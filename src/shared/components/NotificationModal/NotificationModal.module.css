@@ -1,0 +1,25 @@
+.content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+  text-align: center;
+}
+
+.title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.message {
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+}
+
+.success {
+  color: var(--success);
+}
+
+.error {
+  color: var(--danger);
+}

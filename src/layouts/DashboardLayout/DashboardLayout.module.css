@@ -1,0 +1,49 @@
+.layout {
+  min-height: 100vh;
+  background-color: var(--bg-base);
+  color: var(--text-primary);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--spacing-md) var(--spacing-xl);
+  border-bottom: 1px solid var(--border);
+  background-color: var(--bg-surface);
+}
+
+.brand {
+  color: var(--accent);
+  font-weight: 700;
+  font-size: 1.1rem;
+}
+
+.user {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background-color: var(--accent);
+  color: var(--bg-base);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.85rem;
+}
+
+.email {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+}
+
+.main {
+  padding: var(--spacing-xl);
+}
