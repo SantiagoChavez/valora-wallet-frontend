@@ -197,7 +197,8 @@ export function Dashboard() {
         <div className={styles.txCard}>
           <div className={styles.txCardHeader}>
             <span className={styles.label}>Últimas transacciones</span>
-            <a href="#" className={styles.txLink}>Ver todas</a>
+            {/* TODO: cambiar a <Link to="/historial"> cuando el historial se conecte al routing */}
+            <button type="button" className={styles.txLink}>Ver todas</button>
           </div>
           <div className={styles.txList}>
             {TRANSACTIONS.map((tx) => (

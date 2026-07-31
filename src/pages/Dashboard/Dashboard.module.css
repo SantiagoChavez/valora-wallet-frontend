@@ -390,11 +390,16 @@
 }
 
 .txLink {
+  background: transparent;
+  border: none;
+  padding: 0;
+  font-family: inherit;
   font-size: 12px;
   font-weight: 500;
   letter-spacing: 0.05em;
   color: var(--accent);
   text-decoration: none;
+  cursor: pointer;
 }
 
 .txLink:hover {
@@ -419,7 +424,7 @@
 }
 
 .txRow:hover {
-  background: rgba(31, 32, 29, 0.5);
+  background: var(--bg-inset);
 }
 
 .txRowLeft {
@@ -488,13 +493,13 @@
 }
 
 .txIconWrap.tonePos {
-  background: rgba(73, 223, 160, 0.15);
-  border: 1px solid rgba(73, 223, 160, 0.2);
+  background: color-mix(in srgb, var(--success) 15%, transparent);
+  border: 1px solid color-mix(in srgb, var(--success) 20%, transparent);
 }
 
 .txIconWrap.toneNeg {
-  background: rgba(229, 72, 77, 0.15);
-  border: 1px solid rgba(229, 72, 77, 0.2);
+  background: color-mix(in srgb, var(--danger) 15%, transparent);
+  border: 1px solid color-mix(in srgb, var(--danger) 20%, transparent);
 }
 
 .txIconWrap.toneGold {
