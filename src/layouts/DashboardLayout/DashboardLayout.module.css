@@ -149,7 +149,7 @@
   }
 }
 
-.panel {
+.userPanelBox {
   position: absolute;
   top: calc(100% + 12px);
   right: 0;
@@ -164,7 +164,7 @@
 }
 
 @media (max-width: 859px) {
-  .panel {
+  .userPanelBox {
     right: -16px;
   }
 }
@@ -173,78 +173,6 @@
   width: auto;
   min-width: 160px;
   padding: var(--spacing-sm);
-}
-
-.panelHeader {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 14px;
-  font-size: 14px;
-  font-weight: 500;
-  color: var(--text-primary);
-}
-
-.panelCloseButton {
-  background: transparent;
-  border: none;
-  color: var(--text-secondary);
-  cursor: pointer;
-  display: flex;
-}
-
-.panelCloseButton:hover {
-  color: var(--text-primary);
-}
-
-.notifList {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.notifRow {
-  display: flex;
-  gap: 10px;
-  align-items: flex-start;
-  padding: 10px;
-  border-radius: var(--radius-sm);
-  background: transparent;
-}
-
-.notifRowUnread {
-  background: var(--bg-inset);
-}
-
-.notifDot {
-  margin-top: 5px;
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--text-tertiary);
-  flex-shrink: 0;
-}
-
-.notifDotUnread {
-  background: var(--accent);
-}
-
-.notifTextGroup {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.notifTitle {
-  font-size: 14px;
-  font-weight: 500;
-  color: var(--text-primary);
-}
-
-.notifBody {
-  font-size: 12px;
-  letter-spacing: 0.05em;
-  color: var(--text-secondary);
 }
 
 .logoutButton {
