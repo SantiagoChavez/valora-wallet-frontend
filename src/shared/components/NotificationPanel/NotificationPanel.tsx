@@ -1,19 +1,19 @@
 import styles from "./NotificationPanel.module.css";
 
-export interface Notification {
+export interface AppNotification {
   id: string;
   title: string;
   body: string;
   unread: boolean;
 }
 
-export const NOTIFICATIONS: Notification[] = [
+export const NOTIFICATIONS: AppNotification[] = [
   { id: "1", title: "¡Transacción exitosa!", body: "Has recibido $500 USD en tu cuenta.", unread: true },
   { id: "2", title: "Cambio completado", body: "EUR a USD procesado con éxito.", unread: false },
 ];
 
 interface NotificationPanelProps {
-  notifications: Notification[];
+  notifications: AppNotification[];
   onClose: () => void;
 }
 
