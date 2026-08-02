@@ -6,6 +6,19 @@
   align-items: center;
   justify-content: center;
   z-index: 1000;
+  /* --modal-anim-duration es la única fuente de verdad: .content la hereda (es hijo
+     de .overlay en el DOM) y Modal.tsx la lee vía getComputedStyle. No declarar
+     animation-duration como literal en ningún otro lado de este archivo. */
+  --modal-anim-duration: 0.15s;
+  animation-duration: var(--modal-anim-duration);
+  animation-name: overlayIn;
+  animation-timing-function: ease-out;
+}
+
+.overlayClosing {
+  animation-name: overlayOut;
+  animation-timing-function: ease-in;
+  animation-fill-mode: forwards;
 }
 
 .content {
@@ -15,4 +28,53 @@
   padding: var(--spacing-lg);
   min-width: 320px;
   max-width: 90vw;
+  animation-duration: var(--modal-anim-duration);
+  animation-name: contentIn;
+  animation-timing-function: ease-out;
+}
+
+.contentClosing {
+  animation-name: contentOut;
+  animation-timing-function: ease-in;
+  animation-fill-mode: forwards;
+}
+
+@keyframes overlayIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes overlayOut {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes contentIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes contentOut {
+  from {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.95) translateY(8px);
+  }
 }

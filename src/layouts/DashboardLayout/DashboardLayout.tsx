@@ -32,7 +32,7 @@ export function DashboardLayout({ userEmail, onLogout }: DashboardLayoutProps) {
               onClick={() => setOpenPanel((current) => (current === "notif" ? null : "notif"))}
               aria-label="Notificaciones"
             >
-              <span className={`msym ${styles.icon}`}>notifications</span>
+              <span className={`msym ${styles.icon}`} aria-hidden="true">notifications</span>
               {hasUnread && <span className={styles.unreadDot} />}
             </button>
 

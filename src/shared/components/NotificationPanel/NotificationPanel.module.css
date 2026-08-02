@@ -23,8 +23,8 @@
   justify-content: space-between;
   align-items: center;
   margin-bottom: 14px;
-  font-size: 14px;
-  font-weight: 500;
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-medium);
   color: var(--text-primary);
 }
 
@@ -79,13 +79,13 @@
 }
 
 .notifTitle {
-  font-size: 14px;
-  font-weight: 500;
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-medium);
   color: var(--text-primary);
 }
 
 .notifBody {
-  font-size: 12px;
-  letter-spacing: 0.05em;
+  font-size: var(--font-size-xs);
+  letter-spacing: var(--tracking-wide);
   color: var(--text-secondary);
 }
