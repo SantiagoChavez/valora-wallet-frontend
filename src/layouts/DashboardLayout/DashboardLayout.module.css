@@ -149,7 +149,7 @@
   }
 }
 
-.panel {
+.userPanelBox {
   position: absolute;
   top: calc(100% + 12px);
   right: 0;
@@ -164,7 +164,7 @@
 }
 
 @media (max-width: 859px) {
-  .panel {
+  .userPanelBox {
     right: -16px;
   }
 }

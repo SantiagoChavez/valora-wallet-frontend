@@ -55,7 +55,7 @@ export function DashboardLayout({ userEmail, onLogout }: DashboardLayoutProps) {
                 </button>
 
                 {openPanel === "user" && (
-                  <div className={`${styles.panel} ${styles.userPanel}`}>
+                  <div className={`${styles.userPanelBox} ${styles.userPanel}`}>
                     <button type="button" className={styles.logoutButton} onClick={onLogout}>
                       Cerrar sesión
                     </button>
