@@ -26,7 +26,7 @@ export function NotificationModal({
   variant = "info",
 }: NotificationModalProps) {
   return (
-    <Modal isOpen={isOpen} onClose={onClose}>
+    <Modal isOpen={isOpen} onClose={onClose} ariaLabel={title}>
       <div className={styles.content}>
         <span className={`msym ${styles.icon} ${styles[variant]}`} aria-hidden="true">{VARIANT_ICON[variant]}</span>
         <span className={styles.title}>{title}</span>

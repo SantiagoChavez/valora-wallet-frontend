@@ -6,11 +6,17 @@
   align-items: center;
   justify-content: center;
   z-index: 1000;
-  animation: overlayIn 0.15s ease-out;
+  /* animation-duration es la única fuente de verdad: Modal.tsx la lee vía
+     getComputedStyle en vez de duplicar el número — no tocar sin revisar el TS. */
+  animation-duration: 0.15s;
+  animation-name: overlayIn;
+  animation-timing-function: ease-out;
 }
 
 .overlayClosing {
-  animation: overlayOut 0.15s ease-in forwards;
+  animation-name: overlayOut;
+  animation-timing-function: ease-in;
+  animation-fill-mode: forwards;
 }
 
 .content {
@@ -20,11 +26,15 @@
   padding: var(--spacing-lg);
   min-width: 320px;
   max-width: 90vw;
-  animation: contentIn 0.15s ease-out;
+  animation-duration: 0.15s;
+  animation-name: contentIn;
+  animation-timing-function: ease-out;
 }
 
 .contentClosing {
-  animation: contentOut 0.15s ease-in forwards;
+  animation-name: contentOut;
+  animation-timing-function: ease-in;
+  animation-fill-mode: forwards;
 }
 
 @keyframes overlayIn {

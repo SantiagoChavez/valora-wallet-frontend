@@ -1,18 +1,26 @@
 import { useEffect, useRef, useState, type AnimationEvent, type PropsWithChildren } from "react";
 import styles from "./Modal.module.css";
 
-// Debe cubrir la duración de overlayOut/contentOut en Modal.module.css (0.15s) + margen.
-const CLOSE_FALLBACK_MS = 200;
+const CLOSE_FALLBACK_BUFFER_MS = 50;
 
 interface ModalProps extends PropsWithChildren {
   isOpen: boolean;
   onClose: () => void;
+  ariaLabel?: string;
 }
 
-export function Modal({ isOpen, onClose, children }: ModalProps) {
+function getAnimationDurationMs(element: HTMLElement | null): number {
+  if (!element) return 150;
+  const raw = getComputedStyle(element).animationDuration.split(",")[0]?.trim() ?? "0s";
+  const value = parseFloat(raw);
+  return raw.endsWith("ms") ? value : value * 1000;
+}
+
+export function Modal({ isOpen, onClose, ariaLabel, children }: ModalProps) {
   const [shouldRender, setShouldRender] = useState(isOpen);
   const [isClosing, setIsClosing] = useState(false);
   const wasOpenRef = useRef(isOpen);
+  const overlayRef = useRef<HTMLDivElement>(null);
   const closeTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   useEffect(() => {
@@ -24,11 +32,13 @@ export function Modal({ isOpen, onClose, children }: ModalProps) {
       setIsClosing(true);
       // Respaldo por si onAnimationEnd nunca dispara (tests con jsdom, animaciones
       // deshabilitadas por el usuario/navegador, overrides de CSS futuros, etc.):
-      // sin esto el modal puede quedar "pegado" tapando la app.
+      // sin esto el modal puede quedar "pegado" tapando la app. La duración se lee
+      // del CSS real en vez de duplicarla acá, para que no se puedan desincronizar.
+      const fallbackMs = getAnimationDurationMs(overlayRef.current) + CLOSE_FALLBACK_BUFFER_MS;
       closeTimerRef.current = setTimeout(() => {
         setShouldRender(false);
         setIsClosing(false);
-      }, CLOSE_FALLBACK_MS);
+      }, fallbackMs);
     }
     wasOpenRef.current = isOpen;
   }, [isOpen]);
@@ -45,15 +55,25 @@ export function Modal({ isOpen, onClose, children }: ModalProps) {
     }
   }
 
+  function handleOverlayClick() {
+    // Ignorar clicks mientras cierra: el overlay sigue montado durante la
+    // animación de salida, y un doble click ahí no debe repetir el onClose del caller.
+    if (!isClosing) onClose();
+  }
+
   return (
     <div
+      ref={overlayRef}
       className={`${styles.overlay} ${isClosing ? styles.overlayClosing : ""}`}
-      onClick={onClose}
+      onClick={handleOverlayClick}
       onAnimationEnd={handleAnimationEnd}
     >
       <div
         className={`${styles.content} ${isClosing ? styles.contentClosing : ""}`}
         onClick={(event) => event.stopPropagation()}
+        role="dialog"
+        aria-modal="true"
+        aria-label={ariaLabel}
       >
         {children}
       </div>
