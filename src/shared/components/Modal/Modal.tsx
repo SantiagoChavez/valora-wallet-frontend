@@ -6,7 +6,7 @@ const CLOSE_FALLBACK_BUFFER_MS = 50;
 interface ModalProps extends PropsWithChildren {
   isOpen: boolean;
   onClose: () => void;
-  ariaLabel?: string;
+  ariaLabel: string;
 }
 
 function getAnimationDurationMs(element: HTMLElement | null): number {

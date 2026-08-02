@@ -6,9 +6,11 @@
   align-items: center;
   justify-content: center;
   z-index: 1000;
-  /* animation-duration es la única fuente de verdad: Modal.tsx la lee vía
-     getComputedStyle en vez de duplicar el número — no tocar sin revisar el TS. */
-  animation-duration: 0.15s;
+  /* --modal-anim-duration es la única fuente de verdad: .content la hereda (es hijo
+     de .overlay en el DOM) y Modal.tsx la lee vía getComputedStyle. No declarar
+     animation-duration como literal en ningún otro lado de este archivo. */
+  --modal-anim-duration: 0.15s;
+  animation-duration: var(--modal-anim-duration);
   animation-name: overlayIn;
   animation-timing-function: ease-out;
 }
@@ -26,7 +28,7 @@
   padding: var(--spacing-lg);
   min-width: 320px;
   max-width: 90vw;
-  animation-duration: 0.15s;
+  animation-duration: var(--modal-anim-duration);
   animation-name: contentIn;
   animation-timing-function: ease-out;
 }
