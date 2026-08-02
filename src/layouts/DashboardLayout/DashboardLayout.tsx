@@ -1,19 +1,8 @@
 import { useState } from "react";
 import { Outlet } from "react-router-dom";
 import logo from "../../shared/assets/valora-logo.png";
+import { NotificationPanel, NOTIFICATIONS } from "../../shared/components/NotificationPanel/NotificationPanel";
 import styles from "./DashboardLayout.module.css";
-
-interface Notification {
-  id: string;
-  title: string;
-  body: string;
-  unread: boolean;
-}
-
-const NOTIFICATIONS: Notification[] = [
-  { id: "1", title: "¡Transacción exitosa!", body: "Has recibido $500 USD en tu cuenta.", unread: true },
-  { id: "2", title: "Cambio completado", body: "EUR a USD procesado con éxito.", unread: false },
-];
 
 interface DashboardLayoutProps {
   userEmail?: string;
@@ -21,8 +10,7 @@ interface DashboardLayoutProps {
 }
 
 export function DashboardLayout({ userEmail, onLogout }: DashboardLayoutProps) {
-  const [isNotifOpen, setIsNotifOpen] = useState(false);
-  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+  const [openPanel, setOpenPanel] = useState<"notif" | "user" | null>(null);
   const hasUnread = NOTIFICATIONS.some((note) => note.unread);
 
   return (
@@ -45,41 +33,15 @@ export function DashboardLayout({ userEmail, onLogout }: DashboardLayoutProps) {
             <button
               type="button"
               className={styles.ghostIconButton}
-              onClick={() => setIsNotifOpen((open) => !open)}
+              onClick={() => setOpenPanel((current) => (current === "notif" ? null : "notif"))}
               aria-label="Notificaciones"
             >
               <span className={`msym ${styles.icon}`}>notifications</span>
               {hasUnread && <span className={styles.unreadDot} />}
             </button>
 
-            {isNotifOpen && (
-              <div className={styles.panel}>
-                <div className={styles.panelHeader}>
-                  <span>Notificaciones</span>
-                  <button
-                    type="button"
-                    className={styles.panelCloseButton}
-                    onClick={() => setIsNotifOpen(false)}
-                    aria-label="Cerrar notificaciones"
-                  >
-                    <span className="msym">close</span>
-                  </button>
-                </div>
-                <div className={styles.notifList}>
-                  {NOTIFICATIONS.map((note) => (
-                    <div
-                      key={note.id}
-                      className={`${styles.notifRow} ${note.unread ? styles.notifRowUnread : ""}`}
-                    >
-                      <span className={`${styles.notifDot} ${note.unread ? styles.notifDotUnread : ""}`} />
-                      <div className={styles.notifTextGroup}>
-                        <span className={styles.notifTitle}>{note.title}</span>
-                        <span className={styles.notifBody}>{note.body}</span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
+            {openPanel === "notif" && (
+              <NotificationPanel notifications={NOTIFICATIONS} onClose={() => setOpenPanel(null)} />
             )}
           </div>
 
@@ -90,13 +52,13 @@ export function DashboardLayout({ userEmail, onLogout }: DashboardLayoutProps) {
                 <button
                   type="button"
                   className={styles.userTrigger}
-                  onClick={() => setIsUserMenuOpen((open) => !open)}
+                  onClick={() => setOpenPanel((current) => (current === "user" ? null : "user"))}
                 >
                   <span className={styles.avatar}>{userEmail.charAt(0).toUpperCase()}</span>
                   <span className={styles.email}>{userEmail}</span>
                 </button>
 
-                {isUserMenuOpen && (
+                {openPanel === "user" && (
                   <div className={`${styles.panel} ${styles.userPanel}`}>
                     <button type="button" className={styles.logoutButton} onClick={onLogout}>
                       Cerrar sesión
