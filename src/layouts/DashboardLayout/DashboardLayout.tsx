@@ -25,10 +25,6 @@ export function DashboardLayout({ userEmail, onLogout }: DashboardLayoutProps) {
         </div>
 
         <div className={styles.actions}>
-          <button type="button" className={styles.ghostIconButton} aria-label="Configuración">
-            <span className={`msym ${styles.icon}`}>settings</span>
-          </button>
-
           <div className={styles.menuAnchor}>
             <button
               type="button"
