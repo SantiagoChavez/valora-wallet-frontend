@@ -12,6 +12,12 @@ interface NotificationModalProps {
   variant?: NotificationVariant;
 }
 
+const VARIANT_ICON: Record<NotificationVariant, string> = {
+  success: "check_circle",
+  error: "error",
+  info: "info",
+};
+
 export function NotificationModal({
   isOpen,
   onClose,
@@ -19,12 +25,11 @@ export function NotificationModal({
   message,
   variant = "info",
 }: NotificationModalProps) {
-  const titleClass = variant === "info" ? styles.title : [styles.title, styles[variant]].join(" ");
-
   return (
     <Modal isOpen={isOpen} onClose={onClose}>
       <div className={styles.content}>
-        <span className={titleClass}>{title}</span>
+        <span className={`msym ${styles.icon} ${styles[variant]}`}>{VARIANT_ICON[variant]}</span>
+        <span className={styles.title}>{title}</span>
         <p className={styles.message}>{message}</p>
         <Button onClick={onClose}>Cerrar</Button>
       </div>

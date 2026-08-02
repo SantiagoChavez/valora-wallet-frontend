@@ -1,4 +1,4 @@
-import type { PropsWithChildren } from "react";
+import { useEffect, useState, type AnimationEvent, type PropsWithChildren } from "react";
 import styles from "./Modal.module.css";
 
 interface ModalProps extends PropsWithChildren {
@@ -7,11 +7,37 @@ interface ModalProps extends PropsWithChildren {
 }
 
 export function Modal({ isOpen, onClose, children }: ModalProps) {
-  if (!isOpen) return null;
+  const [shouldRender, setShouldRender] = useState(isOpen);
+  const [isClosing, setIsClosing] = useState(false);
+
+  useEffect(() => {
+    if (isOpen) {
+      setShouldRender(true);
+      setIsClosing(false);
+    } else if (shouldRender) {
+      setIsClosing(true);
+    }
+  }, [isOpen, shouldRender]);
+
+  if (!shouldRender) return null;
+
+  function handleAnimationEnd(event: AnimationEvent<HTMLDivElement>) {
+    if (isClosing && event.currentTarget === event.target) {
+      setShouldRender(false);
+      setIsClosing(false);
+    }
+  }
 
   return (
-    <div className={styles.overlay} onClick={onClose}>
-      <div className={styles.content} onClick={(event) => event.stopPropagation()}>
+    <div
+      className={`${styles.overlay} ${isClosing ? styles.overlayClosing : ""}`}
+      onClick={onClose}
+      onAnimationEnd={handleAnimationEnd}
+    >
+      <div
+        className={`${styles.content} ${isClosing ? styles.contentClosing : ""}`}
+        onClick={(event) => event.stopPropagation()}
+      >
         {children}
       </div>
     </div>
