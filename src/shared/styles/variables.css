@@ -28,6 +28,34 @@
   --radius-lg: 12px;
   --radius-xl: 16px;
   --radius-pill: 9999px;
+
+  /* escala tipográfica: tamaños, pesos y tracking usados en dashboard/layout */
+  --font-size-2xs: 10px;
+  --font-size-xs: 12px;
+  --font-size-sm: 13px;
+  --font-size-md: 14px;
+  --font-size-lg: 16px;
+  --font-size-xl: 20px;
+  --font-size-2xl: 24px;
+  --font-size-3xl: 32px;
+  --font-size-4xl: 40px;
+
+  --font-weight-regular: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+  --font-weight-extrabold: 800;
+
+  --tracking-tight: -0.02em;
+  --tracking-snug: -0.01em;
+  --tracking-wide: 0.05em;
+  --tracking-widest: 0.2em;
+}
+
+@media (max-width: 859px) {
+  :root {
+    --font-size-4xl: 32px;
+  }
 }
 
 :root[data-theme="light"] {
