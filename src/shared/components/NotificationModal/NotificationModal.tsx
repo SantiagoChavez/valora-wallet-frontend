@@ -28,7 +28,7 @@ export function NotificationModal({
   return (
     <Modal isOpen={isOpen} onClose={onClose}>
       <div className={styles.content}>
-        <span className={`msym ${styles.icon} ${styles[variant]}`}>{VARIANT_ICON[variant]}</span>
+        <span className={`msym ${styles.icon} ${styles[variant]}`} aria-hidden="true">{VARIANT_ICON[variant]}</span>
         <span className={styles.title}>{title}</span>
         <p className={styles.message}>{message}</p>
         <Button onClick={onClose}>Cerrar</Button>

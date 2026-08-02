@@ -28,7 +28,7 @@ export function NotificationPanel({ notifications, onClose }: NotificationPanelP
           onClick={onClose}
           aria-label="Cerrar notificaciones"
         >
-          <span className="msym">close</span>
+          <span className="msym" aria-hidden="true">close</span>
         </button>
       </div>
       <div className={styles.notifList}>

@@ -99,7 +99,10 @@ export function Dashboard() {
                   onClick={() => setTotalHidden((v) => !v)}
                   aria-label={totalHidden ? "Mostrar balance" : "Ocultar balance"}
                 >
-                  <span className={`msym ${styles.eyeIcon} ${totalHidden ? "" : styles.eyeIconActive}`}>
+                  <span
+                    className={`msym ${styles.eyeIcon} ${totalHidden ? "" : styles.eyeIconActive}`}
+                    aria-hidden="true"
+                  >
                     {totalHidden ? "visibility_off" : "visibility"}
                   </span>
                 </button>
@@ -110,7 +113,7 @@ export function Dashboard() {
                     onClick={() => setCurrencyMenuOpen((v) => !v)}
                   >
                     {totalCurrency}
-                    <span className="msym" style={{ fontSize: 16 }}>expand_more</span>
+                    <span className="msym" style={{ fontSize: 16 }} aria-hidden="true">expand_more</span>
                   </button>
                   {currencyMenuOpen && (
                     <div className={styles.currencyMenu}>
@@ -154,7 +157,10 @@ export function Dashboard() {
                       onClick={() => toggleBalanceHidden(bal.code)}
                       aria-label={isHidden ? "Mostrar saldo" : "Ocultar saldo"}
                     >
-                      <span className={`msym ${styles.eyeIconSmall} ${isHidden ? "" : styles.eyeIconActive}`}>
+                      <span
+                        className={`msym ${styles.eyeIconSmall} ${isHidden ? "" : styles.eyeIconActive}`}
+                        aria-hidden="true"
+                      >
                         {isHidden ? "visibility_off" : "visibility"}
                       </span>
                     </button>
@@ -169,11 +175,11 @@ export function Dashboard() {
 
           <div className={styles.buySellRow}>
             <button type="button" className={styles.buyButton} onClick={() => showToast("Compra iniciada — elegí la moneda a comprar.")}>
-              <span className="msym" style={{ fontSize: 18 }}>add</span>
+              <span className="msym" style={{ fontSize: 18 }} aria-hidden="true">add</span>
               Comprar
             </button>
             <button type="button" className={styles.sellButton} onClick={() => showToast("Venta iniciada — elegí la moneda a vender.")}>
-              <span className="msym" style={{ fontSize: 18 }}>remove</span>
+              <span className="msym" style={{ fontSize: 18 }} aria-hidden="true">remove</span>
               Vender
             </button>
           </div>
@@ -182,7 +188,7 @@ export function Dashboard() {
         <div className={styles.aiPromo}>
           <div className={styles.aiPromoText}>
             <div className={styles.aiPromoHeading}>
-              <span className="msym" style={{ fontSize: 22, color: "var(--accent)" }}>auto_awesome</span>
+              <span className="msym" style={{ fontSize: 22, color: "var(--accent)" }} aria-hidden="true">auto_awesome</span>
               <span className={styles.aiPromoTitle}>Asistente Valora AI</span>
             </div>
             <p className={styles.aiPromoBody}>
@@ -205,7 +211,7 @@ export function Dashboard() {
               <div key={tx.id} className={styles.txRow}>
                 <div className={styles.txRowLeft}>
                   <div className={`${styles.txIconWrap} ${toneClass[tx.tone]}`}>
-                    <span className={`msym ${styles.txIcon}`}>{tx.glyph}</span>
+                    <span className={`msym ${styles.txIcon}`} aria-hidden="true">{tx.glyph}</span>
                   </div>
                   <div className={styles.txTextGroup}>
                     <span className={styles.txTitle}>{tx.title}</span>
@@ -225,7 +231,7 @@ export function Dashboard() {
         <div className={styles.cardView}>
           <div className={styles.cardGlow} />
           <div className={styles.cardTop}>
-            <span className="msym" style={{ fontSize: 22, color: "var(--accent)" }}>contactless</span>
+            <span className="msym" style={{ fontSize: 22, color: "var(--accent)" }} aria-hidden="true">contactless</span>
             <span className={styles.cardBrand}>VALORA PLATINUM</span>
           </div>
           <div className={styles.cardBottom}>
@@ -251,7 +257,7 @@ export function Dashboard() {
               className={`${styles.navItem} ${isActive ? styles.navItemActive : ""}`}
               onClick={() => setActiveNav(item.label)}
             >
-              <span className={`msym ${styles.navIcon}`}>{item.icon}</span>
+              <span className={`msym ${styles.navIcon}`} aria-hidden="true">{item.icon}</span>
               <span className={styles.navLabel}>{item.label}</span>
             </button>
           );
