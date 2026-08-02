@@ -15,12 +15,11 @@ body {
   font-family: var(--font-family-base);
   background-color: var(--bg-base);
   color: var(--text-primary);
+  /* Fijo en dark: nada en el código setea `data-theme` todavía (no hay toggle de
+     tema real, solo los tokens en variables.css) — depender de ese selector acá
+     sería CSS muerto. Revisar esto junto con el toggle real cuando se construya. */
   color-scheme: dark;
   -webkit-font-smoothing: antialiased;
-}
-
-:root[data-theme="light"] body {
-  color-scheme: light;
 }
 
 .msym {
