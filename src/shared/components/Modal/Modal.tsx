@@ -55,7 +55,13 @@ export function Modal({ isOpen, onClose, ariaLabel, children }: ModalProps) {
   useEffect(() => {
     if (isOpen) {
       clearTimeout(closeTimerRef.current);
-      previousFocusRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+      // Solo recapturar si venía realmente cerrado: si isOpen vuelve a true mientras
+      // shouldRender sigue en true (reingreso rápido, mitad de la animación de
+      // cierre), document.activeElement ya es document.body por el inert del cierre
+      // cancelado — recapturar acá pisaría el trigger original con ese valor inútil.
+      if (!shouldRender) {
+        previousFocusRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+      }
       setShouldRender(true);
       setIsClosing(false);
     } else if (wasOpenRef.current) {
@@ -73,23 +79,27 @@ export function Modal({ isOpen, onClose, ariaLabel, children }: ModalProps) {
       closeTimerRef.current = setTimeout(finishClosing, fallbackMs);
     }
     wasOpenRef.current = isOpen;
-  }, [isOpen]);
+  }, [isOpen, shouldRender]);
 
   useEffect(() => () => clearTimeout(closeTimerRef.current), []);
 
-  // Autofocus al abrir (una vez que .content ya está en el DOM) y devolución de
-  // foco al trigger cuando termina de cerrarse (shouldRender pasa a false) — sin
-  // importar si el cierre lo disparó handleAnimationEnd o el timer de respaldo.
+  // Autofocus al abrir/reabrir (contenido interactivo, sin animar cierre) y
+  // devolución de foco al trigger cuando termina de cerrarse del todo. Depende de
+  // isClosing (no de isOpen) porque en un reingreso rápido — reabrir mientras
+  // isClosing=true — shouldRender nunca pasa por false, pero isClosing sí vuelve
+  // a false; sin esa dependencia el efecto no vuelve a correr y el foco queda
+  // perdido en document.body (donde lo dejó el inert del cierre cancelado).
   useEffect(() => {
-    if (shouldRender) {
-      const content = contentRef.current;
-      if (!content) return;
-      const [first] = getFocusableElements(content);
-      (first ?? content).focus();
-    } else {
+    if (!shouldRender) {
       previousFocusRef.current?.focus();
+      return;
     }
-  }, [shouldRender]);
+    if (isClosing) return;
+    const content = contentRef.current;
+    if (!content) return;
+    const [first] = getFocusableElements(content);
+    (first ?? content).focus();
+  }, [shouldRender, isClosing]);
 
   if (!shouldRender) return null;
 
