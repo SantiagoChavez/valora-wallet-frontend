@@ -11,6 +11,11 @@ export function DashboardLayout() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const userEmail = user?.email;
+  // DashboardLayout solo se renderiza dentro de ProtectedRoute (hay sesión activa
+  // siempre), pero user.email puede faltar si el storage quedó con datos parciales
+  // — no por eso hay que esconder el logout, si no queda sin forma de salir.
+  const avatarInitial = userEmail ? userEmail.charAt(0).toUpperCase() : "?";
+  const displayEmail = userEmail ?? "Mi cuenta";
 
   function handleLogout() {
     logout();
@@ -45,29 +50,25 @@ export function DashboardLayout() {
             )}
           </div>
 
-          {userEmail && (
-            <>
-              <div className={styles.divider} />
-              <div className={styles.menuAnchor}>
-                <button
-                  type="button"
-                  className={styles.userTrigger}
-                  onClick={() => setOpenPanel((current) => (current === "user" ? null : "user"))}
-                >
-                  <span className={styles.avatar}>{userEmail.charAt(0).toUpperCase()}</span>
-                  <span className={styles.email}>{userEmail}</span>
-                </button>
+          <div className={styles.divider} />
+          <div className={styles.menuAnchor}>
+            <button
+              type="button"
+              className={styles.userTrigger}
+              onClick={() => setOpenPanel((current) => (current === "user" ? null : "user"))}
+            >
+              <span className={styles.avatar}>{avatarInitial}</span>
+              <span className={styles.email}>{displayEmail}</span>
+            </button>
 
-                {openPanel === "user" && (
-                  <div className={`${styles.userPanelBox} ${styles.userPanel}`}>
-                    <button type="button" className={styles.logoutButton} onClick={handleLogout}>
-                      Cerrar sesión
-                    </button>
-                  </div>
-                )}
+            {openPanel === "user" && (
+              <div className={`${styles.userPanelBox} ${styles.userPanel}`}>
+                <button type="button" className={styles.logoutButton} onClick={handleLogout}>
+                  Cerrar sesión
+                </button>
               </div>
-            </>
-          )}
+            )}
+          </div>
         </div>
       </header>
       <main className={styles.main}>
