@@ -46,6 +46,12 @@ export function Modal({ isOpen, onClose, ariaLabel, children }: ModalProps) {
   const pendingCloseAnimationsRef = useRef<Set<HTMLElement>>(new Set());
   const previousFocusRef = useRef<HTMLElement | null>(null);
 
+  function finishClosing() {
+    clearTimeout(closeTimerRef.current);
+    setShouldRender(false);
+    setIsClosing(false);
+  }
+
   useEffect(() => {
     if (isOpen) {
       clearTimeout(closeTimerRef.current);
@@ -64,10 +70,7 @@ export function Modal({ isOpen, onClose, ariaLabel, children }: ModalProps) {
       const fallbackMs =
         Math.max(getAnimationDurationMs(overlayRef.current), getAnimationDurationMs(contentRef.current)) +
         CLOSE_FALLBACK_BUFFER_MS;
-      closeTimerRef.current = setTimeout(() => {
-        setShouldRender(false);
-        setIsClosing(false);
-      }, fallbackMs);
+      closeTimerRef.current = setTimeout(finishClosing, fallbackMs);
     }
     wasOpenRef.current = isOpen;
   }, [isOpen]);
@@ -94,9 +97,7 @@ export function Modal({ isOpen, onClose, ariaLabel, children }: ModalProps) {
     if (!isClosing) return;
     pendingCloseAnimationsRef.current.delete(event.target as HTMLElement);
     if (pendingCloseAnimationsRef.current.size === 0) {
-      clearTimeout(closeTimerRef.current);
-      setShouldRender(false);
-      setIsClosing(false);
+      finishClosing();
     }
   }
 
