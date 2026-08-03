@@ -29,7 +29,7 @@ export function NotificationModal({
     <Modal isOpen={isOpen} onClose={onClose} ariaLabel={title}>
       <div className={styles.content}>
         <span className={`msym ${styles.icon} ${styles[variant]}`} aria-hidden="true">{VARIANT_ICON[variant]}</span>
-        <span className={styles.title}>{title}</span>
+        <span className={`${styles.title} ${styles[variant]}`}>{title}</span>
         <p className={styles.message}>{message}</p>
         <Button onClick={onClose}>Cerrar</Button>
       </div>

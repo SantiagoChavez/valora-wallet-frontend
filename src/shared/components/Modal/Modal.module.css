@@ -6,10 +6,9 @@
   align-items: center;
   justify-content: center;
   z-index: 1000;
-  /* --modal-anim-duration es la única fuente de verdad: .content la hereda (es hijo
-     de .overlay en el DOM) y Modal.tsx la lee vía getComputedStyle. No declarar
-     animation-duration como literal en ningún otro lado de este archivo. */
-  --modal-anim-duration: 0.15s;
+  /* --modal-anim-duration vive en shared/styles/variables.css (:root); tanto .overlay
+     como .content la heredan de ahí directamente, no uno del otro (evita depender de
+     que .content sea hijo de .overlay en el DOM). Modal.tsx la lee vía getComputedStyle. */
   animation-duration: var(--modal-anim-duration);
   animation-name: overlayIn;
   animation-timing-function: ease-out;

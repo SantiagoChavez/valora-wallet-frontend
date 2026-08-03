@@ -50,6 +50,11 @@
   --tracking-snug: -0.01em;
   --tracking-wide: 0.05em;
   --tracking-widest: 0.2em;
+
+  /* duración de animación de Modal (shared/components/Modal) — vive en :root para
+     que .overlay y .content la hereden directamente de acá, sin depender de que
+     .content sea hijo de .overlay en el DOM (evita romperse si Modal migra a portal) */
+  --modal-anim-duration: 0.15s;
 }
 
 @media (max-width: 859px) {
