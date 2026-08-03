@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type AnimationEvent, type PropsWithChildren } from "react";
+import { useEffect, useRef, useState, type AnimationEvent, type KeyboardEvent, type PropsWithChildren } from "react";
 import styles from "./Modal.module.css";
 
 const CLOSE_FALLBACK_BUFFER_MS = 50;
@@ -25,6 +25,17 @@ function getAnimationDurationMs(element: HTMLElement | null): number {
   return Number.isNaN(ms) ? FALLBACK_DURATION_MS : ms;
 }
 
+// Selector "básico" de elementos focuseables para el focus trap: no filtra por
+// visibilidad real (display:none, offsetParent) — cubre los casos actuales del
+// proyecto, pero si un modal futuro tiene contenido condicional oculto con
+// elementos focuseables adentro, este selector los va a contar igual.
+const FOCUSABLE_SELECTOR =
+  'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])';
+
+function getFocusableElements(container: HTMLElement): HTMLElement[] {
+  return Array.from(container.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR));
+}
+
 export function Modal({ isOpen, onClose, ariaLabel, children }: ModalProps) {
   const [shouldRender, setShouldRender] = useState(isOpen);
   const [isClosing, setIsClosing] = useState(false);
@@ -33,10 +44,12 @@ export function Modal({ isOpen, onClose, ariaLabel, children }: ModalProps) {
   const contentRef = useRef<HTMLDivElement>(null);
   const closeTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const pendingCloseAnimationsRef = useRef<Set<HTMLElement>>(new Set());
+  const previousFocusRef = useRef<HTMLElement | null>(null);
 
   useEffect(() => {
     if (isOpen) {
       clearTimeout(closeTimerRef.current);
+      previousFocusRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
       setShouldRender(true);
       setIsClosing(false);
     } else if (wasOpenRef.current) {
@@ -61,6 +74,20 @@ export function Modal({ isOpen, onClose, ariaLabel, children }: ModalProps) {
 
   useEffect(() => () => clearTimeout(closeTimerRef.current), []);
 
+  // Autofocus al abrir (una vez que .content ya está en el DOM) y devolución de
+  // foco al trigger cuando termina de cerrarse (shouldRender pasa a false) — sin
+  // importar si el cierre lo disparó handleAnimationEnd o el timer de respaldo.
+  useEffect(() => {
+    if (shouldRender) {
+      const content = contentRef.current;
+      if (!content) return;
+      const [first] = getFocusableElements(content);
+      (first ?? content).focus();
+    } else {
+      previousFocusRef.current?.focus();
+    }
+  }, [shouldRender]);
+
   if (!shouldRender) return null;
 
   function handleAnimationEnd(event: AnimationEvent<HTMLDivElement>) {
@@ -79,12 +106,39 @@ export function Modal({ isOpen, onClose, ariaLabel, children }: ModalProps) {
     if (!isClosing) onClose();
   }
 
+  function handleKeyDown(event: KeyboardEvent<HTMLDivElement>) {
+    if (event.key === "Escape") {
+      if (!isClosing) onClose();
+      return;
+    }
+    if (event.key !== "Tab" || !contentRef.current) return;
+    const focusable = getFocusableElements(contentRef.current);
+    if (focusable.length === 0) {
+      // Sin elementos focuseables por tabIndex natural, el único destino del trap
+      // es .content mismo (foco solo por script) — sin esto, Tab se escapa del
+      // modal porque tabIndex={-1} lo saca de la secuencia normal de tabulación.
+      event.preventDefault();
+      contentRef.current.focus();
+      return;
+    }
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+    if (event.shiftKey && document.activeElement === first) {
+      event.preventDefault();
+      last.focus();
+    } else if (!event.shiftKey && document.activeElement === last) {
+      event.preventDefault();
+      first.focus();
+    }
+  }
+
   return (
     <div
       ref={overlayRef}
       className={`${styles.overlay} ${isClosing ? styles.overlayClosing : ""}`}
       onClick={handleOverlayClick}
       onAnimationEnd={handleAnimationEnd}
+      onKeyDown={handleKeyDown}
     >
       <div
         ref={contentRef}
@@ -93,6 +147,7 @@ export function Modal({ isOpen, onClose, ariaLabel, children }: ModalProps) {
         role="dialog"
         aria-modal="true"
         aria-label={ariaLabel}
+        tabIndex={-1}
       >
         {children}
       </div>
