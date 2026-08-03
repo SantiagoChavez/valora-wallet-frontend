@@ -144,6 +144,7 @@ export function Modal({ isOpen, onClose, ariaLabel, children }: ModalProps) {
         ref={contentRef}
         className={`${styles.content} ${isClosing ? styles.contentClosing : ""}`}
         onClick={(event) => event.stopPropagation()}
+        inert={isClosing}
         role="dialog"
         aria-modal="true"
         aria-label={ariaLabel}
