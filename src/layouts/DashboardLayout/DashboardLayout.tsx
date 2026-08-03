@@ -1,17 +1,21 @@
 import { useState } from "react";
-import { Outlet } from "react-router-dom";
+import { Outlet, useNavigate } from "react-router-dom";
 import logo from "../../shared/assets/valora-logo.png";
+import { useAuth } from "../../shared/auth/useAuth";
 import { NotificationPanel, NOTIFICATIONS } from "../../shared/components/NotificationPanel/NotificationPanel";
 import styles from "./DashboardLayout.module.css";
 
-interface DashboardLayoutProps {
-  userEmail?: string;
-  onLogout?: () => void;
-}
-
-export function DashboardLayout({ userEmail, onLogout }: DashboardLayoutProps) {
+export function DashboardLayout() {
   const [openPanel, setOpenPanel] = useState<"notif" | "user" | null>(null);
   const hasUnread = NOTIFICATIONS.some((note) => note.unread);
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
+  const userEmail = user?.email;
+
+  function handleLogout() {
+    logout();
+    navigate("/login", { replace: true });
+  }
 
   return (
     <div className={styles.layout}>
@@ -56,7 +60,7 @@ export function DashboardLayout({ userEmail, onLogout }: DashboardLayoutProps) {
 
                 {openPanel === "user" && (
                   <div className={`${styles.userPanelBox} ${styles.userPanel}`}>
-                    <button type="button" className={styles.logoutButton} onClick={onLogout}>
+                    <button type="button" className={styles.logoutButton} onClick={handleLogout}>
                       Cerrar sesión
                     </button>
                   </div>
