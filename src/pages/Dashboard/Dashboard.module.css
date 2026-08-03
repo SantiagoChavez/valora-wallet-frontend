@@ -152,30 +152,6 @@
   color: var(--accent);
 }
 
-.trendChip {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-sm);
-  background: var(--bg-inset);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  padding: 8px 12px;
-}
-
-.trendDot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--success);
-}
-
-.trendLabel {
-  font-size: var(--font-size-xs);
-  font-weight: var(--font-weight-medium);
-  letter-spacing: var(--tracking-wide);
-  color: var(--success);
-}
-
 .currencyGrid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);

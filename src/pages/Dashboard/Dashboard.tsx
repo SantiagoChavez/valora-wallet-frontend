@@ -23,6 +23,7 @@ interface TransactionEntry {
 }
 
 interface NavEntry {
+  id: string;
   label: string;
   icon: string;
 }
@@ -46,10 +47,10 @@ const TRANSACTIONS: TransactionEntry[] = [
 ];
 
 const NAV_ITEMS: NavEntry[] = [
-  { label: "Home", icon: "account_balance_wallet" },
-  { label: "Cards", icon: "credit_card" },
-  { label: "Swap", icon: "swap_horiz" },
-  { label: "Activity", icon: "receipt_long" },
+  { id: "home", label: "Inicio", icon: "account_balance_wallet" },
+  { id: "cards", label: "Tarjetas", icon: "credit_card" },
+  { id: "swap", label: "Intercambio", icon: "swap_horiz" },
+  { id: "activity", label: "Actividad", icon: "receipt_long" },
 ];
 
 const toneClass: Record<TxTone, string> = {
@@ -63,7 +64,7 @@ export function Dashboard() {
   const [totalCurrency, setTotalCurrency] = useState<CurrencyCode>("USD");
   const [currencyMenuOpen, setCurrencyMenuOpen] = useState(false);
   const [hidden, setHidden] = useState<Record<CurrencyCode, boolean>>({ USD: true, EUR: true, ARS: true });
-  const [activeNav, setActiveNav] = useState("Home");
+  const [activeNav, setActiveNav] = useState("home");
   const [toast, setToast] = useState<string | null>(null);
   const toastTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
@@ -134,10 +135,6 @@ export function Dashboard() {
                   )}
                 </div>
               </div>
-            </div>
-            <div className={styles.trendChip}>
-              <span className={styles.trendDot} />
-              <span className={styles.trendLabel}>+2.4%</span>
             </div>
           </div>
 
@@ -249,13 +246,13 @@ export function Dashboard() {
 
       <nav className={styles.bottomNav}>
         {NAV_ITEMS.map((item) => {
-          const isActive = item.label === activeNav;
+          const isActive = item.id === activeNav;
           return (
             <button
-              key={item.label}
+              key={item.id}
               type="button"
               className={`${styles.navItem} ${isActive ? styles.navItemActive : ""}`}
-              onClick={() => setActiveNav(item.label)}
+              onClick={() => setActiveNav(item.id)}
             >
               <span className={`msym ${styles.navIcon}`} aria-hidden="true">{item.icon}</span>
               <span className={styles.navLabel}>{item.label}</span>
