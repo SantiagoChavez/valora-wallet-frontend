@@ -9,11 +9,16 @@ interface ModalProps extends PropsWithChildren {
   ariaLabel: string;
 }
 
+// 150ms es el respaldo cuando no se puede leer la duración real del CSS (elemento
+// ausente, o animationDuration vacío como pasa en jsdom). Asume que overlayRef/
+// contentRef siempre están conectados al DOM en este punto porque Modal no usa
+// portal hoy (prop isOpen controlada, sin createPortal) — si eso cambia, revisar.
 function getAnimationDurationMs(element: HTMLElement | null): number {
   if (!element) return 150;
   const raw = getComputedStyle(element).animationDuration.split(",")[0]?.trim() ?? "0s";
   const value = parseFloat(raw);
-  return raw.endsWith("ms") ? value : value * 1000;
+  const ms = raw.endsWith("ms") ? value : value * 1000;
+  return Number.isNaN(ms) ? 150 : ms;
 }
 
 export function Modal({ isOpen, onClose, ariaLabel, children }: ModalProps) {
