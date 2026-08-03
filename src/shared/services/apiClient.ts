@@ -1,4 +1,9 @@
-const API_BASE_URL = import.meta.env.VITE_API_URL;
+const rawApiBaseUrl = import.meta.env.VITE_API_URL;
+if (!rawApiBaseUrl) {
+  throw new Error("VITE_API_URL no está configurada — revisá tu .env/.env.local.");
+}
+// sin esto, una URL con "/" final + un path que arranca con "/" queda con "//".
+const API_BASE_URL = rawApiBaseUrl.replace(/\/$/, "");
 
 export class ApiError extends Error {
   status: number;
@@ -12,6 +17,21 @@ export class ApiError extends Error {
 
 interface ApiFetchOptions extends RequestInit {
   token?: string;
+}
+
+async function parseJsonSafely(response: Response): Promise<unknown> {
+  if (response.status === 204 || response.status === 205) {
+    return undefined;
+  }
+  const contentType = response.headers.get("Content-Type") ?? "";
+  if (!contentType.includes("application/json")) {
+    return undefined;
+  }
+  try {
+    return await response.json();
+  } catch {
+    return undefined;
+  }
 }
 
 export async function apiFetch<T>(path: string, options: ApiFetchOptions = {}): Promise<T> {
@@ -37,10 +57,10 @@ export async function apiFetch<T>(path: string, options: ApiFetchOptions = {}): 
     headers: mergedHeaders,
   });
 
-  const data = await response.json().catch(() => null);
+  const data = await parseJsonSafely(response);
 
   if (!response.ok) {
-    const message = data?.error ?? "Ocurrió un error inesperado. Intentá de nuevo.";
+    const message = (data as { error?: string } | undefined)?.error ?? "Ocurrió un error inesperado. Intentá de nuevo.";
     throw new ApiError(message, response.status);
   }
 
