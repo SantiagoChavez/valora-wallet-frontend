@@ -3,22 +3,26 @@ import styles from "./Modal.module.css";
 
 const CLOSE_FALLBACK_BUFFER_MS = 50;
 
+// Aproximación manual de --modal-anim-duration (Modal.module.css) para cuando no
+// hay DOM del cual leer el valor real: sin elemento (dado el único call-site hoy,
+// no debería pasar mientras Modal no use portal — prop isOpen controlada, sin
+// createPortal; si eso cambia, revisar) o animationDuration vacío (jsdom sin CSS
+// inyectado). Si --modal-anim-duration cambia, actualizar también acá — no hay
+// forma de derivarlo en runtime sin un elemento conectado.
+const FALLBACK_DURATION_MS = 150;
+
 interface ModalProps extends PropsWithChildren {
   isOpen: boolean;
   onClose: () => void;
   ariaLabel: string;
 }
 
-// 150ms es el respaldo cuando no se puede leer la duración real del CSS (elemento
-// ausente, o animationDuration vacío como pasa en jsdom). Asume que overlayRef/
-// contentRef siempre están conectados al DOM en este punto porque Modal no usa
-// portal hoy (prop isOpen controlada, sin createPortal) — si eso cambia, revisar.
 function getAnimationDurationMs(element: HTMLElement | null): number {
-  if (!element) return 150;
+  if (!element) return FALLBACK_DURATION_MS;
   const raw = getComputedStyle(element).animationDuration.split(",")[0]?.trim() ?? "0s";
   const value = parseFloat(raw);
   const ms = raw.endsWith("ms") ? value : value * 1000;
-  return Number.isNaN(ms) ? 150 : ms;
+  return Number.isNaN(ms) ? FALLBACK_DURATION_MS : ms;
 }
 
 export function Modal({ isOpen, onClose, ariaLabel, children }: ModalProps) {
