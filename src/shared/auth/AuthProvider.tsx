@@ -46,7 +46,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
       value={{
         user: auth?.user ?? null,
         token: auth?.token ?? null,
-        isAuthenticated: auth !== null,
+        isAuthenticated: Boolean(auth?.token),
         login,
         logout,
       }}
