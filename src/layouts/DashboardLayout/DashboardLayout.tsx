@@ -24,13 +24,15 @@ export function DashboardLayout() {
     navigate("/login", { replace: true });
   }
 
-  // Cerrar el panel abierto al hacer click afuera o presionar Escape. Solo hay
-  // un panel abierto a la vez (openPanel), así que un único listener alcanza
-  // para los dos anchors (notificaciones / usuario).
+  // Cerrar el panel abierto al hacer click/tap afuera o presionar Escape. Se usa
+  // pointerdown (no mousedown) para cubrir mouse, touch y pen por igual — este
+  // proyecto es mobile-first, mousedown no está garantizado en pantallas táctiles.
+  // Solo hay un panel abierto a la vez (openPanel), así que un único listener
+  // alcanza para los dos anchors (notificaciones / usuario).
   useEffect(() => {
     if (!openPanel) return;
 
-    function handlePointerDown(event: MouseEvent) {
+    function handlePointerDown(event: PointerEvent) {
       const anchor = openPanel === "notif" ? notifAnchorRef.current : userAnchorRef.current;
       if (anchor && !anchor.contains(event.target as Node)) {
         setOpenPanel(null);
@@ -41,10 +43,10 @@ export function DashboardLayout() {
       if (event.key === "Escape") setOpenPanel(null);
     }
 
-    document.addEventListener("mousedown", handlePointerDown);
+    document.addEventListener("pointerdown", handlePointerDown);
     document.addEventListener("keydown", handleKeyDown);
     return () => {
-      document.removeEventListener("mousedown", handlePointerDown);
+      document.removeEventListener("pointerdown", handlePointerDown);
       document.removeEventListener("keydown", handleKeyDown);
     };
   }, [openPanel]);
