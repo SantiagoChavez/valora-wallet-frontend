@@ -12,7 +12,7 @@ interface StoredAuth {
 }
 
 function readStoredAuth(): StoredAuth | null {
-  const raw = localStorage.getItem(STORAGE_KEY);
+  const raw = sessionStorage.getItem(STORAGE_KEY);
   if (!raw) return null;
   try {
     return JSON.parse(raw) as StoredAuth;
@@ -26,9 +26,9 @@ export function AuthProvider({ children }: PropsWithChildren) {
 
   useEffect(() => {
     if (auth) {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(auth));
+      sessionStorage.setItem(STORAGE_KEY, JSON.stringify(auth));
     } else {
-      localStorage.removeItem(STORAGE_KEY);
+      sessionStorage.removeItem(STORAGE_KEY);
     }
   }, [auth]);
 
