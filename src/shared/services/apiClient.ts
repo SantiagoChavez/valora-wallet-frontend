@@ -21,7 +21,11 @@ export async function apiFetch<T>(path: string, options: ApiFetchOptions = {}): 
   // string[][], Record<string,string>), a diferencia de un object-spread que solo
   // funciona bien con el último. `token` siempre gana sobre un Authorization manual.
   const mergedHeaders = new Headers(headers);
-  if (!mergedHeaders.has("Content-Type")) {
+  // Solo forzar JSON si de verdad hay un body y no es FormData: si no, un GET sin
+  // body dispara un preflight CORS de más, y con FormData rompemos el boundary
+  // que el navegador tiene que setear solo.
+  const hasJsonBody = rest.body !== undefined && !(rest.body instanceof FormData);
+  if (hasJsonBody && !mergedHeaders.has("Content-Type")) {
     mergedHeaders.set("Content-Type", "application/json");
   }
   if (token) {
