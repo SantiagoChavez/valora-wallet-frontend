@@ -1,9 +1,14 @@
 const rawApiBaseUrl = import.meta.env.VITE_API_URL;
+const MISSING_URL_MESSAGE = "VITE_API_URL no está configurada — revisá tu .env/.env.local.";
+
 if (!rawApiBaseUrl) {
-  throw new Error("VITE_API_URL no está configurada — revisá tu .env/.env.local.");
+  // No tirar acá: esto corre al importar el módulo, y sin ErrorBoundary deja la
+  // app en blanco antes de que se intente ningún request. Se valida de nuevo,
+  // y recién ahí se lanza, dentro de apiFetch.
+  console.error(MISSING_URL_MESSAGE);
 }
 // sin esto, una URL con "/" final + un path que arranca con "/" queda con "//".
-const API_BASE_URL = rawApiBaseUrl.replace(/\/$/, "");
+const API_BASE_URL = (rawApiBaseUrl ?? "").replace(/\/$/, "");
 
 export class ApiError extends Error {
   status: number;
@@ -35,6 +40,10 @@ async function parseJsonSafely(response: Response): Promise<unknown> {
 }
 
 export async function apiFetch<T>(path: string, options: ApiFetchOptions = {}): Promise<T> {
+  if (!rawApiBaseUrl) {
+    throw new ApiError(MISSING_URL_MESSAGE, 0);
+  }
+
   const { token, headers, ...rest } = options;
 
   // new Headers(headers) normaliza los 3 tipos válidos de HeadersInit (Headers,
