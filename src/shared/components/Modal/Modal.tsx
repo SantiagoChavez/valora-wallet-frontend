@@ -21,7 +21,9 @@ export function Modal({ isOpen, onClose, ariaLabel, children }: ModalProps) {
   const [isClosing, setIsClosing] = useState(false);
   const wasOpenRef = useRef(isOpen);
   const overlayRef = useRef<HTMLDivElement>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
   const closeTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const pendingCloseAnimationsRef = useRef<Set<HTMLElement>>(new Set());
 
   useEffect(() => {
     if (isOpen) {
@@ -30,11 +32,16 @@ export function Modal({ isOpen, onClose, ariaLabel, children }: ModalProps) {
       setIsClosing(false);
     } else if (wasOpenRef.current) {
       setIsClosing(true);
+      pendingCloseAnimationsRef.current = new Set(
+        [overlayRef.current, contentRef.current].filter((el): el is HTMLDivElement => el !== null)
+      );
       // Respaldo por si onAnimationEnd nunca dispara (tests con jsdom, animaciones
       // deshabilitadas por el usuario/navegador, overrides de CSS futuros, etc.):
-      // sin esto el modal puede quedar "pegado" tapando la app. La duración se lee
-      // del CSS real en vez de duplicarla acá, para que no se puedan desincronizar.
-      const fallbackMs = getAnimationDurationMs(overlayRef.current) + CLOSE_FALLBACK_BUFFER_MS;
+      // sin esto el modal puede quedar "pegado" tapando la app. Se espera a la más
+      // lenta entre overlay y content, leídas del CSS real en vez de duplicarlas acá.
+      const fallbackMs =
+        Math.max(getAnimationDurationMs(overlayRef.current), getAnimationDurationMs(contentRef.current)) +
+        CLOSE_FALLBACK_BUFFER_MS;
       closeTimerRef.current = setTimeout(() => {
         setShouldRender(false);
         setIsClosing(false);
@@ -48,7 +55,9 @@ export function Modal({ isOpen, onClose, ariaLabel, children }: ModalProps) {
   if (!shouldRender) return null;
 
   function handleAnimationEnd(event: AnimationEvent<HTMLDivElement>) {
-    if (isClosing && event.currentTarget === event.target) {
+    if (!isClosing) return;
+    pendingCloseAnimationsRef.current.delete(event.target as HTMLElement);
+    if (pendingCloseAnimationsRef.current.size === 0) {
       clearTimeout(closeTimerRef.current);
       setShouldRender(false);
       setIsClosing(false);
@@ -69,6 +78,7 @@ export function Modal({ isOpen, onClose, ariaLabel, children }: ModalProps) {
       onAnimationEnd={handleAnimationEnd}
     >
       <div
+        ref={contentRef}
         className={`${styles.content} ${isClosing ? styles.contentClosing : ""}`}
         onClick={(event) => event.stopPropagation()}
         role="dialog"
