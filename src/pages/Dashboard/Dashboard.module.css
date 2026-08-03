@@ -80,7 +80,7 @@
 }
 
 .eyeIcon {
-  font-size: 20px;
+  font-size: var(--font-size-xl);
   color: var(--text-tertiary);
 }
 
@@ -439,7 +439,7 @@
 }
 
 .txIcon {
-  font-size: 20px;
+  font-size: var(--font-size-xl);
 }
 
 .txTextGroup {
