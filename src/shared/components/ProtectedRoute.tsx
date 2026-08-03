@@ -1,7 +1,8 @@
 import { Navigate, Outlet } from "react-router-dom";
+import { useAuth } from "../auth/useAuth";
 
 export function ProtectedRoute() {
-  const isAuthenticated = true; // TODO: reemplazar por lógica real cuando auth-jwt (Santiago) esté en dev
+  const { isAuthenticated } = useAuth();
 
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
