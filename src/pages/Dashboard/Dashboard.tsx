@@ -135,10 +135,6 @@ export function Dashboard() {
                 </div>
               </div>
             </div>
-            <div className={styles.trendChip}>
-              <span className={styles.trendDot} />
-              <span className={styles.trendLabel}>+2.4%</span>
-            </div>
           </div>
 
           <div className={styles.currencyGrid}>
