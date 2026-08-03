@@ -12,11 +12,13 @@ interface StoredAuth {
 }
 
 function readStoredAuth(): StoredAuth | null {
-  const raw = sessionStorage.getItem(STORAGE_KEY);
-  if (!raw) return null;
   try {
+    const raw = sessionStorage.getItem(STORAGE_KEY);
+    if (!raw) return null;
     return JSON.parse(raw) as StoredAuth;
   } catch {
+    // sessionStorage puede tirar (modo privado, storage bloqueado) además de que
+    // el JSON puede estar corrupto — cualquiera de los dos, se ignora la sesión guardada.
     return null;
   }
 }
@@ -25,10 +27,15 @@ export function AuthProvider({ children }: PropsWithChildren) {
   const [auth, setAuth] = useState<StoredAuth | null>(() => readStoredAuth());
 
   useEffect(() => {
-    if (auth) {
-      sessionStorage.setItem(STORAGE_KEY, JSON.stringify(auth));
-    } else {
-      sessionStorage.removeItem(STORAGE_KEY);
+    try {
+      if (auth) {
+        sessionStorage.setItem(STORAGE_KEY, JSON.stringify(auth));
+      } else {
+        sessionStorage.removeItem(STORAGE_KEY);
+      }
+    } catch {
+      // Storage bloqueado o sin cuota: la sesión sigue andando en memoria para
+      // esta pestaña, solo no va a persistir si se recarga la página.
     }
   }, [auth]);
 
