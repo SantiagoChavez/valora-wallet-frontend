@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { CardDisplay } from "../../shared/components/CardDisplay/CardDisplay";
 import { Toast } from "../../shared/components/Toast/Toast";
 import { useToast } from "../../shared/components/Toast/useToast";
 import styles from "./Dashboard.module.css";
@@ -218,23 +219,7 @@ export function Dashboard() {
         </div>
 
         {/* Vista de tarjeta física: no estaba en el checklist original, se sumó al traer el mock del diseño Geist */}
-        <div className={styles.cardView}>
-          <div className={styles.cardGlow} />
-          <div className={styles.cardTop}>
-            <span className="msym" style={{ fontSize: 22, color: "var(--accent)" }} aria-hidden="true">contactless</span>
-            <span className={styles.cardBrand}>VALORA PLATINUM</span>
-          </div>
-          <div className={styles.cardBottom}>
-            <div className={styles.cardNumber}>•••• •••• •••• 8829</div>
-            <div className={styles.cardHolderRow}>
-              <span className={styles.cardHolder}>USUARIO VALORA</span>
-              <div className={styles.cardNetwork}>
-                <div className={styles.networkDotRed} />
-                <div className={styles.networkDotGold} />
-              </div>
-            </div>
-          </div>
-        </div>
+        <CardDisplay />
       </aside>
 
       <nav className={styles.bottomNav}>
