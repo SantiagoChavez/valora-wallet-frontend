@@ -160,25 +160,7 @@
 }
 
 .userPanelBox {
-  position: absolute;
-  top: calc(100% + 12px);
-  right: 0;
-  z-index: 60;
-  width: 320px;
-  background: var(--bg-panel);
-  border: 1px solid var(--border-strong);
-  border-radius: var(--radius-lg);
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
-  padding: var(--spacing-md);
-  animation-name: global(notifIn);
-  animation-duration: 0.15s;
-  animation-timing-function: ease-out;
-}
-
-@media (max-width: 859px) {
-  .userPanelBox {
-    right: -16px;
-  }
+  composes: popover from "../../shared/styles/popover.module.css";
 }
 
 .userPanel {

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { CardDisplay } from "../../shared/components/CardDisplay/CardDisplay";
 import { Toast } from "../../shared/components/Toast/Toast";
 import { useToast } from "../../shared/components/Toast/useToast";
@@ -31,7 +31,6 @@ interface NavEntry {
   icon: string;
 }
 
-const TOTAL_USD = 12451;
 const RATES: Record<CurrencyCode, number> = { USD: 1, EUR: 0.92, ARS: 1350 };
 const CURRENCY_OPTIONS: CurrencyCode[] = ["USD", "EUR", "ARS"];
 
@@ -40,6 +39,10 @@ const BALANCES: BalanceEntry[] = [
   { code: "EUR", prefix: "EUR", label: "Euros", flagChar: "EU", value: 3540 },
   { code: "ARS", prefix: "ARS", label: "Pesos AR", flagChar: "AR", value: 710400 },
 ];
+
+// Antes era un número hardcodeado aparte que no coincidía con la suma real de
+// BALANCES — ahora se deriva de ahí, así no se pueden desincronizar.
+const TOTAL_USD = BALANCES.reduce((sum, bal) => sum + bal.value / RATES[bal.code], 0);
 
 const TRANSACTIONS: TransactionEntry[] = [
   { id: "1", title: "Venta de EUR", date: "12 Oct", amount: "+$150.00", currency: "EUR", glyph: "arrow_downward", tone: "pos" },
@@ -69,6 +72,30 @@ export function Dashboard() {
   const [hidden, setHidden] = useState<Record<CurrencyCode, boolean>>({ USD: true, EUR: true, ARS: true });
   const [activeNav, setActiveNav] = useState("home");
   const { message: toast, showToast } = useToast();
+  const currencyMenuAnchorRef = useRef<HTMLDivElement>(null);
+
+  // Cerrar el menú de moneda con click/tap afuera o Escape — mismo patrón que los
+  // popovers de DashboardLayout (pointerdown para cubrir mouse, touch y pen).
+  useEffect(() => {
+    if (!currencyMenuOpen) return;
+
+    function handlePointerDown(event: PointerEvent) {
+      if (currencyMenuAnchorRef.current && !currencyMenuAnchorRef.current.contains(event.target as Node)) {
+        setCurrencyMenuOpen(false);
+      }
+    }
+
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") setCurrencyMenuOpen(false);
+    }
+
+    document.addEventListener("pointerdown", handlePointerDown);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("pointerdown", handlePointerDown);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [currencyMenuOpen]);
 
   function toggleBalanceHidden(code: CurrencyCode) {
     setHidden((prev) => ({ ...prev, [code]: !prev[code] }));
@@ -101,7 +128,7 @@ export function Dashboard() {
                     {totalHidden ? "visibility_off" : "visibility"}
                   </span>
                 </button>
-                <div className={styles.currencyMenuAnchor}>
+                <div className={styles.currencyMenuAnchor} ref={currencyMenuAnchorRef}>
                   <button
                     type="button"
                     className={styles.currencySelect}
