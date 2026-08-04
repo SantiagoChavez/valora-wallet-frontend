@@ -408,11 +408,19 @@
   background: var(--border);
 }
 
-.strengthBarWeak {
+.strengthLevel1 {
   background: var(--danger);
 }
 
-.strengthBarStrong {
+.strengthLevel2 {
+  background: var(--strength-fair);
+}
+
+.strengthLevel3 {
+  background: var(--strength-good);
+}
+
+.strengthLevel4 {
   background: var(--success);
 }
 

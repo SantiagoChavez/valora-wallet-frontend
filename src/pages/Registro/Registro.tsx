@@ -11,6 +11,11 @@ import styles from "./Registro.module.css";
 
 type LegalVariant = "terms" | "privacy";
 
+// Color fijo por posición (no por puntaje total): la barra 1 siempre es roja al
+// llenarse, la 2 naranja, la 3 amarilla, la 4 verde — niveles de seguridad
+// diferenciados en vez de un único color binario débil/fuerte.
+const STRENGTH_LEVEL_CLASSES = [styles.strengthLevel1, styles.strengthLevel2, styles.strengthLevel3, styles.strengthLevel4];
+
 const MIN_AGE_YEARS = 18;
 
 function getMaxBirthdate(): string {
@@ -253,12 +258,10 @@ export function Registro() {
                 </button>
               </div>
               <div className={styles.strengthMeter} aria-hidden="true">
-                {[0, 1, 2, 3].map((index) => (
+                {STRENGTH_LEVEL_CLASSES.map((levelClass, index) => (
                   <span
-                    key={index}
-                    className={`${styles.strengthBar} ${
-                      index < passwordScore ? (passwordScore === 1 ? styles.strengthBarWeak : styles.strengthBarStrong) : ""
-                    }`}
+                    key={levelClass}
+                    className={`${styles.strengthBar} ${index < passwordScore ? levelClass : ""}`}
                   />
                 ))}
               </div>
