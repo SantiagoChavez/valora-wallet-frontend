@@ -1,0 +1,21 @@
+.toastWrapper {
+  position: fixed;
+  bottom: var(--toast-bottom-offset, 24px);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 200;
+}
+
+.toast {
+  background: var(--bg-panel);
+  border: 1px solid var(--border-strong);
+  color: var(--text-primary);
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-medium);
+  padding: 12px 20px;
+  border-radius: var(--radius-lg);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4);
+  animation-name: global(notifIn);
+  animation-duration: 0.2s;
+  animation-timing-function: ease-out;
+}

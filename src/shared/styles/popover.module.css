@@ -12,7 +12,9 @@
   border-radius: var(--radius-lg);
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
   padding: var(--spacing-md);
-  animation: notifIn 0.15s ease-out;
+  animation-name: global(notifIn);
+  animation-duration: 0.15s;
+  animation-timing-function: ease-out;
 }
 
 @media (max-width: 859px) {

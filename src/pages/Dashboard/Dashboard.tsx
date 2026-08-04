@@ -1,4 +1,7 @@
 import { useEffect, useRef, useState } from "react";
+import { CardDisplay } from "../../shared/components/CardDisplay/CardDisplay";
+import { Toast } from "../../shared/components/Toast/Toast";
+import { useToast } from "../../shared/components/Toast/useToast";
 import styles from "./Dashboard.module.css";
 
 type CurrencyCode = "USD" | "EUR" | "ARS";
@@ -68,11 +71,8 @@ export function Dashboard() {
   const [currencyMenuOpen, setCurrencyMenuOpen] = useState(false);
   const [hidden, setHidden] = useState<Record<CurrencyCode, boolean>>({ USD: true, EUR: true, ARS: true });
   const [activeNav, setActiveNav] = useState("home");
-  const [toast, setToast] = useState<string | null>(null);
-  const toastTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const { message: toast, showToast } = useToast();
   const currencyMenuAnchorRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => () => clearTimeout(toastTimer.current), []);
 
   // Cerrar el menú de moneda con click/tap afuera o Escape — mismo patrón que los
   // popovers de DashboardLayout (pointerdown para cubrir mouse, touch y pen).
@@ -96,12 +96,6 @@ export function Dashboard() {
       document.removeEventListener("keydown", handleKeyDown);
     };
   }, [currencyMenuOpen]);
-
-  function showToast(message: string) {
-    clearTimeout(toastTimer.current);
-    setToast(message);
-    toastTimer.current = setTimeout(() => setToast(null), 2200);
-  }
 
   function toggleBalanceHidden(code: CurrencyCode) {
     setHidden((prev) => ({ ...prev, [code]: !prev[code] }));
@@ -252,23 +246,7 @@ export function Dashboard() {
         </div>
 
         {/* Vista de tarjeta física: no estaba en el checklist original, se sumó al traer el mock del diseño Geist */}
-        <div className={styles.cardView}>
-          <div className={styles.cardGlow} />
-          <div className={styles.cardTop}>
-            <span className="msym" style={{ fontSize: 22, color: "var(--accent)" }} aria-hidden="true">contactless</span>
-            <span className={styles.cardBrand}>VALORA PLATINUM</span>
-          </div>
-          <div className={styles.cardBottom}>
-            <div className={styles.cardNumber}>•••• •••• •••• 8829</div>
-            <div className={styles.cardHolderRow}>
-              <span className={styles.cardHolder}>USUARIO VALORA</span>
-              <div className={styles.cardNetwork}>
-                <div className={styles.networkDotRed} />
-                <div className={styles.networkDotGold} />
-              </div>
-            </div>
-          </div>
-        </div>
+        <CardDisplay />
       </aside>
 
       <nav className={styles.bottomNav}>
@@ -288,7 +266,7 @@ export function Dashboard() {
         })}
       </nav>
 
-      {toast && <div className={styles.toast}>{toast}</div>}
+      <Toast message={toast} />
     </div>
   );
 }
