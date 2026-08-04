@@ -209,7 +209,6 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
   padding: 48px var(--spacing-xl);
 }
 
@@ -223,6 +222,11 @@
 .formPanelInner {
   width: 100%;
   max-width: 420px;
+  /* Centra verticalmente cuando sobra espacio, pero nunca fuerza el contenido
+     contra un footer posicionado aparte — a diferencia de justify-content:center
+     en .formPanel, esto no puede superponerse con .footerNote (ahora en el
+     mismo flujo, ver más abajo) ni bloquearle los clicks. */
+  margin: auto 0;
 }
 
 .mobileHeader {
@@ -430,10 +434,7 @@
 }
 
 .footerNote {
-  position: absolute;
-  bottom: 20px;
-  left: var(--spacing-md);
-  right: var(--spacing-md);
+  margin-top: var(--spacing-xl);
   text-align: center;
   font-size: var(--font-size-2xs);
   color: var(--text-secondary);

@@ -174,9 +174,9 @@ export function Login() {
           <p className={styles.signupHint}>
             ¿No tenés cuenta? <Link to="/registro" className={styles.inlineLink}>Registrate</Link>
           </p>
-        </div>
 
-        <p className={styles.footerNote}>© 2026 Valora Digital Limited. Conexión cifrada activa.</p>
+          <p className={styles.footerNote}>© 2026 Valora Digital Limited. Conexión cifrada activa.</p>
+        </div>
       </div>
     </div>
   );
