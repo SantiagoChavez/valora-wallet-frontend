@@ -67,8 +67,32 @@ export function Dashboard() {
   const [activeNav, setActiveNav] = useState("home");
   const [toast, setToast] = useState<string | null>(null);
   const toastTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const currencyMenuAnchorRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => () => clearTimeout(toastTimer.current), []);
+
+  // Cerrar el menú de moneda con click/tap afuera o Escape — mismo patrón que los
+  // popovers de DashboardLayout (pointerdown para cubrir mouse, touch y pen).
+  useEffect(() => {
+    if (!currencyMenuOpen) return;
+
+    function handlePointerDown(event: PointerEvent) {
+      if (currencyMenuAnchorRef.current && !currencyMenuAnchorRef.current.contains(event.target as Node)) {
+        setCurrencyMenuOpen(false);
+      }
+    }
+
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") setCurrencyMenuOpen(false);
+    }
+
+    document.addEventListener("pointerdown", handlePointerDown);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("pointerdown", handlePointerDown);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [currencyMenuOpen]);
 
   function showToast(message: string) {
     clearTimeout(toastTimer.current);
@@ -107,7 +131,7 @@ export function Dashboard() {
                     {totalHidden ? "visibility_off" : "visibility"}
                   </span>
                 </button>
-                <div className={styles.currencyMenuAnchor}>
+                <div className={styles.currencyMenuAnchor} ref={currencyMenuAnchorRef}>
                   <button
                     type="button"
                     className={styles.currencySelect}
