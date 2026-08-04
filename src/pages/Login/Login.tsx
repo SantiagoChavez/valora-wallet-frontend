@@ -1,5 +1,5 @@
 import { useState, type SubmitEvent } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import logo from "../../shared/assets/valora-logo.png";
 import { Button } from "../../shared/components/Button/Button";
 import { useAuth } from "../../shared/auth/useAuth";
@@ -143,8 +143,7 @@ export function Login() {
               {isSubmitting ? "Ingresando..." : "Iniciar sesión"}
             </Button>
 
-            {/* Sin página de registro todavía — botón inerte a propósito, no un <a href="#"> */}
-            <Button type="button" variant="secondary" className={styles.actionButton} aria-disabled="true" title="Todavía no disponible">
+            <Button type="button" variant="secondary" className={styles.actionButton} onClick={() => navigate("/registro")}>
               Crear cuenta
             </Button>
 
@@ -172,9 +171,8 @@ export function Login() {
             </Button>
           </form>
 
-          {/* Sin página de registro todavía — mismo motivo que "Crear cuenta" arriba */}
           <p className={styles.signupHint}>
-            ¿No tenés cuenta? <button type="button" className={styles.inlineLink} aria-disabled="true" title="Todavía no disponible">Registrate</button>
+            ¿No tenés cuenta? <Link to="/registro" className={styles.inlineLink}>Registrate</Link>
           </p>
         </div>
 
