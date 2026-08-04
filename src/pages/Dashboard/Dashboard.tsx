@@ -1,4 +1,6 @@
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
+import { Toast } from "../../shared/components/Toast/Toast";
+import { useToast } from "../../shared/components/Toast/useToast";
 import styles from "./Dashboard.module.css";
 
 type CurrencyCode = "USD" | "EUR" | "ARS";
@@ -65,16 +67,7 @@ export function Dashboard() {
   const [currencyMenuOpen, setCurrencyMenuOpen] = useState(false);
   const [hidden, setHidden] = useState<Record<CurrencyCode, boolean>>({ USD: true, EUR: true, ARS: true });
   const [activeNav, setActiveNav] = useState("home");
-  const [toast, setToast] = useState<string | null>(null);
-  const toastTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
-
-  useEffect(() => () => clearTimeout(toastTimer.current), []);
-
-  function showToast(message: string) {
-    clearTimeout(toastTimer.current);
-    setToast(message);
-    toastTimer.current = setTimeout(() => setToast(null), 2200);
-  }
+  const { message: toast, showToast } = useToast();
 
   function toggleBalanceHidden(code: CurrencyCode) {
     setHidden((prev) => ({ ...prev, [code]: !prev[code] }));
@@ -261,7 +254,7 @@ export function Dashboard() {
         })}
       </nav>
 
-      {toast && <div className={styles.toast}>{toast}</div>}
+      <Toast message={toast} />
     </div>
   );
 }
