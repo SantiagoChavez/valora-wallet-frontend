@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 
-const TOAST_DURATION_MS = 2200;
+export const TOAST_DURATION_MS = 2200;
 
 export function useToast() {
   const [message, setMessage] = useState<string | null>(null);
