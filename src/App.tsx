@@ -5,12 +5,14 @@ import { ProtectedRoute } from "./shared/components/ProtectedRoute";
 import { DashboardLayout } from "./layouts/DashboardLayout/DashboardLayout";
 import { Dashboard } from "./pages/Dashboard/Dashboard";
 import { Login } from "./pages/Login/Login";
+import { Registro } from "./pages/Registro/Registro";
 
 function App() {
   return (
     <Routes>
       <Route element={<GuestRoute />}>
         <Route path="/login" element={<Login />} />
+        <Route path="/registro" element={<Registro />} />
       </Route>
       <Route element={<ProtectedRoute />}>
         {/* Cualquier ruta privada futura (ej: /transactions) va como hija acá adentro, no afuera */}

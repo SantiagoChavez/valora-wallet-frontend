@@ -19,9 +19,11 @@ export function register(
   password: string,
   firstName: string,
   lastName: string,
+  dateOfBirth: string,
+  phone: string,
 ): Promise<AuthResponse> {
   return apiFetch<AuthResponse>("/auth/register", {
     method: "POST",
-    body: JSON.stringify({ email, password, firstName, lastName }),
+    body: JSON.stringify({ email, password, firstName, lastName, dateOfBirth, phone }),
   });
 }
