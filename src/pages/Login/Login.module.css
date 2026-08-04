@@ -366,6 +366,24 @@
   color: var(--accent-hover);
 }
 
+.inlineLink[aria-disabled="true"] {
+  cursor: not-allowed;
+}
+
+.inlineLink[aria-disabled="true"]:hover {
+  color: var(--accent);
+}
+
+/* Button compartido: variant="secondary" solo cambia border-color en hover, así que
+   alcanza con revertir esa propiedad puntual para los usos marcados aria-disabled */
+.actionButton[aria-disabled="true"] {
+  cursor: not-allowed;
+}
+
+.actionButton[aria-disabled="true"]:hover {
+  border-color: var(--border);
+}
+
 .error {
   margin: 0;
   color: var(--danger);

@@ -105,7 +105,7 @@ export function Login() {
               <div className={styles.fieldHeader}>
                 <label htmlFor="password" className={styles.fieldLabel}>Contraseña</label>
                 {/* Sin recuperación de contraseña todavía (no hay endpoint en el backend) */}
-                <button type="button" className={styles.inlineLink} title="Todavía no disponible">
+                <button type="button" className={styles.inlineLink} aria-disabled="true" title="Todavía no disponible">
                   ¿Olvidaste tu contraseña?
                 </button>
               </div>
@@ -144,7 +144,7 @@ export function Login() {
             </Button>
 
             {/* Sin página de registro todavía — botón inerte a propósito, no un <a href="#"> */}
-            <Button type="button" variant="secondary" className={styles.actionButton} title="Todavía no disponible">
+            <Button type="button" variant="secondary" className={styles.actionButton} aria-disabled="true" title="Todavía no disponible">
               Crear cuenta
             </Button>
 
@@ -159,6 +159,7 @@ export function Login() {
               type="button"
               variant="secondary"
               className={`${styles.actionButton} ${styles.googleButton}`}
+              aria-disabled="true"
               title="Todavía no disponible"
             >
               <svg width="20" height="20" viewBox="0 0 48 48" aria-hidden="true">
@@ -173,7 +174,7 @@ export function Login() {
 
           {/* Sin página de registro todavía — mismo motivo que "Crear cuenta" arriba */}
           <p className={styles.signupHint}>
-            ¿No tenés cuenta? <button type="button" className={styles.inlineLink} title="Todavía no disponible">Registrate</button>
+            ¿No tenés cuenta? <button type="button" className={styles.inlineLink} aria-disabled="true" title="Todavía no disponible">Registrate</button>
           </p>
         </div>
 
