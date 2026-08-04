@@ -2,7 +2,8 @@ import { useEffect, useRef, useState } from "react";
 import { Outlet, useNavigate } from "react-router-dom";
 import logo from "../../shared/assets/valora-logo.png";
 import { useAuth } from "../../shared/auth/useAuth";
-import { NotificationPanel, NOTIFICATIONS } from "../../shared/components/NotificationPanel/NotificationPanel";
+import { NotificationPanel } from "../../shared/components/NotificationPanel/NotificationPanel";
+import { NOTIFICATIONS } from "../../shared/components/NotificationPanel/mockNotifications";
 import styles from "./DashboardLayout.module.css";
 
 export function DashboardLayout() {
