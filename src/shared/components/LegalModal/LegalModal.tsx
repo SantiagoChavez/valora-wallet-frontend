@@ -22,7 +22,7 @@ export function LegalModal({ isOpen, onClose, variant }: LegalModalProps) {
       <div className={styles.wrapper}>
         <h2 className={styles.title}>{TITLES[variant]}</h2>
         <div className={styles.body}>{variant === "terms" ? <TermsContent /> : <PrivacyContent />}</div>
-        <Button onClick={onClose} className={styles.closeButton}>
+        <Button type="button" onClick={onClose} className={styles.closeButton}>
           Cerrar
         </Button>
       </div>

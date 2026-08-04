@@ -18,11 +18,20 @@ const STRENGTH_LEVEL_CLASSES = [styles.strengthLevel1, styles.strengthLevel2, st
 
 const MIN_AGE_YEARS = 18;
 
+// Fecha límite para el <input type="date"> (18 años atrás de hoy), calculada
+// una sola vez al cargar el módulo — no cambia entre renders. Se arma con los
+// componentes locales de la fecha en vez de toISOString() (que convierte a
+// UTC) para no correr un día la fecha límite en husos horarios donde la
+// medianoche local cae del otro lado del corte UTC.
 function getMaxBirthdate(): string {
   const today = new Date();
-  const maxDate = new Date(today.getFullYear() - MIN_AGE_YEARS, today.getMonth(), today.getDate());
-  return maxDate.toISOString().split("T")[0];
+  const year = today.getFullYear() - MIN_AGE_YEARS;
+  const month = String(today.getMonth() + 1).padStart(2, "0");
+  const day = String(today.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
 }
+
+const MAX_BIRTHDATE = getMaxBirthdate();
 
 // El backend (Zod, ver authSchema.ts) espera la fecha en DD/MM/YYYY, no en el
 // formato ISO (YYYY-MM-DD) que devuelve un <input type="date"> nativo.
@@ -55,7 +64,12 @@ export function Registro() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [openLegal, setOpenLegal] = useState<LegalVariant | null>(null);
+  // Separado de "está abierto" a propósito: si legalVariant volviera a un
+  // default no nulo al cerrar (ej. `openLegal ?? "terms"`), el Modal seguiría
+  // montado durante su animación de salida y se vería un flash del contenido
+  // cambiando de variante a mitad del cierre. Cerrar solo debe tocar legalOpen.
+  const [legalVariant, setLegalVariant] = useState<LegalVariant>("terms");
+  const [legalOpen, setLegalOpen] = useState(false);
   const { message: toast, showToast } = useToast();
   const navigate = useNavigate();
   const redirectTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
@@ -210,7 +224,8 @@ export function Registro() {
                   className={styles.input}
                   value={dateOfBirth}
                   onChange={(event) => setDateOfBirth(event.target.value)}
-                  max={getMaxBirthdate()}
+                  autoComplete="bday"
+                  max={MAX_BIRTHDATE}
                   required
                 />
               </div>
@@ -299,11 +314,25 @@ export function Registro() {
               <input id="terms" type="checkbox" className={styles.checkbox} required />
               <label htmlFor="terms" className={styles.checkboxLabel}>
                 Acepto los{" "}
-                <button type="button" className={styles.inlineLink} onClick={() => setOpenLegal("terms")}>
+                <button
+                  type="button"
+                  className={styles.inlineLink}
+                  onClick={() => {
+                    setLegalVariant("terms");
+                    setLegalOpen(true);
+                  }}
+                >
                   Términos de Servicio
                 </button>{" "}
                 y la{" "}
-                <button type="button" className={styles.inlineLink} onClick={() => setOpenLegal("privacy")}>
+                <button
+                  type="button"
+                  className={styles.inlineLink}
+                  onClick={() => {
+                    setLegalVariant("privacy");
+                    setLegalOpen(true);
+                  }}
+                >
                   Política de Privacidad
                 </button>{" "}
                 de Valora Wallet.
@@ -353,7 +382,7 @@ export function Registro() {
       </div>
 
       <Toast message={toast} />
-      <LegalModal isOpen={openLegal !== null} onClose={() => setOpenLegal(null)} variant={openLegal ?? "terms"} />
+      <LegalModal isOpen={legalOpen} onClose={() => setLegalOpen(false)} variant={legalVariant} />
     </div>
   );
 }

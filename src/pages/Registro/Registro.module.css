@@ -305,12 +305,6 @@
   gap: 6px;
 }
 
-.fieldHeader {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
 .fieldLabel {
   font-size: var(--font-size-md);
   font-weight: var(--font-weight-semibold);
@@ -353,11 +347,12 @@
 }
 
 .input[type="date"] {
+  /* Igual que color-scheme:dark en body (index.css): no hay toggle real
+     todavía (nada setea data-theme en tiempo de ejecución), así que un
+     override condicional a data-theme="light" acá sería CSS muerto — mismo
+     motivo por el que se revirtió en el commit 2988c02. Revisar junto con el
+     toggle real cuando exista, no antes. */
   color-scheme: dark;
-}
-
-:global([data-theme="light"]) .input[type="date"] {
-  color-scheme: light;
 }
 
 .inputIcon {
