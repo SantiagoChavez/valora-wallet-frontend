@@ -1,5 +1,6 @@
-import { Navigate, Route, Routes } from "react-router-dom";
+import { Route, Routes } from "react-router-dom";
 import { GuestRoute } from "./shared/components/GuestRoute";
+import { NotFoundRedirect } from "./shared/components/NotFoundRedirect";
 import { ProtectedRoute } from "./shared/components/ProtectedRoute";
 import { DashboardLayout } from "./layouts/DashboardLayout/DashboardLayout";
 import { Dashboard } from "./pages/Dashboard/Dashboard";
@@ -17,7 +18,7 @@ function App() {
           <Route path="/" element={<Dashboard />} />
         </Route>
       </Route>
-      <Route path="*" element={<Navigate to="/" replace />} />
+      <Route path="*" element={<NotFoundRedirect />} />
     </Routes>
   );
 }

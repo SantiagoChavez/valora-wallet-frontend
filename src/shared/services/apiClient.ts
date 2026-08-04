@@ -61,7 +61,11 @@ export async function apiFetch<T>(path: string, options: ApiFetchOptions = {}): 
     mergedHeaders.set("Authorization", `Bearer ${token}`);
   }
 
-  const response = await fetch(`${API_BASE_URL}${path}`, {
+  // si el caller pasa el path sin "/" inicial (ej. "auth/login"), la URL queda
+  // pegada al dominio sin separador ("...comauth/login") — se normaliza acá.
+  const normalizedPath = path.startsWith("/") ? path : `/${path}`;
+
+  const response = await fetch(`${API_BASE_URL}${normalizedPath}`, {
     ...rest,
     headers: mergedHeaders,
   });

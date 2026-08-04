@@ -28,7 +28,6 @@ interface NavEntry {
   icon: string;
 }
 
-const TOTAL_USD = 12451;
 const RATES: Record<CurrencyCode, number> = { USD: 1, EUR: 0.92, ARS: 1350 };
 const CURRENCY_OPTIONS: CurrencyCode[] = ["USD", "EUR", "ARS"];
 
@@ -37,6 +36,10 @@ const BALANCES: BalanceEntry[] = [
   { code: "EUR", prefix: "EUR", label: "Euros", flagChar: "EU", value: 3540 },
   { code: "ARS", prefix: "ARS", label: "Pesos AR", flagChar: "AR", value: 710400 },
 ];
+
+// Antes era un número hardcodeado aparte que no coincidía con la suma real de
+// BALANCES — ahora se deriva de ahí, así no se pueden desincronizar.
+const TOTAL_USD = BALANCES.reduce((sum, bal) => sum + bal.value / RATES[bal.code], 0);
 
 const TRANSACTIONS: TransactionEntry[] = [
   { id: "1", title: "Venta de EUR", date: "12 Oct", amount: "+$150.00", currency: "EUR", glyph: "arrow_downward", tone: "pos" },
@@ -67,8 +70,32 @@ export function Dashboard() {
   const [activeNav, setActiveNav] = useState("home");
   const [toast, setToast] = useState<string | null>(null);
   const toastTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const currencyMenuAnchorRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => () => clearTimeout(toastTimer.current), []);
+
+  // Cerrar el menú de moneda con click/tap afuera o Escape — mismo patrón que los
+  // popovers de DashboardLayout (pointerdown para cubrir mouse, touch y pen).
+  useEffect(() => {
+    if (!currencyMenuOpen) return;
+
+    function handlePointerDown(event: PointerEvent) {
+      if (currencyMenuAnchorRef.current && !currencyMenuAnchorRef.current.contains(event.target as Node)) {
+        setCurrencyMenuOpen(false);
+      }
+    }
+
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") setCurrencyMenuOpen(false);
+    }
+
+    document.addEventListener("pointerdown", handlePointerDown);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("pointerdown", handlePointerDown);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [currencyMenuOpen]);
 
   function showToast(message: string) {
     clearTimeout(toastTimer.current);
@@ -107,7 +134,7 @@ export function Dashboard() {
                     {totalHidden ? "visibility_off" : "visibility"}
                   </span>
                 </button>
-                <div className={styles.currencyMenuAnchor}>
+                <div className={styles.currencyMenuAnchor} ref={currencyMenuAnchorRef}>
                   <button
                     type="button"
                     className={styles.currencySelect}
