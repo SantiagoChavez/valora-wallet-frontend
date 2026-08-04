@@ -6,5 +6,9 @@ interface ToastProps {
 
 export function Toast({ message }: ToastProps) {
   if (!message) return null;
-  return <div className={styles.toast}>{message}</div>;
+  return (
+    <div className={styles.toast} role="status" aria-live="polite">
+      {message}
+    </div>
+  );
 }
