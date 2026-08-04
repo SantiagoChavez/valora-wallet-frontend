@@ -10,6 +10,14 @@ body,
   height: 100%;
 }
 
+html {
+  /* Reserva el ancho de la scrollbar vertical siempre, la use la página o no —
+     sin esto, Login (nunca scrollea) y Registro (scrollea, más campos) quedan
+     con distinto ancho disponible según el viewport, aunque el CSS de cada
+     .page sea idéntico. */
+  scrollbar-gutter: stable;
+}
+
 body {
   margin: 0;
   font-family: var(--font-family-base);

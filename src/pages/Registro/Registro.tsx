@@ -11,9 +11,9 @@ import styles from "./Registro.module.css";
 
 type LegalVariant = "terms" | "privacy";
 
-// Color fijo por posición (no por puntaje total): la barra 1 siempre es roja al
-// llenarse, la 2 naranja, la 3 amarilla, la 4 verde — niveles de seguridad
-// diferenciados en vez de un único color binario débil/fuerte.
+// Todas las barras llenas comparten el color del nivel alcanzado (no un color
+// fijo por posición): en nivel 2 las 2 primeras se pintan naranja, en nivel 3
+// las 3 primeras amarillo, en nivel 4 las 4 verde — como un semáforo de fuerza.
 const STRENGTH_LEVEL_CLASSES = [styles.strengthLevel1, styles.strengthLevel2, styles.strengthLevel3, styles.strengthLevel4];
 
 const MIN_AGE_YEARS = 18;
@@ -63,6 +63,7 @@ export function Registro() {
   useEffect(() => () => clearTimeout(redirectTimer.current), []);
 
   const passwordScore = getPasswordScore(password);
+  const reachedStrengthClass = passwordScore > 0 ? STRENGTH_LEVEL_CLASSES[passwordScore - 1] : "";
   const passwordMismatch = confirmPassword.length > 0 && confirmPassword !== password;
 
   async function handleSubmit(event: SubmitEvent<HTMLFormElement>) {
@@ -258,10 +259,10 @@ export function Registro() {
                 </button>
               </div>
               <div className={styles.strengthMeter} aria-hidden="true">
-                {STRENGTH_LEVEL_CLASSES.map((levelClass, index) => (
+                {STRENGTH_LEVEL_CLASSES.map((_, index) => (
                   <span
-                    key={levelClass}
-                    className={`${styles.strengthBar} ${index < passwordScore ? levelClass : ""}`}
+                    key={index}
+                    className={`${styles.strengthBar} ${index < passwordScore ? reachedStrengthClass : ""}`}
                   />
                 ))}
               </div>
