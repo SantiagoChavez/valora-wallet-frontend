@@ -2,14 +2,12 @@ import { useEffect, useRef, useState, type SubmitEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import logo from "../../shared/assets/valora-logo.png";
 import { Button } from "../../shared/components/Button/Button";
-import { LegalModal } from "../../shared/components/LegalModal/LegalModal";
+import { LegalModal, type LegalVariant } from "../../shared/components/LegalModal/LegalModal";
 import { Toast } from "../../shared/components/Toast/Toast";
 import { useToast, TOAST_DURATION_MS } from "../../shared/components/Toast/useToast";
 import * as authService from "../../shared/auth/authService";
 import { ApiError } from "../../shared/services/apiClient";
 import styles from "./Registro.module.css";
-
-type LegalVariant = "terms" | "privacy";
 
 // Todas las barras llenas comparten el color del nivel alcanzado (no un color
 // fijo por posición): en nivel 2 las 2 primeras se pintan naranja, en nivel 3
