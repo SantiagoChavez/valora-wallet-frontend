@@ -68,10 +68,11 @@ export function Usuario() {
         </div>
 
         <div className={styles.field}>
-          <span className={styles.label}>Nro. de celular</span>
+          <label className={styles.label} htmlFor="phone">Nro. de celular</label>
           {isEditingPhone ? (
             <div className={styles.editForm}>
               <Input
+                id="phone"
                 type="tel"
                 value={phoneDraft}
                 onChange={(event) => setPhoneDraft(event.target.value)}
@@ -109,10 +110,11 @@ export function Usuario() {
 
       <Card className={styles.card}>
         <div className={styles.field}>
-          <span className={styles.label}>Alias</span>
+          <label className={styles.label} htmlFor="alias">Alias</label>
           {isEditingAlias ? (
             <div className={styles.editForm}>
               <Input
+                id="alias"
                 type="text"
                 value={aliasDraft}
                 onChange={(event) => setAliasDraft(event.target.value)}
