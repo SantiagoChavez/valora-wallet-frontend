@@ -276,6 +276,7 @@ export function Registro() {
                   className={styles.inputIconButton}
                   onClick={() => setShowPassword((value) => !value)}
                   aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+                  aria-pressed={showPassword}
                 >
                   <span className="msym" aria-hidden="true">
                     {showPassword ? "visibility_off" : "visibility"}
@@ -310,6 +311,7 @@ export function Registro() {
                   className={styles.inputIconButton}
                   onClick={() => setShowConfirmPassword((value) => !value)}
                   aria-label={showConfirmPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+                  aria-pressed={showConfirmPassword}
                 >
                   <span className="msym" aria-hidden="true">
                     {showConfirmPassword ? "visibility_off" : "visibility"}
