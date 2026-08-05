@@ -16,6 +16,10 @@ const STRENGTH_LEVEL_CLASSES = [styles.strengthLevel1, styles.strengthLevel2, st
 
 const MIN_AGE_YEARS = 18;
 
+function isLeapYear(year: number): boolean {
+  return (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0;
+}
+
 // Fecha límite para el <input type="date"> (18 años atrás de hoy), calculada
 // una sola vez al cargar el módulo — no cambia entre renders. Se arma con los
 // componentes locales de la fecha en vez de toISOString() (que convierte a
@@ -24,9 +28,16 @@ const MIN_AGE_YEARS = 18;
 function getMaxBirthdate(): string {
   const today = new Date();
   const year = today.getFullYear() - MIN_AGE_YEARS;
-  const month = String(today.getMonth() + 1).padStart(2, "0");
-  const day = String(today.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
+  const month = today.getMonth() + 1;
+  let day = today.getDate();
+
+  // Si hoy es 29 de febrero (bisiesto) pero año-18 no es bisiesto, esa fecha
+  // no existe — clampear al 28, el último día válido de febrero ese año.
+  if (month === 2 && day === 29 && !isLeapYear(year)) {
+    day = 28;
+  }
+
+  return `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
 }
 
 const MAX_BIRTHDATE = getMaxBirthdate();
