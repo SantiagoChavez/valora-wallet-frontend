@@ -2,12 +2,21 @@ import { useEffect, useRef, useState } from "react";
 import { Outlet, useNavigate } from "react-router-dom";
 import logo from "../../shared/assets/valora-logo.png";
 import { useAuth } from "../../shared/auth/useAuth";
+import { BottomNav, type NavEntry } from "../../shared/components/BottomNav/BottomNav";
 import { NotificationPanel } from "../../shared/components/NotificationPanel/NotificationPanel";
 import { NOTIFICATIONS } from "../../shared/components/NotificationPanel/mockNotifications";
 import styles from "./DashboardLayout.module.css";
 
+const NAV_ITEMS: NavEntry[] = [
+  { id: "home", label: "Inicio", icon: "account_balance_wallet", path: "/" },
+  { id: "cards", label: "Tarjetas", icon: "credit_card", path: "/tarjetas" },
+  { id: "swap", label: "Intercambio", icon: "swap_horiz", path: "/intercambio" },
+  { id: "activity", label: "Actividad", icon: "receipt_long", path: "/actividad" },
+];
+
 export function DashboardLayout() {
   const [openPanel, setOpenPanel] = useState<"notif" | "user" | null>(null);
+  const [activeNav, setActiveNav] = useState("home");
   const notifAnchorRef = useRef<HTMLDivElement>(null);
   const userAnchorRef = useRef<HTMLDivElement>(null);
   const hasUnread = NOTIFICATIONS.some((note) => note.unread);
@@ -104,6 +113,7 @@ export function DashboardLayout() {
       <main className={styles.main}>
         <Outlet />
       </main>
+      <BottomNav items={NAV_ITEMS} activeId={activeNav} onItemClick={setActiveNav} />
     </div>
   );
 }
