@@ -1,15 +1,23 @@
 :root {
-  --bg-base: #262624;        /* gris oscuro cálido, base de toda la app */
+  --bg-base: #121411;        /* base de toda la app */
+  --bg-elevated: #1b1c19;    /* header, nav */
   --bg-surface: #2f2f2d;     /* cards, superficies elevadas */
+  --bg-inset: #1f201d;       /* chips, botones ghost en hover */
+  --bg-panel: #292a27;       /* dropdowns, toasts, notificaciones */
   --accent: #f0b429;         /* dorado/ámbar — color de marca de Valora */
   --accent-hover: #d69a1f;
-  --success: #2ecc8f;
+  --accent-contrast: #412d00; /* texto oscuro sobre fondo dorado */
+  --success: #49dfa0;
   --danger: #e5484d;
-  --text-primary: #f5f5f4;
-  --text-secondary: #a3a39e;
+  --strength-fair: #f2994a;  /* naranja — solo para el medidor de fuerza de contraseña */
+  --strength-good: #f5c518;  /* amarillo — ídem, no es un color semántico de marca */
+  --text-primary: #e3e3dd;
+  --text-secondary: #d4c5ad;
+  --text-tertiary: #9c8f7a;
   --border: #3a3a38;
+  --border-strong: #504534;
 
-  --font-family-base: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-family-base: "Geist", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
 
   --spacing-xs: 4px;
   --spacing-sm: 8px;
@@ -20,16 +28,57 @@
   --radius-sm: 4px;
   --radius-md: 8px;
   --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-pill: 9999px;
+
+  /* escala tipográfica: tamaños, pesos y tracking usados en dashboard/layout */
+  --font-size-2xs: 10px;
+  --font-size-xs: 12px;
+  --font-size-sm: 13px;
+  --font-size-md: 14px;
+  --font-size-lg: 16px;
+  --font-size-xl: 20px;
+  --font-size-2xl: 24px;
+  --font-size-3xl: 32px;
+  --font-size-4xl: 40px;
+
+  --font-weight-regular: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+  --font-weight-extrabold: 800;
+
+  --tracking-tight: -0.02em;
+  --tracking-snug: -0.01em;
+  --tracking-wide: 0.05em;
+  --tracking-widest: 0.2em;
+
+  /* duración de animación de Modal (shared/components/Modal) — vive en :root para
+     que .overlay y .content la hereden directamente de acá, sin depender de que
+     .content sea hijo de .overlay en el DOM (evita romperse si Modal migra a portal) */
+  --modal-anim-duration: 0.15s;
+}
+
+@media (max-width: 859px) {
+  :root {
+    --font-size-4xl: 32px;
+  }
 }
 
 :root[data-theme="light"] {
   --bg-base: #f5f5f4;
+  --bg-elevated: #ffffff;
   --bg-surface: #ffffff;
+  --bg-inset: #f0f0ee;
+  --bg-panel: #ffffff;
   --accent: #f0b429;
   --accent-hover: #d69a1f;
+  --accent-contrast: #412d00;
   --success: #1f9d6f;
   --danger: #c93b40;
   --text-primary: #262624;
   --text-secondary: #57574f;
+  --text-tertiary: #78786f;
   --border: #e0e0dc;
+  --border-strong: #cfcfc8;
 }

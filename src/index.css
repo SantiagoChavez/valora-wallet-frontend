@@ -10,10 +10,46 @@ body,
   height: 100%;
 }
 
+html {
+  /* Reserva el ancho de la scrollbar vertical siempre, la use la página o no —
+     sin esto, Login (nunca scrollea) y Registro (scrollea, más campos) quedan
+     con distinto ancho disponible según el viewport, aunque el CSS de cada
+     .page sea idéntico. */
+  scrollbar-gutter: stable;
+}
+
 body {
   margin: 0;
   font-family: var(--font-family-base);
   background-color: var(--bg-base);
   color: var(--text-primary);
+  /* Fijo en dark: nada en el código setea `data-theme` todavía (no hay toggle de
+     tema real, solo los tokens en variables.css) — depender de ese selector acá
+     sería CSS muerto. Revisar esto junto con el toggle real cuando se construya. */
   color-scheme: dark;
+  -webkit-font-smoothing: antialiased;
+}
+
+.msym {
+  font-family: "Material Symbols Outlined";
+  font-weight: normal;
+  font-style: normal;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  font-variation-settings: "FILL" 0, "wght" 400, "GRAD" 0, "opsz" 24;
+}
+
+@keyframes notifIn {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
