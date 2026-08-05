@@ -14,7 +14,7 @@ interface BottomNavProps {
 
 export function BottomNav({ items }: BottomNavProps) {
   return (
-    <nav className={styles.bottomNav}>
+    <nav className={styles.bottomNav} aria-label="Navegación inferior">
       {items.map((item) => (
         <NavLink
           key={item.id}

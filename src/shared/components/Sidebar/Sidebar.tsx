@@ -13,7 +13,7 @@ interface SidebarProps {
 export function Sidebar({ items, onLogout, onOpenLegal }: SidebarProps) {
   return (
     <aside className={styles.sidebar}>
-      <nav className={styles.nav}>
+      <nav className={styles.nav} aria-label="Navegación principal">
         <NavLink
           to="/usuario"
           className={({ isActive }) => `${styles.navItem} ${isActive ? styles.navItemActive : ""}`}
