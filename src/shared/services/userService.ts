@@ -7,3 +7,10 @@ export function updatePhone(phone: string): Promise<{ phone: string }> {
     setTimeout(() => resolve({ phone }), 400);
   });
 }
+
+// Mismo criterio que updatePhone: mock de latencia hasta que exista endpoint real.
+export function updateAlias(alias: string): Promise<{ alias: string }> {
+  return new Promise((resolve) => {
+    setTimeout(() => resolve({ alias }), 400);
+  });
+}

@@ -1,15 +1,18 @@
 import { useState } from "react";
-import { updatePhone } from "../../shared/services/userService";
 
-export function useUpdatePhone(initialPhone: string) {
-  const [phone, setPhone] = useState(initialPhone);
+export function useEditableField(
+  initialValue: string,
+  updateValue: (draft: string) => Promise<string>,
+  errorMessage: string,
+) {
+  const [value, setValue] = useState(initialValue);
   const [isEditing, setIsEditing] = useState(false);
-  const [draft, setDraft] = useState(initialPhone);
+  const [draft, setDraft] = useState(initialValue);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   function startEditing() {
-    setDraft(phone);
+    setDraft(value);
     setError(null);
     setIsEditing(true);
   }
@@ -22,15 +25,15 @@ export function useUpdatePhone(initialPhone: string) {
     setError(null);
     setIsSubmitting(true);
     try {
-      const result = await updatePhone(draft);
-      setPhone(result.phone);
+      const result = await updateValue(draft);
+      setValue(result);
       setIsEditing(false);
     } catch {
-      setError("No se pudo actualizar el celular. Intentá de nuevo.");
+      setError(errorMessage);
     } finally {
       setIsSubmitting(false);
     }
   }
 
-  return { phone, isEditing, draft, setDraft, isSubmitting, error, startEditing, cancelEditing, save };
+  return { value, isEditing, draft, setDraft, isSubmitting, error, startEditing, cancelEditing, save };
 }
