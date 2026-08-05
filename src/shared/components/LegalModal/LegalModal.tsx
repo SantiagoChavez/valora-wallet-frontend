@@ -3,7 +3,7 @@ import { Modal } from "../Modal/Modal";
 import { PrivacyContent, TermsContent } from "./legalContent";
 import styles from "./LegalModal.module.css";
 
-type LegalVariant = "terms" | "privacy";
+export type LegalVariant = "terms" | "privacy";
 
 interface LegalModalProps {
   isOpen: boolean;

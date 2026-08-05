@@ -8,6 +8,7 @@ export interface User {
   lastName: string;
   dateOfBirth?: string | null;
   phone?: string | null;
+  documentNumber?: string | null;
 }
 
 export interface Wallet {

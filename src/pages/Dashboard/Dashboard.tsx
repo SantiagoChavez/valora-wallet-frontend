@@ -25,12 +25,6 @@ interface TransactionEntry {
   tone: TxTone;
 }
 
-interface NavEntry {
-  id: string;
-  label: string;
-  icon: string;
-}
-
 const RATES: Record<CurrencyCode, number> = { USD: 1, EUR: 0.92, ARS: 1350 };
 const CURRENCY_OPTIONS: CurrencyCode[] = ["USD", "EUR", "ARS"];
 
@@ -52,13 +46,6 @@ const TRANSACTIONS: TransactionEntry[] = [
   { id: "5", title: "Retiro a cuenta bancaria", date: "5 Oct", amount: "-$300.00", currency: "USD", glyph: "arrow_upward", tone: "neg" },
 ];
 
-const NAV_ITEMS: NavEntry[] = [
-  { id: "home", label: "Inicio", icon: "account_balance_wallet" },
-  { id: "cards", label: "Tarjetas", icon: "credit_card" },
-  { id: "swap", label: "Intercambio", icon: "swap_horiz" },
-  { id: "activity", label: "Actividad", icon: "receipt_long" },
-];
-
 const toneClass: Record<TxTone, string> = {
   pos: styles.tonePos,
   neg: styles.toneNeg,
@@ -70,7 +57,6 @@ export function Dashboard() {
   const [totalCurrency, setTotalCurrency] = useState<CurrencyCode>("USD");
   const [currencyMenuOpen, setCurrencyMenuOpen] = useState(false);
   const [hidden, setHidden] = useState<Record<CurrencyCode, boolean>>({ USD: true, EUR: true, ARS: true });
-  const [activeNav, setActiveNav] = useState("home");
   const { message: toast, showToast } = useToast();
   const currencyMenuAnchorRef = useRef<HTMLDivElement>(null);
 
@@ -133,27 +119,27 @@ export function Dashboard() {
                     type="button"
                     className={styles.currencySelect}
                     onClick={() => setCurrencyMenuOpen((v) => !v)}
+                    aria-expanded={currencyMenuOpen}
+                    aria-controls="currency-menu"
                   >
                     {totalCurrency}
                     <span className="msym" style={{ fontSize: 16 }} aria-hidden="true">expand_more</span>
                   </button>
-                  {currencyMenuOpen && (
-                    <div className={styles.currencyMenu}>
-                      {CURRENCY_OPTIONS.map((code) => (
-                        <button
-                          key={code}
-                          type="button"
-                          className={`${styles.currencyMenuItem} ${code === totalCurrency ? styles.currencyMenuItemActive : ""}`}
-                          onClick={() => {
-                            setTotalCurrency(code);
-                            setCurrencyMenuOpen(false);
-                          }}
-                        >
-                          {code}
-                        </button>
-                      ))}
-                    </div>
-                  )}
+                  <div id="currency-menu" className={styles.currencyMenu} hidden={!currencyMenuOpen}>
+                    {CURRENCY_OPTIONS.map((code) => (
+                      <button
+                        key={code}
+                        type="button"
+                        className={`${styles.currencyMenuItem} ${code === totalCurrency ? styles.currencyMenuItemActive : ""}`}
+                        onClick={() => {
+                          setTotalCurrency(code);
+                          setCurrencyMenuOpen(false);
+                        }}
+                      >
+                        {code}
+                      </button>
+                    ))}
+                  </div>
                 </div>
               </div>
             </div>
@@ -248,23 +234,6 @@ export function Dashboard() {
         {/* Vista de tarjeta física: no estaba en el checklist original, se sumó al traer el mock del diseño Geist */}
         <CardDisplay />
       </aside>
-
-      <nav className={styles.bottomNav}>
-        {NAV_ITEMS.map((item) => {
-          const isActive = item.id === activeNav;
-          return (
-            <button
-              key={item.id}
-              type="button"
-              className={`${styles.navItem} ${isActive ? styles.navItemActive : ""}`}
-              onClick={() => setActiveNav(item.id)}
-            >
-              <span className={`msym ${styles.navIcon}`} aria-hidden="true">{item.icon}</span>
-              <span className={styles.navLabel}>{item.label}</span>
-            </button>
-          );
-        })}
-      </nav>
 
       <Toast message={toast} />
     </div>

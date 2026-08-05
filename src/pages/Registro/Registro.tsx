@@ -2,14 +2,12 @@ import { useEffect, useRef, useState, type SubmitEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import logo from "../../shared/assets/valora-logo.png";
 import { Button } from "../../shared/components/Button/Button";
-import { LegalModal } from "../../shared/components/LegalModal/LegalModal";
+import { LegalModal, type LegalVariant } from "../../shared/components/LegalModal/LegalModal";
 import { Toast } from "../../shared/components/Toast/Toast";
 import { useToast, TOAST_DURATION_MS } from "../../shared/components/Toast/useToast";
 import * as authService from "../../shared/auth/authService";
 import { ApiError } from "../../shared/services/apiClient";
 import styles from "./Registro.module.css";
-
-type LegalVariant = "terms" | "privacy";
 
 // Todas las barras llenas comparten el color del nivel alcanzado (no un color
 // fijo por posición): en nivel 2 las 2 primeras se pintan naranja, en nivel 3
@@ -17,6 +15,10 @@ type LegalVariant = "terms" | "privacy";
 const STRENGTH_LEVEL_CLASSES = [styles.strengthLevel1, styles.strengthLevel2, styles.strengthLevel3, styles.strengthLevel4];
 
 const MIN_AGE_YEARS = 18;
+
+function isLeapYear(year: number): boolean {
+  return (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0;
+}
 
 // Fecha límite para el <input type="date"> (18 años atrás de hoy), calculada
 // una sola vez al cargar el módulo — no cambia entre renders. Se arma con los
@@ -26,9 +28,16 @@ const MIN_AGE_YEARS = 18;
 function getMaxBirthdate(): string {
   const today = new Date();
   const year = today.getFullYear() - MIN_AGE_YEARS;
-  const month = String(today.getMonth() + 1).padStart(2, "0");
-  const day = String(today.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
+  const month = today.getMonth() + 1;
+  let day = today.getDate();
+
+  // Si hoy es 29 de febrero (bisiesto) pero año-18 no es bisiesto, esa fecha
+  // no existe — clampear al 28, el último día válido de febrero ese año.
+  if (month === 2 && day === 29 && !isLeapYear(year)) {
+    day = 28;
+  }
+
+  return `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
 }
 
 const MAX_BIRTHDATE = getMaxBirthdate();
@@ -267,6 +276,7 @@ export function Registro() {
                   className={styles.inputIconButton}
                   onClick={() => setShowPassword((value) => !value)}
                   aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+                  aria-pressed={showPassword}
                 >
                   <span className="msym" aria-hidden="true">
                     {showPassword ? "visibility_off" : "visibility"}
@@ -301,6 +311,7 @@ export function Registro() {
                   className={styles.inputIconButton}
                   onClick={() => setShowConfirmPassword((value) => !value)}
                   aria-label={showConfirmPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+                  aria-pressed={showConfirmPassword}
                 >
                   <span className="msym" aria-hidden="true">
                     {showConfirmPassword ? "visibility_off" : "visibility"}

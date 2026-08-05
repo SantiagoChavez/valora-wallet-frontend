@@ -2,15 +2,33 @@
   min-height: 100vh;
   background-color: var(--bg-base);
   color: var(--text-primary);
+  /* Consumido por Sidebar (mismo componente) para su propio ancho y acá para
+     compensar con padding-left — una sola fuente, nunca se repite el 240px. */
+  --sidebar-width: 240px;
+  padding-left: var(--sidebar-width, 0);
+  /* Consumido por shared/components/Toast: el sidebar corre el centro visual
+     del área de contenido (main) hacia la derecha respecto del viewport
+     completo — este offset compensa ese corrimiento en su left:50% fijo. */
+  --toast-center-offset: calc(var(--sidebar-width) / 2);
 }
 
 @media (max-width: 859px) {
   .layout {
+    /* Sidebar se oculta en mobile (ver Sidebar.module.css); sin esto el
+       padding-left desktop quedaría empujando el contenido sin necesidad. */
+    padding-left: 0;
+    /* Sin sidebar en mobile no hay corrimiento que compensar — el toast debe
+       quedar centrado real en el viewport, igual que antes de este fix. */
+    --toast-center-offset: 0px;
     /* Consumido por shared/components/Toast: en mobile, las páginas colgadas
        de este layout (Dashboard hoy, Tarjetas/Intercambio/Actividad después)
        tienen un bottom nav fijo — el toast necesita este offset para no
        quedar tapado. Registro/Login no cuelgan de acá, caen al default. */
     --toast-bottom-offset: 96px;
+    /* Mismo motivo, para el contenido scrolleable de cada página (no un overlay
+       flotante como el toast): despeja el padding-bottom del bottom nav fijo,
+       sin repetir el valor a mano en cada .module.css que cuelgue de <Outlet/>. */
+    --content-bottom-offset: 96px;
   }
 }
 
@@ -111,78 +129,78 @@
 }
 
 .divider {
+  /* Separaba el ícono de notificaciones del trigger de usuario en desktop;
+     ahora ese trigger no existe más en desktop (ver hamburgerAnchor) y solo
+     tiene sentido junto al ícono de hamburguesa, mobile-only. */
+  display: none;
   width: 1px;
   height: 26px;
   background: var(--border);
   margin: 0 2px;
 }
 
-.userTrigger {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-sm);
-  background: transparent;
-  border: none;
-  padding: 0;
-  cursor: pointer;
-}
-
-.avatar {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  background-color: var(--border);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: var(--font-size-md);
-  font-weight: var(--font-weight-semibold);
-  color: var(--text-primary);
-  flex-shrink: 0;
-  border: 2px solid transparent;
-  transition: border-color 0.15s ease, transform 0.15s ease;
-}
-
-.userTrigger:hover .avatar {
-  border-color: var(--accent);
-  transform: scale(1.05);
-}
-
-.email {
-  font-size: var(--font-size-md);
-  color: var(--text-secondary);
-}
-
 @media (max-width: 859px) {
-  .email {
-    display: none;
+  .divider {
+    display: block;
   }
 }
 
-.userPanelBox {
+.hamburgerAnchor {
+  /* El menú hamburguesa reemplaza, solo en mobile, al trigger de usuario que
+     existía acá antes — en desktop el Sidebar ya cubre "Usuario" y "Cerrar
+     sesión", así que este bloque no tiene sentido y queda oculto. */
+  display: none;
+}
+
+@media (max-width: 859px) {
+  .hamburgerAnchor {
+    display: block;
+  }
+}
+
+.dropdownBox {
   composes: popover from "../../shared/styles/popover.module.css";
 }
 
-.userPanel {
+.hamburgerPanel {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
   width: auto;
-  min-width: 160px;
+  min-width: 220px;
   padding: var(--spacing-sm);
 }
 
-.logoutButton {
+/* El atributo hidden nativo pierde contra el display:flex de acá arriba (ambos
+   son reglas de autor, gana la última/más específica) — sin esto, hidden no
+   ocultaría nada. Queda siempre montado (para que aria-controls apunte a un id
+   real) y hidden decide visibilidad, no el mount/unmount de React. */
+.hamburgerPanel[hidden] {
+  display: none;
+}
+
+.hamburgerDivider {
+  border-top: 1px solid var(--border);
+  margin: var(--spacing-sm) 0;
+}
+
+.hamburgerItem {
+  display: block;
   width: 100%;
   background: transparent;
   border: none;
   border-radius: var(--radius-sm);
-  color: var(--danger);
+  color: var(--text-primary);
+  font-family: inherit;
   font-size: var(--font-size-sm);
-  font-weight: var(--font-weight-semibold);
+  font-weight: var(--font-weight-medium);
   text-align: left;
+  text-decoration: none;
   padding: 8px 10px;
   cursor: pointer;
 }
 
-.logoutButton:hover {
+.hamburgerItem:hover {
   background: var(--bg-inset);
 }
 

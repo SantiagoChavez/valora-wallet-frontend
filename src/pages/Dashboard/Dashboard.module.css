@@ -11,7 +11,7 @@
   .page {
     grid-template-columns: 1fr;
     padding: 0 var(--spacing-md);
-    padding-bottom: 96px;
+    padding-bottom: var(--content-bottom-offset, 96px);
   }
 }
 
@@ -129,6 +129,14 @@
   display: flex;
   flex-direction: column;
   min-width: 90px;
+}
+
+/* El atributo hidden nativo pierde contra el display:flex de acá arriba (ambos
+   son reglas de autor) — sin esto, hidden no ocultaría nada. Queda siempre
+   montado (para que aria-controls apunte a un id real) y hidden decide
+   visibilidad, no el mount/unmount de React. */
+.currencyMenu[hidden] {
+  display: none;
 }
 
 .currencyMenuItem {
@@ -477,65 +485,3 @@
   border: 1px solid rgba(240, 180, 41, 0.2);
 }
 
-/* Bottom nav */
-
-.bottomNav {
-  display: none;
-}
-
-@media (max-width: 859px) {
-  .bottomNav {
-    display: flex;
-    justify-content: space-around;
-    align-items: center;
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    z-index: 50;
-    height: 80px;
-    padding: 0 var(--spacing-md);
-    background: var(--bg-elevated);
-    border-top: 1px solid var(--border-strong);
-  }
-}
-
-.navItem {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 2px;
-  background: transparent;
-  border: none;
-  border-radius: var(--radius-pill);
-  padding: 6px 16px;
-  cursor: pointer;
-  color: var(--text-tertiary);
-  transition: background-color 0.15s ease, transform 0.15s ease;
-}
-
-.navItem:hover {
-  background: var(--bg-inset);
-}
-
-.navItemActive {
-  background: var(--accent);
-  color: var(--accent-contrast);
-}
-
-.navItemActive:hover {
-  background: var(--accent);
-  transform: scale(1.03);
-}
-
-.navIcon {
-  font-size: 22px;
-  color: inherit;
-}
-
-.navLabel {
-  font-size: var(--font-size-2xs);
-  font-weight: var(--font-weight-medium);
-  color: inherit;
-}
