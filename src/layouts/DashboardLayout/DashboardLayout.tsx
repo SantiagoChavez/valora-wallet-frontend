@@ -99,9 +99,11 @@ export function DashboardLayout() {
               {hasUnread && <span className={styles.unreadDot} />}
             </button>
 
-            {openPanel === "notif" && (
-              <NotificationPanel notifications={NOTIFICATIONS} onClose={() => setOpenPanel(null)} />
-            )}
+            <NotificationPanel
+              notifications={NOTIFICATIONS}
+              onClose={() => setOpenPanel(null)}
+              hidden={openPanel !== "notif"}
+            />
           </div>
 
           <div className={styles.divider} />
@@ -118,39 +120,37 @@ export function DashboardLayout() {
               <span className={`msym ${styles.icon}`} aria-hidden="true">menu</span>
             </button>
 
-            {openPanel === "hamburger" && (
-              <div id="hamburger-panel" className={`${styles.dropdownBox} ${styles.hamburgerPanel}`}>
-                <button type="button" className={styles.hamburgerItem} onClick={handleHamburgerUsuario}>
-                  Usuario
-                </button>
+            <div
+              id="hamburger-panel"
+              className={`${styles.dropdownBox} ${styles.hamburgerPanel}`}
+              hidden={openPanel !== "hamburger"}
+            >
+              <button type="button" className={styles.hamburgerItem} onClick={handleHamburgerUsuario}>
+                Usuario
+              </button>
 
-                <div className={styles.hamburgerDivider} />
+              <div className={styles.hamburgerDivider} />
 
-                <button type="button" className={styles.hamburgerItem} onClick={() => openLegal("terms")}>
-                  Términos y condiciones
-                </button>
-                <button
-                  type="button"
-                  className={styles.hamburgerItem}
-                  onClick={() => openLegal("privacy")}
-                >
-                  Políticas de privacidad
-                </button>
-                <a
-                  href={`mailto:${SUPPORT_EMAIL}`}
-                  className={styles.hamburgerItem}
-                  onClick={() => setOpenPanel(null)}
-                >
-                  Contacta a Soporte
-                </a>
+              <button type="button" className={styles.hamburgerItem} onClick={() => openLegal("terms")}>
+                Términos y condiciones
+              </button>
+              <button type="button" className={styles.hamburgerItem} onClick={() => openLegal("privacy")}>
+                Políticas de privacidad
+              </button>
+              <a
+                href={`mailto:${SUPPORT_EMAIL}`}
+                className={styles.hamburgerItem}
+                onClick={() => setOpenPanel(null)}
+              >
+                Contacta a Soporte
+              </a>
 
-                <div className={styles.hamburgerDivider} />
+              <div className={styles.hamburgerDivider} />
 
-                <button type="button" className={styles.hamburgerItem} onClick={handleLogout}>
-                  Cerrar sesión
-                </button>
-              </div>
-            )}
+              <button type="button" className={styles.hamburgerItem} onClick={handleLogout}>
+                Cerrar sesión
+              </button>
+            </div>
           </div>
         </div>
       </header>

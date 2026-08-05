@@ -10,11 +10,12 @@ export interface AppNotification {
 interface NotificationPanelProps {
   notifications: AppNotification[];
   onClose: () => void;
+  hidden: boolean;
 }
 
-export function NotificationPanel({ notifications, onClose }: NotificationPanelProps) {
+export function NotificationPanel({ notifications, onClose, hidden }: NotificationPanelProps) {
   return (
-    <div id="notification-panel" className={styles.panel}>
+    <div id="notification-panel" className={styles.panel} hidden={hidden}>
       <div className={styles.panelHeader}>
         <span>Notificaciones</span>
         <button

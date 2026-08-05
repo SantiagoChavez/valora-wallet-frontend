@@ -125,23 +125,21 @@ export function Dashboard() {
                     {totalCurrency}
                     <span className="msym" style={{ fontSize: 16 }} aria-hidden="true">expand_more</span>
                   </button>
-                  {currencyMenuOpen && (
-                    <div id="currency-menu" className={styles.currencyMenu}>
-                      {CURRENCY_OPTIONS.map((code) => (
-                        <button
-                          key={code}
-                          type="button"
-                          className={`${styles.currencyMenuItem} ${code === totalCurrency ? styles.currencyMenuItemActive : ""}`}
-                          onClick={() => {
-                            setTotalCurrency(code);
-                            setCurrencyMenuOpen(false);
-                          }}
-                        >
-                          {code}
-                        </button>
-                      ))}
-                    </div>
-                  )}
+                  <div id="currency-menu" className={styles.currencyMenu} hidden={!currencyMenuOpen}>
+                    {CURRENCY_OPTIONS.map((code) => (
+                      <button
+                        key={code}
+                        type="button"
+                        className={`${styles.currencyMenuItem} ${code === totalCurrency ? styles.currencyMenuItemActive : ""}`}
+                        onClick={() => {
+                          setTotalCurrency(code);
+                          setCurrencyMenuOpen(false);
+                        }}
+                      >
+                        {code}
+                      </button>
+                    ))}
+                  </div>
                 </div>
               </div>
             </div>

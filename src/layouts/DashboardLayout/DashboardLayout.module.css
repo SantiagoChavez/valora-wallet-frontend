@@ -171,6 +171,14 @@
   padding: var(--spacing-sm);
 }
 
+/* El atributo hidden nativo pierde contra el display:flex de acá arriba (ambos
+   son reglas de autor, gana la última/más específica) — sin esto, hidden no
+   ocultaría nada. Queda siempre montado (para que aria-controls apunte a un id
+   real) y hidden decide visibilidad, no el mount/unmount de React. */
+.hamburgerPanel[hidden] {
+  display: none;
+}
+
 .hamburgerDivider {
   border-top: 1px solid var(--border);
   margin: var(--spacing-sm) 0;
