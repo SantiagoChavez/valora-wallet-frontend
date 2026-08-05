@@ -1,3 +1,4 @@
+import { NavLink } from "react-router-dom";
 import styles from "./BottomNav.module.css";
 
 export interface NavEntry {
@@ -9,27 +10,22 @@ export interface NavEntry {
 
 interface BottomNavProps {
   items: NavEntry[];
-  activeId: string;
-  onItemClick: (id: string) => void;
 }
 
-export function BottomNav({ items, activeId, onItemClick }: BottomNavProps) {
+export function BottomNav({ items }: BottomNavProps) {
   return (
     <nav className={styles.bottomNav}>
-      {items.map((item) => {
-        const isActive = item.id === activeId;
-        return (
-          <button
-            key={item.id}
-            type="button"
-            className={`${styles.navItem} ${isActive ? styles.navItemActive : ""}`}
-            onClick={() => onItemClick(item.id)}
-          >
-            <span className={`msym ${styles.navIcon}`} aria-hidden="true">{item.icon}</span>
-            <span className={styles.navLabel}>{item.label}</span>
-          </button>
-        );
-      })}
+      {items.map((item) => (
+        <NavLink
+          key={item.id}
+          to={item.path}
+          end={item.path === "/"}
+          className={({ isActive }) => `${styles.navItem} ${isActive ? styles.navItemActive : ""}`}
+        >
+          <span className={`msym ${styles.navIcon}`} aria-hidden="true">{item.icon}</span>
+          <span className={styles.navLabel}>{item.label}</span>
+        </NavLink>
+      ))}
     </nav>
   );
 }

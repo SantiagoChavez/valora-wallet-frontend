@@ -16,7 +16,6 @@ const NAV_ITEMS: NavEntry[] = [
 
 export function DashboardLayout() {
   const [openPanel, setOpenPanel] = useState<"notif" | "user" | null>(null);
-  const [activeNav, setActiveNav] = useState("home");
   const notifAnchorRef = useRef<HTMLDivElement>(null);
   const userAnchorRef = useRef<HTMLDivElement>(null);
   const hasUnread = NOTIFICATIONS.some((note) => note.unread);
@@ -113,7 +112,7 @@ export function DashboardLayout() {
       <main className={styles.main}>
         <Outlet />
       </main>
-      <BottomNav items={NAV_ITEMS} activeId={activeNav} onItemClick={setActiveNav} />
+      <BottomNav items={NAV_ITEMS} />
     </div>
   );
 }
