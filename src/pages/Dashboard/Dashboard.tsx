@@ -119,12 +119,14 @@ export function Dashboard() {
                     type="button"
                     className={styles.currencySelect}
                     onClick={() => setCurrencyMenuOpen((v) => !v)}
+                    aria-expanded={currencyMenuOpen}
+                    aria-controls="currency-menu"
                   >
                     {totalCurrency}
                     <span className="msym" style={{ fontSize: 16 }} aria-hidden="true">expand_more</span>
                   </button>
                   {currencyMenuOpen && (
-                    <div className={styles.currencyMenu}>
+                    <div id="currency-menu" className={styles.currencyMenu}>
                       {CURRENCY_OPTIONS.map((code) => (
                         <button
                           key={code}
