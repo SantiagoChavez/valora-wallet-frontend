@@ -150,11 +150,11 @@ export function DashboardLayout() {
           </div>
         </div>
       </header>
+      <Sidebar items={NAV_ITEMS} onLogout={handleLogout} onOpenLegal={openLegal} />
       <main className={styles.main}>
         <Outlet />
       </main>
       <BottomNav items={NAV_ITEMS} />
-      <Sidebar items={NAV_ITEMS} onLogout={handleLogout} onOpenLegal={openLegal} />
       <LegalModal isOpen={legalOpen} onClose={() => setLegalOpen(false)} variant={legalVariant} />
     </div>
   );
