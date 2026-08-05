@@ -9,6 +9,7 @@ import { Dashboard } from "./pages/Dashboard/Dashboard";
 import { Login } from "./pages/Login/Login";
 import { Registro } from "./pages/Registro/Registro";
 import { Tarjetas } from "./pages/Tarjetas/Tarjetas";
+import { Usuario } from "./pages/Usuario/Usuario";
 
 function App() {
   return (
@@ -21,6 +22,7 @@ function App() {
         {/* Cualquier ruta privada futura (ej: /transactions) va como hija acá adentro, no afuera */}
         <Route element={<DashboardLayout />}>
           <Route path="/" element={<Dashboard />} />
+          <Route path="/usuario" element={<Usuario />} />
           <Route path="/tarjetas" element={<Tarjetas />} />
           <Route path="/intercambio" element={<ExchangeForm />} />
           <Route path="/actividad" element={<HistoryPage />} />
