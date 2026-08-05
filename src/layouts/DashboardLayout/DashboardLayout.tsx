@@ -37,7 +37,11 @@ export function DashboardLayout() {
     navigate("/usuario");
   }
 
-  function openHamburgerLegal(variant: LegalVariant) {
+  // Compartida entre el Sidebar (desktop) y el menú hamburguesa (mobile) — un
+  // solo estado/instancia de LegalModal para los dos triggers, en vez de que
+  // cada uno mantenga su propia copia. setOpenPanel(null) no tiene efecto
+  // cuando la llama Sidebar (openPanel ya está en null en desktop).
+  function openLegal(variant: LegalVariant) {
     setOpenPanel(null);
     setLegalVariant(variant);
     setLegalOpen(true);
@@ -118,13 +122,13 @@ export function DashboardLayout() {
 
                 <div className={styles.hamburgerDivider} />
 
-                <button type="button" className={styles.hamburgerItem} onClick={() => openHamburgerLegal("terms")}>
+                <button type="button" className={styles.hamburgerItem} onClick={() => openLegal("terms")}>
                   Términos y condiciones
                 </button>
                 <button
                   type="button"
                   className={styles.hamburgerItem}
-                  onClick={() => openHamburgerLegal("privacy")}
+                  onClick={() => openLegal("privacy")}
                 >
                   Políticas de privacidad
                 </button>
@@ -150,7 +154,7 @@ export function DashboardLayout() {
         <Outlet />
       </main>
       <BottomNav items={NAV_ITEMS} />
-      <Sidebar items={NAV_ITEMS} onLogout={handleLogout} />
+      <Sidebar items={NAV_ITEMS} onLogout={handleLogout} onOpenLegal={openLegal} />
       <LegalModal isOpen={legalOpen} onClose={() => setLegalOpen(false)} variant={legalVariant} />
     </div>
   );
