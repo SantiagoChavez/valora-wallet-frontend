@@ -54,17 +54,17 @@ export function Usuario() {
 
         <div className={styles.field}>
           <span className={styles.label}>Correo electrónico</span>
-          <span className={styles.value}>{user?.email}</span>
+          <span className={styles.value}>{user?.email || "Sin datos"}</span>
         </div>
 
         <div className={styles.field}>
           <span className={styles.label}>Nombre</span>
-          <span className={styles.value}>{user?.firstName}</span>
+          <span className={styles.value}>{user?.firstName || "Sin datos"}</span>
         </div>
 
         <div className={styles.field}>
           <span className={styles.label}>Apellido</span>
-          <span className={styles.value}>{user?.lastName}</span>
+          <span className={styles.value}>{user?.lastName || "Sin datos"}</span>
         </div>
 
         <div className={styles.field}>
