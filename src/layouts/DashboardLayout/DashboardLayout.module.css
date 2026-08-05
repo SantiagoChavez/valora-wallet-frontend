@@ -11,6 +11,10 @@
        tienen un bottom nav fijo — el toast necesita este offset para no
        quedar tapado. Registro/Login no cuelgan de acá, caen al default. */
     --toast-bottom-offset: 96px;
+    /* Mismo motivo, para el contenido scrolleable de cada página (no un overlay
+       flotante como el toast): despeja el padding-bottom del bottom nav fijo,
+       sin repetir el valor a mano en cada .module.css que cuelgue de <Outlet/>. */
+    --content-bottom-offset: 96px;
   }
 }
 
