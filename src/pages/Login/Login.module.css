@@ -209,7 +209,6 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
   padding: 48px var(--spacing-xl);
 }
 
@@ -223,6 +222,11 @@
 .formPanelInner {
   width: 100%;
   max-width: 420px;
+  /* Centra verticalmente cuando sobra espacio, pero nunca fuerza el contenido
+     contra un footer posicionado aparte — a diferencia de justify-content:center
+     en .formPanel, esto no puede superponerse con .footerNote (ahora en el
+     mismo flujo, ver más abajo) ni bloquearle los clicks. */
+  margin: auto 0;
 }
 
 .mobileHeader {
@@ -292,6 +296,13 @@
   justify-content: space-between;
 }
 
+/* El mockup sí le da un tamaño propio más chico a "¿Olvidaste tu contraseña?"
+   (secundario, junto a un label de --font-size-md) — el resto de los usos de
+   .inlineLink hereda en vez de fijar un tamaño. */
+.fieldHeader .inlineLink {
+  font-size: var(--font-size-sm);
+}
+
 .fieldLabel {
   font-size: var(--font-size-md);
   font-weight: var(--font-weight-semibold);
@@ -356,9 +367,14 @@
   background: none;
   border: none;
   padding: 0;
-  font-size: var(--font-size-sm);
+  /* Hereda el tamaño del texto que lo rodea (mismo criterio que el mockup: el
+     link de "Registrate" no tenía font-size propio, solo el de "¿Olvidaste tu
+     contraseña?" — ver .fieldHeader .inlineLink más abajo). Un tamaño fijo acá
+     hacía que "Registrate" se viera más chico que el resto de la oración. */
+  font-size: inherit;
   font-weight: var(--font-weight-semibold);
   color: var(--accent);
+  text-decoration: none;
   cursor: pointer;
 }
 
@@ -430,10 +446,7 @@
 }
 
 .footerNote {
-  position: absolute;
-  bottom: 20px;
-  left: var(--spacing-md);
-  right: var(--spacing-md);
+  margin-top: var(--spacing-xl);
   text-align: center;
   font-size: var(--font-size-2xs);
   color: var(--text-secondary);

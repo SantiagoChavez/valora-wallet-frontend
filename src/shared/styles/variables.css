@@ -9,6 +9,8 @@
   --accent-contrast: #412d00; /* texto oscuro sobre fondo dorado */
   --success: #49dfa0;
   --danger: #e5484d;
+  --strength-fair: #f2994a;  /* naranja — solo para el medidor de fuerza de contraseña */
+  --strength-good: #f5c518;  /* amarillo — ídem, no es un color semántico de marca */
   --text-primary: #e3e3dd;
   --text-secondary: #d4c5ad;
   --text-tertiary: #9c8f7a;
