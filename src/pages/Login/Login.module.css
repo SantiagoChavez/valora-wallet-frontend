@@ -374,6 +374,7 @@
   font-size: inherit;
   font-weight: var(--font-weight-semibold);
   color: var(--accent);
+  text-decoration: none;
   cursor: pointer;
 }
 

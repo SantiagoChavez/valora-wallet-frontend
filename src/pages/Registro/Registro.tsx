@@ -311,8 +311,18 @@ export function Registro() {
             </div>
 
             <div className={styles.checkboxRow}>
-              <input id="terms" type="checkbox" className={styles.checkbox} required />
-              <label htmlFor="terms" className={styles.checkboxLabel}>
+              {/* <p>, no <label>: los dos botones de abajo son "labelable" (spec de
+                  HTML) y un <label> no puede tener descendientes labelable aparte
+                  del control que labelea. El nombre accesible del checkbox va por
+                  aria-label en vez de la asociación implícita de label+texto. */}
+              <input
+                id="terms"
+                type="checkbox"
+                className={styles.checkbox}
+                aria-label="Acepto los Términos de Servicio y la Política de Privacidad de Valora Wallet"
+                required
+              />
+              <p className={styles.checkboxLabel}>
                 Acepto los{" "}
                 <button
                   type="button"
@@ -336,7 +346,7 @@ export function Registro() {
                   Política de Privacidad
                 </button>{" "}
                 de Valora Wallet.
-              </label>
+              </p>
             </div>
 
             {error && (

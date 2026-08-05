@@ -184,6 +184,9 @@
 }
 
 .brandChecklist {
+  margin: 0;
+  padding: 0;
+  list-style: none;
   display: flex;
   flex-direction: column;
   gap: var(--spacing-md);
@@ -436,6 +439,7 @@
 }
 
 .checkboxLabel {
+  margin: 0;
   font-size: var(--font-size-sm);
   line-height: 19px;
   color: var(--text-secondary);
@@ -448,6 +452,7 @@
   font-size: inherit;
   font-weight: var(--font-weight-semibold);
   color: var(--accent);
+  text-decoration: none;
   cursor: pointer;
 }
 
