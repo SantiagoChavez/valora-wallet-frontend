@@ -139,7 +139,7 @@ export function Usuario() {
             </div>
           ) : (
             <div className={styles.valueRow}>
-              <span className={styles.value}>{alias}</span>
+              <span className={styles.value}>{alias || "Sin registrar"}</span>
               <button type="button" className={styles.editButton} onClick={startEditingAlias}>
                 Editar
               </button>
