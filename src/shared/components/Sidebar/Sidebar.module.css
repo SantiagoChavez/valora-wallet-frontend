@@ -1,0 +1,96 @@
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: var(--sidebar-width, 240px);
+  padding: var(--spacing-xl) var(--spacing-md);
+  background: var(--bg-elevated);
+  border-right: 1px solid var(--border);
+  z-index: 50;
+  overflow-y: auto;
+}
+
+@media (max-width: 859px) {
+  .sidebar {
+    display: none;
+  }
+}
+
+.nav {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.navItem {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-md);
+  padding: 10px var(--spacing-md);
+  color: var(--text-tertiary);
+  font-family: inherit;
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-medium);
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.navItem:hover {
+  background: var(--bg-inset);
+  color: var(--text-primary);
+}
+
+.navItemActive {
+  background: var(--accent);
+  color: var(--accent-contrast);
+}
+
+.navItemActive:hover {
+  background: var(--accent);
+  color: var(--accent-contrast);
+}
+
+.navIcon {
+  font-size: 20px;
+  color: inherit;
+  flex-shrink: 0;
+}
+
+.navLabel {
+  color: inherit;
+}
+
+.footer {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+  padding-top: var(--spacing-lg);
+  margin-top: var(--spacing-lg);
+  border-top: 1px solid var(--border);
+}
+
+.footerLink {
+  background: transparent;
+  border: none;
+  padding: 0;
+  margin: 0;
+  font-family: inherit;
+  font-size: var(--font-size-xs);
+  color: var(--text-secondary);
+  text-decoration: none;
+  text-align: left;
+  cursor: pointer;
+}
+
+.footerLink:hover {
+  color: var(--text-primary);
+  text-decoration: underline;
+}

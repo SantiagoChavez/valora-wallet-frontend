@@ -2,10 +2,17 @@
   min-height: 100vh;
   background-color: var(--bg-base);
   color: var(--text-primary);
+  /* Consumido por Sidebar (mismo componente) para su propio ancho y acá para
+     compensar con padding-left — una sola fuente, nunca se repite el 240px. */
+  --sidebar-width: 240px;
+  padding-left: var(--sidebar-width, 0);
 }
 
 @media (max-width: 859px) {
   .layout {
+    /* Sidebar se oculta en mobile (ver Sidebar.module.css); sin esto el
+       padding-left desktop quedaría empujando el contenido sin necesidad. */
+    padding-left: 0;
     /* Consumido por shared/components/Toast: en mobile, las páginas colgadas
        de este layout (Dashboard hoy, Tarjetas/Intercambio/Actividad después)
        tienen un bottom nav fijo — el toast necesita este offset para no
@@ -174,6 +181,9 @@
 }
 
 .logoutButton {
+  /* En desktop el logout ya vive en el Sidebar; este botón del header queda
+     solo para mobile, donde el Sidebar está oculto (ver Sidebar.module.css). */
+  display: none;
   width: 100%;
   background: transparent;
   border: none;
@@ -188,6 +198,12 @@
 
 .logoutButton:hover {
   background: var(--bg-inset);
+}
+
+@media (max-width: 859px) {
+  .logoutButton {
+    display: block;
+  }
 }
 
 .main {

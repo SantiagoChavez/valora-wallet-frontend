@@ -5,6 +5,7 @@ import { useAuth } from "../../shared/auth/useAuth";
 import { BottomNav, type NavEntry } from "../../shared/components/BottomNav/BottomNav";
 import { NotificationPanel } from "../../shared/components/NotificationPanel/NotificationPanel";
 import { NOTIFICATIONS } from "../../shared/components/NotificationPanel/mockNotifications";
+import { Sidebar } from "../../shared/components/Sidebar/Sidebar";
 import styles from "./DashboardLayout.module.css";
 
 const NAV_ITEMS: NavEntry[] = [
@@ -113,6 +114,7 @@ export function DashboardLayout() {
         <Outlet />
       </main>
       <BottomNav items={NAV_ITEMS} />
+      <Sidebar items={NAV_ITEMS} onLogout={handleLogout} />
     </div>
   );
 }
