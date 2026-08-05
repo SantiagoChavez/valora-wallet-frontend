@@ -3,15 +3,12 @@ import { Outlet, useNavigate } from "react-router-dom";
 import logo from "../../shared/assets/valora-logo.png";
 import { useAuth } from "../../shared/auth/useAuth";
 import { BottomNav, type NavEntry } from "../../shared/components/BottomNav/BottomNav";
-import { LegalModal } from "../../shared/components/LegalModal/LegalModal";
+import { LegalModal, type LegalVariant } from "../../shared/components/LegalModal/LegalModal";
 import { NotificationPanel } from "../../shared/components/NotificationPanel/NotificationPanel";
 import { NOTIFICATIONS } from "../../shared/components/NotificationPanel/mockNotifications";
 import { Sidebar } from "../../shared/components/Sidebar/Sidebar";
+import { SUPPORT_EMAIL } from "../../shared/constants";
 import styles from "./DashboardLayout.module.css";
-
-const SUPPORT_EMAIL = "nexot.solutions@gmail.com";
-
-type LegalVariant = "terms" | "privacy";
 
 const NAV_ITEMS: NavEntry[] = [
   { id: "home", label: "Inicio", icon: "account_balance_wallet", path: "/" },

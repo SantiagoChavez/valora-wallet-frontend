@@ -1,12 +1,9 @@
 import { useState } from "react";
 import { NavLink } from "react-router-dom";
+import { SUPPORT_EMAIL } from "../../constants";
 import type { NavEntry } from "../BottomNav/BottomNav";
-import { LegalModal } from "../LegalModal/LegalModal";
+import { LegalModal, type LegalVariant } from "../LegalModal/LegalModal";
 import styles from "./Sidebar.module.css";
-
-const SUPPORT_EMAIL = "nexot.solutions@gmail.com";
-
-type LegalVariant = "terms" | "privacy";
 
 interface SidebarProps {
   items: NavEntry[];
