@@ -6,6 +6,10 @@
      compensar con padding-left — una sola fuente, nunca se repite el 240px. */
   --sidebar-width: 240px;
   padding-left: var(--sidebar-width, 0);
+  /* Consumido por shared/components/Toast: el sidebar corre el centro visual
+     del área de contenido (main) hacia la derecha respecto del viewport
+     completo — este offset compensa ese corrimiento en su left:50% fijo. */
+  --toast-center-offset: calc(var(--sidebar-width) / 2);
 }
 
 @media (max-width: 859px) {
@@ -13,6 +17,9 @@
     /* Sidebar se oculta en mobile (ver Sidebar.module.css); sin esto el
        padding-left desktop quedaría empujando el contenido sin necesidad. */
     padding-left: 0;
+    /* Sin sidebar en mobile no hay corrimiento que compensar — el toast debe
+       quedar centrado real en el viewport, igual que antes de este fix. */
+    --toast-center-offset: 0px;
     /* Consumido por shared/components/Toast: en mobile, las páginas colgadas
        de este layout (Dashboard hoy, Tarjetas/Intercambio/Actividad después)
        tienen un bottom nav fijo — el toast necesita este offset para no
