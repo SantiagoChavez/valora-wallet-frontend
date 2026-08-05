@@ -115,6 +115,9 @@ export function DashboardLayout() {
                 <button type="button" className={styles.hamburgerItem} onClick={handleHamburgerUsuario}>
                   Usuario
                 </button>
+
+                <div className={styles.hamburgerDivider} />
+
                 <button type="button" className={styles.hamburgerItem} onClick={() => openHamburgerLegal("terms")}>
                   Términos y condiciones
                 </button>
@@ -125,9 +128,6 @@ export function DashboardLayout() {
                 >
                   Políticas de privacidad
                 </button>
-                <button type="button" className={styles.hamburgerItem} onClick={handleLogout}>
-                  Cerrar sesión
-                </button>
                 <a
                   href={`mailto:${SUPPORT_EMAIL}`}
                   className={styles.hamburgerItem}
@@ -135,6 +135,12 @@ export function DashboardLayout() {
                 >
                   Contacta a Soporte
                 </a>
+
+                <div className={styles.hamburgerDivider} />
+
+                <button type="button" className={styles.hamburgerItem} onClick={handleLogout}>
+                  Cerrar sesión
+                </button>
               </div>
             )}
           </div>
