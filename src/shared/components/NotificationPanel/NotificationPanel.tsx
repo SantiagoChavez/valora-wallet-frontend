@@ -14,7 +14,7 @@ interface NotificationPanelProps {
 
 export function NotificationPanel({ notifications, onClose }: NotificationPanelProps) {
   return (
-    <div className={styles.panel}>
+    <div id="notification-panel" className={styles.panel}>
       <div className={styles.panelHeader}>
         <span>Notificaciones</span>
         <button

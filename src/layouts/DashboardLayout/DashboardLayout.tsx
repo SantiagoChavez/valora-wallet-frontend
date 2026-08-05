@@ -92,6 +92,8 @@ export function DashboardLayout() {
               className={styles.ghostIconButton}
               onClick={() => setOpenPanel((current) => (current === "notif" ? null : "notif"))}
               aria-label="Notificaciones"
+              aria-expanded={openPanel === "notif"}
+              aria-controls="notification-panel"
             >
               <span className={`msym ${styles.icon}`} aria-hidden="true">notifications</span>
               {hasUnread && <span className={styles.unreadDot} />}
@@ -110,12 +112,14 @@ export function DashboardLayout() {
               className={styles.ghostIconButton}
               onClick={() => setOpenPanel((current) => (current === "hamburger" ? null : "hamburger"))}
               aria-label="Menú"
+              aria-expanded={openPanel === "hamburger"}
+              aria-controls="hamburger-panel"
             >
               <span className={`msym ${styles.icon}`} aria-hidden="true">menu</span>
             </button>
 
             {openPanel === "hamburger" && (
-              <div className={`${styles.dropdownBox} ${styles.hamburgerPanel}`}>
+              <div id="hamburger-panel" className={`${styles.dropdownBox} ${styles.hamburgerPanel}`}>
                 <button type="button" className={styles.hamburgerItem} onClick={handleHamburgerUsuario}>
                   Usuario
                 </button>
