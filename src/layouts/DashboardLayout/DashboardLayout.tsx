@@ -3,10 +3,15 @@ import { Outlet, useNavigate } from "react-router-dom";
 import logo from "../../shared/assets/valora-logo.png";
 import { useAuth } from "../../shared/auth/useAuth";
 import { BottomNav, type NavEntry } from "../../shared/components/BottomNav/BottomNav";
+import { LegalModal } from "../../shared/components/LegalModal/LegalModal";
 import { NotificationPanel } from "../../shared/components/NotificationPanel/NotificationPanel";
 import { NOTIFICATIONS } from "../../shared/components/NotificationPanel/mockNotifications";
 import { Sidebar } from "../../shared/components/Sidebar/Sidebar";
 import styles from "./DashboardLayout.module.css";
+
+const SUPPORT_EMAIL = "nexot.solutions@gmail.com";
+
+type LegalVariant = "terms" | "privacy";
 
 const NAV_ITEMS: NavEntry[] = [
   { id: "home", label: "Inicio", icon: "account_balance_wallet", path: "/" },
@@ -16,34 +21,41 @@ const NAV_ITEMS: NavEntry[] = [
 ];
 
 export function DashboardLayout() {
-  const [openPanel, setOpenPanel] = useState<"notif" | "user" | null>(null);
+  const [openPanel, setOpenPanel] = useState<"notif" | "hamburger" | null>(null);
+  const [legalOpen, setLegalOpen] = useState(false);
+  const [legalVariant, setLegalVariant] = useState<LegalVariant>("terms");
   const notifAnchorRef = useRef<HTMLDivElement>(null);
-  const userAnchorRef = useRef<HTMLDivElement>(null);
+  const hamburgerAnchorRef = useRef<HTMLDivElement>(null);
   const hasUnread = NOTIFICATIONS.some((note) => note.unread);
-  const { user, logout } = useAuth();
+  const { logout } = useAuth();
   const navigate = useNavigate();
-  const userEmail = user?.email;
-  // DashboardLayout solo se renderiza dentro de ProtectedRoute (hay sesión activa
-  // siempre), pero user.email puede faltar si el storage quedó con datos parciales
-  // — no por eso hay que esconder el logout, si no queda sin forma de salir.
-  const avatarInitial = userEmail ? userEmail.charAt(0).toUpperCase() : "?";
-  const displayEmail = userEmail ?? "Mi cuenta";
 
   function handleLogout() {
     logout();
     navigate("/login", { replace: true });
   }
 
+  function handleHamburgerUsuario() {
+    setOpenPanel(null);
+    navigate("/usuario");
+  }
+
+  function openHamburgerLegal(variant: LegalVariant) {
+    setOpenPanel(null);
+    setLegalVariant(variant);
+    setLegalOpen(true);
+  }
+
   // Cerrar el panel abierto al hacer click/tap afuera o presionar Escape. Se usa
   // pointerdown (no mousedown) para cubrir mouse, touch y pen por igual — este
   // proyecto es mobile-first, mousedown no está garantizado en pantallas táctiles.
   // Solo hay un panel abierto a la vez (openPanel), así que un único listener
-  // alcanza para los dos anchors (notificaciones / usuario).
+  // alcanza para los dos anchors (notificaciones / hamburguesa).
   useEffect(() => {
     if (!openPanel) return;
 
     function handlePointerDown(event: PointerEvent) {
-      const anchor = openPanel === "notif" ? notifAnchorRef.current : userAnchorRef.current;
+      const anchor = openPanel === "notif" ? notifAnchorRef.current : hamburgerAnchorRef.current;
       if (anchor && !anchor.contains(event.target as Node)) {
         setOpenPanel(null);
       }
@@ -90,21 +102,42 @@ export function DashboardLayout() {
           </div>
 
           <div className={styles.divider} />
-          <div className={styles.menuAnchor} ref={userAnchorRef}>
+
+          <div className={`${styles.menuAnchor} ${styles.hamburgerAnchor}`} ref={hamburgerAnchorRef}>
             <button
               type="button"
-              className={styles.userTrigger}
-              onClick={() => setOpenPanel((current) => (current === "user" ? null : "user"))}
+              className={styles.ghostIconButton}
+              onClick={() => setOpenPanel((current) => (current === "hamburger" ? null : "hamburger"))}
+              aria-label="Menú"
             >
-              <span className={styles.avatar}>{avatarInitial}</span>
-              <span className={styles.email}>{displayEmail}</span>
+              <span className={`msym ${styles.icon}`} aria-hidden="true">menu</span>
             </button>
 
-            {openPanel === "user" && (
-              <div className={`${styles.userPanelBox} ${styles.userPanel}`}>
-                <button type="button" className={styles.logoutButton} onClick={handleLogout}>
+            {openPanel === "hamburger" && (
+              <div className={`${styles.dropdownBox} ${styles.hamburgerPanel}`}>
+                <button type="button" className={styles.hamburgerItem} onClick={handleHamburgerUsuario}>
+                  Usuario
+                </button>
+                <button type="button" className={styles.hamburgerItem} onClick={() => openHamburgerLegal("terms")}>
+                  Términos y condiciones
+                </button>
+                <button
+                  type="button"
+                  className={styles.hamburgerItem}
+                  onClick={() => openHamburgerLegal("privacy")}
+                >
+                  Políticas de privacidad
+                </button>
+                <button type="button" className={styles.hamburgerItem} onClick={handleLogout}>
                   Cerrar sesión
                 </button>
+                <a
+                  href={`mailto:${SUPPORT_EMAIL}`}
+                  className={styles.hamburgerItem}
+                  onClick={() => setOpenPanel(null)}
+                >
+                  Contacta a Soporte
+                </a>
               </div>
             )}
           </div>
@@ -115,6 +148,7 @@ export function DashboardLayout() {
       </main>
       <BottomNav items={NAV_ITEMS} />
       <Sidebar items={NAV_ITEMS} onLogout={handleLogout} />
+      <LegalModal isOpen={legalOpen} onClose={() => setLegalOpen(false)} variant={legalVariant} />
     </div>
   );
 }

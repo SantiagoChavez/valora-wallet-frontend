@@ -34,6 +34,8 @@ export function Sidebar({ items, onLogout }: SidebarProps) {
             <span className={styles.navLabel}>Usuario</span>
           </NavLink>
 
+          <div className={styles.navDivider} />
+
           {items.map((item) => (
             <NavLink
               key={item.id}

@@ -129,88 +129,66 @@
 }
 
 .divider {
+  /* Separaba el ícono de notificaciones del trigger de usuario en desktop;
+     ahora ese trigger no existe más en desktop (ver hamburgerAnchor) y solo
+     tiene sentido junto al ícono de hamburguesa, mobile-only. */
+  display: none;
   width: 1px;
   height: 26px;
   background: var(--border);
   margin: 0 2px;
 }
 
-.userTrigger {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-sm);
-  background: transparent;
-  border: none;
-  padding: 0;
-  cursor: pointer;
-}
-
-.avatar {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  background-color: var(--border);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: var(--font-size-md);
-  font-weight: var(--font-weight-semibold);
-  color: var(--text-primary);
-  flex-shrink: 0;
-  border: 2px solid transparent;
-  transition: border-color 0.15s ease, transform 0.15s ease;
-}
-
-.userTrigger:hover .avatar {
-  border-color: var(--accent);
-  transform: scale(1.05);
-}
-
-.email {
-  font-size: var(--font-size-md);
-  color: var(--text-secondary);
-}
-
 @media (max-width: 859px) {
-  .email {
-    display: none;
+  .divider {
+    display: block;
   }
 }
 
-.userPanelBox {
+.hamburgerAnchor {
+  /* El menú hamburguesa reemplaza, solo en mobile, al trigger de usuario que
+     existía acá antes — en desktop el Sidebar ya cubre "Usuario" y "Cerrar
+     sesión", así que este bloque no tiene sentido y queda oculto. */
+  display: none;
+}
+
+@media (max-width: 859px) {
+  .hamburgerAnchor {
+    display: block;
+  }
+}
+
+.dropdownBox {
   composes: popover from "../../shared/styles/popover.module.css";
 }
 
-.userPanel {
+.hamburgerPanel {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
   width: auto;
-  min-width: 160px;
+  min-width: 220px;
   padding: var(--spacing-sm);
 }
 
-.logoutButton {
-  /* En desktop el logout ya vive en el Sidebar; este botón del header queda
-     solo para mobile, donde el Sidebar está oculto (ver Sidebar.module.css). */
-  display: none;
+.hamburgerItem {
+  display: block;
   width: 100%;
   background: transparent;
   border: none;
   border-radius: var(--radius-sm);
-  color: var(--danger);
+  color: var(--text-primary);
+  font-family: inherit;
   font-size: var(--font-size-sm);
-  font-weight: var(--font-weight-semibold);
+  font-weight: var(--font-weight-medium);
   text-align: left;
+  text-decoration: none;
   padding: 8px 10px;
   cursor: pointer;
 }
 
-.logoutButton:hover {
+.hamburgerItem:hover {
   background: var(--bg-inset);
-}
-
-@media (max-width: 859px) {
-  .logoutButton {
-    display: block;
-  }
 }
 
 .main {
