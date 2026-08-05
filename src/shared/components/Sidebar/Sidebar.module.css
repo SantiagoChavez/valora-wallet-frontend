@@ -6,7 +6,7 @@
   top: 0;
   left: 0;
   bottom: 0;
-  width: var(--sidebar-width, 240px);
+  width: var(--sidebar-width);
   padding: var(--spacing-xl) var(--spacing-md);
   background: var(--bg-elevated);
   border-right: 1px solid var(--border);
