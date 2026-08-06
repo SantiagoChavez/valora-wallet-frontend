@@ -84,10 +84,9 @@ export function Login() {
             <div className={styles.field}>
               <div className={styles.fieldHeader}>
                 <label htmlFor="password" className={styles.fieldLabel}>Contraseña</label>
-                {/* Sin recuperación de contraseña todavía (no hay endpoint en el backend) */}
-                <button type="button" className={styles.inlineLink} aria-disabled="true" title="Todavía no disponible">
+                <Link to="/recuperar-contrasena" className={styles.inlineLink}>
                   ¿Olvidaste tu contraseña?
-                </button>
+                </Link>
               </div>
               <Input
                 id="password"
