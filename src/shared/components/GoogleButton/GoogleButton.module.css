@@ -1,0 +1,20 @@
+.googleButton {
+  width: 100%;
+  height: 56px;
+  border-radius: var(--radius-lg);
+  font-size: var(--font-size-lg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+/* Button compartido: variant="secondary" solo cambia border-color en hover, así que
+   alcanza con revertir esa propiedad puntual mientras el botón está aria-disabled */
+.googleButton[aria-disabled="true"] {
+  cursor: not-allowed;
+}
+
+.googleButton[aria-disabled="true"]:hover {
+  border-color: var(--border);
+}
