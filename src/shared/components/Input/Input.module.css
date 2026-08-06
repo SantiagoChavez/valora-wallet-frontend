@@ -68,7 +68,8 @@
 .inputIcon {
   position: absolute;
   right: var(--spacing-md);
-  top: 17px;
+  top: 50%;
+  transform: translateY(-50%);
   color: var(--text-secondary);
   opacity: 0.7;
   pointer-events: none;
@@ -77,7 +78,8 @@
 .inputIconButton {
   position: absolute;
   right: 12px;
-  top: 12px;
+  top: 50%;
+  transform: translateY(-50%);
   display: flex;
   background: none;
   border: none;
