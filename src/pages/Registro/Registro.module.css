@@ -142,36 +142,6 @@
   color: var(--danger);
 }
 
-.strengthMeter {
-  display: flex;
-  gap: 4px;
-  margin-top: 4px;
-  margin-left: 4px;
-}
-
-.strengthBar {
-  flex: 1;
-  height: 3px;
-  border-radius: var(--radius-pill);
-  background: var(--border);
-}
-
-.strengthLevel1 {
-  background: var(--danger);
-}
-
-.strengthLevel2 {
-  background: var(--strength-fair);
-}
-
-.strengthLevel3 {
-  background: var(--strength-good);
-}
-
-.strengthLevel4 {
-  background: var(--success);
-}
-
 .checkboxRow {
   display: flex;
   align-items: flex-start;
