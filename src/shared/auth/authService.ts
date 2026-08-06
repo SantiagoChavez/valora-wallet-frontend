@@ -1,5 +1,9 @@
 import { apiFetch } from "../services/apiClient";
 import type { User } from "../types/models";
+import type {
+  ForgotPasswordResponse,
+  ResetPasswordResponse,
+} from "./passwordReset.types";
 
 export interface AuthResponse {
   token: string;
@@ -25,5 +29,19 @@ export function register(
   return apiFetch<AuthResponse>("/auth/register", {
     method: "POST",
     body: JSON.stringify({ email, password, firstName, lastName, dateOfBirth, phone }),
+  });
+}
+
+export function requestPasswordReset(email: string): Promise<ForgotPasswordResponse> {
+  return apiFetch<ForgotPasswordResponse>("/auth/forgot-password", {
+    method: "POST",
+    body: JSON.stringify({ email }),
+  });
+}
+
+export function resetPassword(token: string, password: string): Promise<ResetPasswordResponse> {
+  return apiFetch<ResetPasswordResponse>("/auth/reset-password", {
+    method: "POST",
+    body: JSON.stringify({ token, password }),
   });
 }
