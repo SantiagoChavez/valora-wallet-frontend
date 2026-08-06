@@ -136,10 +136,7 @@
 }
 
 .fieldHint {
-  margin: 0;
-  margin-left: 4px;
-  font-size: var(--font-size-xs);
-  color: var(--danger);
+  composes: fieldHint from "../../shared/components/AuthShared/AuthShared.module.css";
 }
 
 .checkboxRow {

@@ -47,6 +47,13 @@
   font-size: var(--font-size-xs);
 }
 
+.fieldHint {
+  margin: 0;
+  margin-left: 4px;
+  font-size: var(--font-size-xs);
+  color: var(--danger);
+}
+
 .actionButton {
   width: 100%;
   height: 56px;
