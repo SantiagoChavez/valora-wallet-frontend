@@ -13,6 +13,12 @@
   }
 }
 
+/* Sobrescribe el display:none de arriba en cualquier breakpoint — misma
+   especificidad, gana por venir después en el archivo. Ver AuthMobileHeader.tsx */
+.alwaysVisible {
+  display: flex;
+}
+
 .mobileLogo {
   width: 72px;
   height: 72px;
