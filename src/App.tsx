@@ -1,16 +1,34 @@
-import { Navigate, Route, Routes } from "react-router-dom";
+import { Route, Routes } from "react-router-dom";
+import { GuestRoute } from "./shared/components/GuestRoute";
+import { NotFoundRedirect } from "./shared/components/NotFoundRedirect";
+import { ProtectedRoute } from "./shared/components/ProtectedRoute";
+import { ExchangeForm } from "./features/exchange/ExchangeForm";
+import { HistoryPage } from "./features/history/HistoryPage";
 import { DashboardLayout } from "./layouts/DashboardLayout/DashboardLayout";
 import { Dashboard } from "./pages/Dashboard/Dashboard";
 import { Login } from "./pages/Login/Login";
+import { Registro } from "./pages/Registro/Registro";
+import { Tarjetas } from "./pages/Tarjetas/Tarjetas";
+import { Usuario } from "./pages/Usuario/Usuario";
 
 function App() {
   return (
     <Routes>
-      <Route path="/login" element={<Login />} />
-      <Route element={<DashboardLayout />}>
-        <Route path="/" element={<Dashboard />} />
+      <Route element={<GuestRoute />}>
+        <Route path="/login" element={<Login />} />
+        <Route path="/registro" element={<Registro />} />
       </Route>
-      <Route path="*" element={<Navigate to="/" replace />} />
+      <Route element={<ProtectedRoute />}>
+        {/* Cualquier ruta privada futura (ej: /transactions) va como hija acá adentro, no afuera */}
+        <Route element={<DashboardLayout />}>
+          <Route path="/" element={<Dashboard />} />
+          <Route path="/usuario" element={<Usuario />} />
+          <Route path="/tarjetas" element={<Tarjetas />} />
+          <Route path="/intercambio" element={<ExchangeForm />} />
+          <Route path="/actividad" element={<HistoryPage />} />
+        </Route>
+      </Route>
+      <Route path="*" element={<NotFoundRedirect />} />
     </Routes>
   );
 }

@@ -1,0 +1,75 @@
+.panel {
+  composes: popover from "../../styles/popover.module.css";
+}
+
+.panelHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 14px;
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-medium);
+  color: var(--text-primary);
+}
+
+.panelCloseButton {
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  display: flex;
+}
+
+.panelCloseButton:hover {
+  color: var(--text-primary);
+}
+
+.notifList {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.notifRow {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 10px;
+  border-radius: var(--radius-sm);
+  background: transparent;
+}
+
+.notifRowUnread {
+  background: var(--bg-inset);
+}
+
+.notifDot {
+  margin-top: 5px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--text-tertiary);
+  flex-shrink: 0;
+}
+
+.notifDotUnread {
+  background: var(--accent);
+}
+
+.notifTextGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.notifTitle {
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-medium);
+  color: var(--text-primary);
+}
+
+.notifBody {
+  font-size: var(--font-size-xs);
+  letter-spacing: var(--tracking-wide);
+  color: var(--text-secondary);
+}

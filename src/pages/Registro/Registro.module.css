@@ -2,7 +2,6 @@
   position: relative;
   min-height: 100vh;
   display: flex;
-  overflow: hidden;
   background: var(--bg-base);
 }
 
@@ -83,7 +82,9 @@
   }
 }
 
-/* Panel de marca (izquierda en desktop, arriba en tablet, oculto en mobile) */
+/* Panel de marca — se queda fijo (sticky) en desktop mientras el formulario, más
+   largo que en Login, scrollea por abajo. En Login no hace falta: el form entra
+   entero en el viewport y el panel no necesita despegarse del flujo normal. */
 
 .brandPanel {
   position: relative;
@@ -96,6 +97,14 @@
   min-width: 420px;
   padding: 64px;
   background: var(--bg-elevated);
+}
+
+@media (min-width: 1024px) {
+  .brandPanel {
+    position: sticky;
+    top: 0;
+    height: 100vh;
+  }
 }
 
 @media (max-width: 1023px) {
@@ -174,30 +183,35 @@
   margin: 0 0 var(--spacing-xl) 0;
 }
 
-.brandPills {
+.brandChecklist {
+  margin: 0;
+  padding: 0;
+  list-style: none;
   display: flex;
-  flex-wrap: wrap;
-  gap: var(--spacing-sm);
+  flex-direction: column;
+  gap: var(--spacing-md);
 }
 
-.pill {
+.brandChecklistItem {
   display: flex;
   align-items: center;
   gap: var(--spacing-sm);
-  background: var(--bg-inset);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-pill);
-  padding: var(--spacing-sm) var(--spacing-md);
   font-size: var(--font-size-md);
-  font-weight: var(--font-weight-medium);
   color: var(--text-primary);
 }
 
-.pillDot {
-  width: 8px;
-  height: 8px;
+.brandCheckIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
   border-radius: var(--radius-pill);
-  background: var(--success);
+  background: var(--bg-inset);
+  border: 1px solid var(--border);
+  color: var(--success);
+  flex-shrink: 0;
+  font-size: var(--font-size-md);
 }
 
 /* Panel del formulario */
@@ -215,17 +229,12 @@
 @media (max-width: 639px) {
   .formPanel {
     padding: var(--spacing-md);
-    min-height: 60vh;
   }
 }
 
 .formPanelInner {
   width: 100%;
   max-width: 420px;
-  /* Centra verticalmente cuando sobra espacio, pero nunca fuerza el contenido
-     contra un footer posicionado aparte — a diferencia de justify-content:center
-     en .formPanel, esto no puede superponerse con .footerNote (ahora en el
-     mismo flujo, ver más abajo) ni bloquearle los clicks. */
   margin: auto 0;
 }
 
@@ -284,23 +293,19 @@
   gap: var(--spacing-lg);
 }
 
+.nameRow {
+  display: flex;
+  gap: var(--spacing-md);
+}
+
+.nameRow > .field {
+  flex: 1;
+}
+
 .field {
   display: flex;
   flex-direction: column;
   gap: 6px;
-}
-
-.fieldHeader {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-/* El mockup sí le da un tamaño propio más chico a "¿Olvidaste tu contraseña?"
-   (secundario, junto a un label de --font-size-md) — el resto de los usos de
-   .inlineLink hereda en vez de fijar un tamaño. */
-.fieldHeader .inlineLink {
-  font-size: var(--font-size-sm);
 }
 
 .fieldLabel {
@@ -320,7 +325,7 @@
   background: var(--bg-elevated);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
-  padding: 0 44px 0 var(--spacing-lg);
+  padding: 0 var(--spacing-lg);
   color: var(--text-primary);
   font-family: var(--font-family-base);
   font-size: var(--font-size-lg);
@@ -334,6 +339,23 @@
 
 .input::placeholder {
   color: var(--text-tertiary);
+}
+
+.inputWithIcon {
+  padding-right: 44px;
+}
+
+.inputError {
+  border-color: var(--danger);
+}
+
+.input[type="date"] {
+  /* Igual que color-scheme:dark en body (index.css): no hay toggle real
+     todavía (nada setea data-theme en tiempo de ejecución), así que un
+     override condicional a data-theme="light" acá sería CSS muerto — mismo
+     motivo por el que se revirtió en el commit 2988c02. Revisar junto con el
+     toggle real cuando exista, no antes. */
+  color-scheme: dark;
 }
 
 .inputIcon {
@@ -363,14 +385,70 @@
   opacity: 1;
 }
 
+.fieldHint {
+  margin: 0;
+  margin-left: 4px;
+  font-size: var(--font-size-xs);
+  color: var(--danger);
+}
+
+.strengthMeter {
+  display: flex;
+  gap: 4px;
+  margin-top: 4px;
+  margin-left: 4px;
+}
+
+.strengthBar {
+  flex: 1;
+  height: 3px;
+  border-radius: var(--radius-pill);
+  background: var(--border);
+}
+
+.strengthLevel1 {
+  background: var(--danger);
+}
+
+.strengthLevel2 {
+  background: var(--strength-fair);
+}
+
+.strengthLevel3 {
+  background: var(--strength-good);
+}
+
+.strengthLevel4 {
+  background: var(--success);
+}
+
+.checkboxRow {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--spacing-sm);
+  margin-top: 4px;
+}
+
+.checkbox {
+  width: 18px;
+  height: 18px;
+  margin: 2px 0 0 0;
+  accent-color: var(--accent);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.checkboxLabel {
+  margin: 0;
+  font-size: var(--font-size-sm);
+  line-height: 19px;
+  color: var(--text-secondary);
+}
+
 .inlineLink {
   background: none;
   border: none;
   padding: 0;
-  /* Hereda el tamaño del texto que lo rodea (mismo criterio que el mockup: el
-     link de "Registrate" no tenía font-size propio, solo el de "¿Olvidaste tu
-     contraseña?" — ver .fieldHeader .inlineLink más abajo). Un tamaño fijo acá
-     hacía que "Registrate" se viera más chico que el resto de la oración. */
   font-size: inherit;
   font-weight: var(--font-weight-semibold);
   color: var(--accent);
@@ -446,8 +524,10 @@
 }
 
 .footerNote {
-  margin-top: var(--spacing-xl);
+  width: 100%;
+  max-width: 420px;
   text-align: center;
+  margin-top: var(--spacing-xl);
   font-size: var(--font-size-2xs);
   color: var(--text-secondary);
   opacity: 0.4;

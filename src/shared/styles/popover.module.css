@@ -1,0 +1,24 @@
+/* Shell compartido para popovers flotantes anclados a un botón del header
+   (panel de notificaciones, menú de usuario). Cada .module.css local lo suma
+   vía `composes`, así mantiene su propio nombre de clase sin duplicar reglas. */
+.popover {
+  position: absolute;
+  top: calc(100% + 12px);
+  right: 0;
+  z-index: 60;
+  width: 320px;
+  background: var(--bg-panel);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+  padding: var(--spacing-md);
+  animation-name: global(notifIn);
+  animation-duration: 0.15s;
+  animation-timing-function: ease-out;
+}
+
+@media (max-width: 859px) {
+  .popover {
+    right: -16px;
+  }
+}

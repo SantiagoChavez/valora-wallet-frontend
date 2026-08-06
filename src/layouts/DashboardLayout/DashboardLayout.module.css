@@ -2,48 +2,208 @@
   min-height: 100vh;
   background-color: var(--bg-base);
   color: var(--text-primary);
+  /* Consumido por Sidebar (mismo componente) para su propio ancho y acá para
+     compensar con padding-left — una sola fuente, nunca se repite el 240px. */
+  --sidebar-width: 240px;
+  padding-left: var(--sidebar-width, 0);
+  /* Consumido por shared/components/Toast: el sidebar corre el centro visual
+     del área de contenido (main) hacia la derecha respecto del viewport
+     completo — este offset compensa ese corrimiento en su left:50% fijo. */
+  --toast-center-offset: calc(var(--sidebar-width) / 2);
+}
+
+@media (max-width: 859px) {
+  .layout {
+    /* Sidebar se oculta en mobile (ver Sidebar.module.css); sin esto el
+       padding-left desktop quedaría empujando el contenido sin necesidad. */
+    padding-left: 0;
+    /* Sin sidebar en mobile no hay corrimiento que compensar — el toast debe
+       quedar centrado real en el viewport, igual que antes de este fix. */
+    --toast-center-offset: 0px;
+    /* Consumido por shared/components/Toast: en mobile, las páginas colgadas
+       de este layout (Dashboard hoy, Tarjetas/Intercambio/Actividad después)
+       tienen un bottom nav fijo — el toast necesita este offset para no
+       quedar tapado. Registro/Login no cuelgan de acá, caen al default. */
+    --toast-bottom-offset: 96px;
+    /* Mismo motivo, para el contenido scrolleable de cada página (no un overlay
+       flotante como el toast): despeja el padding-bottom del bottom nav fijo,
+       sin repetir el valor a mano en cada .module.css que cuelgue de <Outlet/>. */
+    --content-bottom-offset: 96px;
+  }
 }
 
 .header {
+  position: sticky;
+  top: 0;
+  z-index: 50;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: var(--spacing-md) var(--spacing-xl);
+  height: 64px;
+  padding: 0 var(--spacing-xl);
+  background-color: var(--bg-elevated);
   border-bottom: 1px solid var(--border);
-  background-color: var(--bg-surface);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
 }
 
-.brand {
-  color: var(--accent);
-  font-weight: 700;
-  font-size: 1.1rem;
+@media (max-width: 859px) {
+  .header {
+    padding: 0 var(--spacing-md);
+  }
 }
 
-.user {
-  position: relative;
+.brandGroup {
   display: flex;
   align-items: center;
-  gap: var(--spacing-sm);
+  gap: var(--spacing-md);
 }
 
-.avatar {
-  width: 32px;
-  height: 32px;
+.logoImg {
+  width: 56px;
+  height: 54px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+.brandText {
+  display: flex;
+  align-items: baseline;
+}
+
+.brandPrimary {
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-extrabold);
+  color: var(--text-primary);
+  letter-spacing: var(--tracking-snug);
+}
+
+.brandSecondary {
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-tertiary);
+  letter-spacing: var(--tracking-snug);
+  margin-left: 4px;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.menuAnchor {
+  position: relative;
+}
+
+.ghostIconButton {
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
-  background-color: var(--accent);
-  color: var(--bg-base);
+  border: 1px solid var(--border);
+  background: transparent;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-weight: 700;
-  font-size: 0.85rem;
+  cursor: pointer;
+  position: relative;
+  transition: border-color 0.15s ease;
 }
 
-.email {
-  color: var(--text-secondary);
-  font-size: 0.9rem;
+.ghostIconButton:hover {
+  border-color: var(--text-primary);
+}
+
+.icon {
+  font-size: var(--font-size-xl);
+  color: var(--text-primary);
+}
+
+.unreadDot {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--danger);
+}
+
+.divider {
+  /* Separaba el ícono de notificaciones del trigger de usuario en desktop;
+     ahora ese trigger no existe más en desktop (ver hamburgerAnchor) y solo
+     tiene sentido junto al ícono de hamburguesa, mobile-only. */
+  display: none;
+  width: 1px;
+  height: 26px;
+  background: var(--border);
+  margin: 0 2px;
+}
+
+@media (max-width: 859px) {
+  .divider {
+    display: block;
+  }
+}
+
+.hamburgerAnchor {
+  /* El menú hamburguesa reemplaza, solo en mobile, al trigger de usuario que
+     existía acá antes — en desktop el Sidebar ya cubre "Usuario" y "Cerrar
+     sesión", así que este bloque no tiene sentido y queda oculto. */
+  display: none;
+}
+
+@media (max-width: 859px) {
+  .hamburgerAnchor {
+    display: block;
+  }
+}
+
+.dropdownBox {
+  composes: popover from "../../shared/styles/popover.module.css";
+}
+
+.hamburgerPanel {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  width: auto;
+  min-width: 220px;
+  padding: var(--spacing-sm);
+}
+
+/* El atributo hidden nativo pierde contra el display:flex de acá arriba (ambos
+   son reglas de autor, gana la última/más específica) — sin esto, hidden no
+   ocultaría nada. Queda siempre montado (para que aria-controls apunte a un id
+   real) y hidden decide visibilidad, no el mount/unmount de React. */
+.hamburgerPanel[hidden] {
+  display: none;
+}
+
+.hamburgerDivider {
+  border-top: 1px solid var(--border);
+  margin: var(--spacing-sm) 0;
+}
+
+.hamburgerItem {
+  display: block;
+  width: 100%;
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  font-family: inherit;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  text-align: left;
+  text-decoration: none;
+  padding: 8px 10px;
+  cursor: pointer;
+}
+
+.hamburgerItem:hover {
+  background: var(--bg-inset);
 }
 
 .main {
-  padding: var(--spacing-xl);
+  padding: var(--spacing-xl) 0;
 }
