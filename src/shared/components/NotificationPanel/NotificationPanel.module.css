@@ -30,6 +30,13 @@
   gap: 10px;
 }
 
+.emptyState {
+  margin: 0;
+  padding: var(--spacing-sm) 0;
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+}
+
 .notifRow {
   display: flex;
   gap: 10px;

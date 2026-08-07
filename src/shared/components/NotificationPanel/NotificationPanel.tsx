@@ -28,6 +28,9 @@ export function NotificationPanel({ notifications, onClose, hidden }: Notificati
         </button>
       </div>
       <div className={styles.notifList}>
+        {notifications.length === 0 && (
+          <p className={styles.emptyState}>No tenés notificaciones todavía.</p>
+        )}
         {notifications.map((note) => (
           <div
             key={note.id}
