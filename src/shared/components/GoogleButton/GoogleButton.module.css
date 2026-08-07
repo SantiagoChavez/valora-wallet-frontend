@@ -1,8 +1,5 @@
 .googleButton {
-  width: 100%;
-  height: 56px;
-  border-radius: var(--radius-lg);
-  font-size: var(--font-size-lg);
+  composes: actionButton from "../AuthShared/AuthShared.module.css";
   display: flex;
   align-items: center;
   justify-content: center;
