@@ -1,7 +1,9 @@
 import { apiFetch } from "../services/apiClient";
 import type { User } from "../types/models";
 import type {
+  ForgotPasswordRequest,
   ForgotPasswordResponse,
+  ResetPasswordRequest,
   ResetPasswordResponse,
 } from "./passwordReset.types";
 
@@ -33,15 +35,17 @@ export function register(
 }
 
 export function requestPasswordReset(email: string): Promise<ForgotPasswordResponse> {
+  const body: ForgotPasswordRequest = { email };
   return apiFetch<ForgotPasswordResponse>("/auth/forgot-password", {
     method: "POST",
-    body: JSON.stringify({ email }),
+    body: JSON.stringify(body),
   });
 }
 
 export function resetPassword(token: string, password: string): Promise<ResetPasswordResponse> {
+  const body: ResetPasswordRequest = { token, password };
   return apiFetch<ResetPasswordResponse>("/auth/reset-password", {
     method: "POST",
-    body: JSON.stringify({ token, password }),
+    body: JSON.stringify(body),
   });
 }
