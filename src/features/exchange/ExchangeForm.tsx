@@ -58,7 +58,11 @@ export function ExchangeForm() {
     try {
       const transaction = await exchange(token as string, fromCurrency, toCurrency, parsedAmount);
       const received = transaction.targetAmount?.toLocaleString("es-AR", { maximumFractionDigits: 2 }) ?? "0";
-      setSuccess(`Intercambiaste ${parsedAmount.toLocaleString("es-AR")} ${fromCurrency} por ${received} ${toCurrency}.`);
+      // exchangeRate = cuántas unidades de toCurrency vale 1 unidad de fromCurrency
+      // (así lo calcula el backend, ver executeExchange en transactionService.ts).
+      const rate = transaction.exchangeRate?.toLocaleString("es-AR", { maximumFractionDigits: 2 });
+      const rateNote = rate ? ` Tasa aplicada: 1 ${fromCurrency} = ${rate} ${toCurrency}.` : "";
+      setSuccess(`Intercambiaste ${parsedAmount.toLocaleString("es-AR", { maximumFractionDigits: 2 })} ${fromCurrency} por ${received} ${toCurrency}.${rateNote}`);
       setAmount("");
       const updatedBalances = await getBalances(token as string);
       setBalances(updatedBalances);
@@ -92,7 +96,7 @@ export function ExchangeForm() {
                 ))}
               </select>
               <span className={styles.balanceHint}>
-                Disponible: {balanceFor(fromCurrency).toLocaleString("es-AR")} {fromCurrency}
+                Disponible: {balanceFor(fromCurrency).toLocaleString("es-AR", { maximumFractionDigits: 2 })} {fromCurrency}
               </span>
             </div>
 
@@ -112,6 +116,12 @@ export function ExchangeForm() {
                   <option key={code} value={code}>{code}</option>
                 ))}
               </select>
+              {/* Mismo hint que "Desde" — no es solo relleno visual para igualar
+                  la altura con la columna de al lado (que sí tiene "Disponible"
+                  debajo), también es información real y útil. */}
+              <span className={styles.balanceHint}>
+                Disponible: {balanceFor(toCurrency).toLocaleString("es-AR", { maximumFractionDigits: 2 })} {toCurrency}
+              </span>
             </div>
           </div>
 

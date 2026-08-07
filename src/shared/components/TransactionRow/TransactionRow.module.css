@@ -51,6 +51,11 @@
   color: var(--text-secondary);
 }
 
+.txRateNote {
+  font-size: var(--font-size-xs);
+  color: var(--text-tertiary);
+}
+
 .txRight {
   text-align: right;
 }

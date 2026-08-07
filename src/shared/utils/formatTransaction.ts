@@ -9,6 +9,9 @@ export interface TransactionDisplay {
   currency: CurrencyCode;
   glyph: string;
   tone: TransactionTone;
+  /** Solo presente en EXCHANGE — cuántas unidades de la moneda destino vale 1
+   *  unidad de la moneda origen, tal como la calculó el backend. */
+  rateNote?: string;
 }
 
 const CURRENCY_SYMBOL: Record<CurrencyCode, string> = { USD: "US$", EUR: "€", ARS: "$" };
@@ -42,6 +45,9 @@ export function formatTransaction(tx: Transaction): TransactionDisplay {
     }
     case "EXCHANGE": {
       const currency = tx.targetCurrency ?? tx.sourceCurrency ?? "USD";
+      const rateNote = tx.exchangeRate
+        ? `1 ${tx.sourceCurrency ?? "?"} = ${tx.exchangeRate.toLocaleString("es-AR", { maximumFractionDigits: 2 })} ${tx.targetCurrency ?? "?"}`
+        : undefined;
       return {
         title: `Intercambio ${tx.sourceCurrency ?? "?"} → ${tx.targetCurrency ?? "?"}`,
         date,
@@ -49,6 +55,7 @@ export function formatTransaction(tx: Transaction): TransactionDisplay {
         currency,
         glyph: "sync_alt",
         tone: "gold",
+        rateNote,
       };
     }
     case "BUY": {

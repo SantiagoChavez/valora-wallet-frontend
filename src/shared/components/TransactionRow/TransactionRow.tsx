@@ -24,6 +24,7 @@ export function TransactionRow({ transaction }: TransactionRowProps) {
         <div className={styles.txTextGroup}>
           <span className={styles.txTitle}>{display.title}</span>
           <span className={styles.txDate}>{display.date}</span>
+          {display.rateNote && <span className={styles.txRateNote}>{display.rateNote}</span>}
         </div>
       </div>
       <div className={styles.txRight}>
