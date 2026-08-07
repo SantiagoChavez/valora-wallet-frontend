@@ -20,6 +20,12 @@ export class ApiError extends Error {
   }
 }
 
+// Cualquier error que no sea un ApiError (falló el fetch en sí, no la respuesta
+// del servidor) no trae un mensaje pensado para mostrarle al usuario.
+export function getApiErrorMessage(err: unknown): string {
+  return err instanceof ApiError ? err.message : "No se pudo conectar con el servidor. Intentá de nuevo.";
+}
+
 interface ApiFetchOptions extends RequestInit {
   token?: string;
 }
