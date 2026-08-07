@@ -87,3 +87,16 @@
   font-weight: var(--font-weight-medium);
   letter-spacing: var(--tracking-wide);
 }
+
+/* AuthBrandGlow no trae su propio display:none (en Login/Registro lo oculta
+   .brandPanel, que acá no existe) — replicamos la exclusión mutua con
+   AuthMobileGlow a mano: mobile usa el glow mobile, desktop/tablet usa este. */
+.brandGlowWrapper {
+  display: none;
+}
+
+@media (min-width: 640px) {
+  .brandGlowWrapper {
+    display: block;
+  }
+}
