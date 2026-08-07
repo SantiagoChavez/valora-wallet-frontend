@@ -1,13 +1,16 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, type SubmitEvent } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../../shared/auth/useAuth";
+import { Button } from "../../shared/components/Button/Button";
 import { CardDisplay } from "../../shared/components/CardDisplay/CardDisplay";
+import { Input } from "../../shared/components/Input/Input";
+import { Modal } from "../../shared/components/Modal/Modal";
 import { Toast } from "../../shared/components/Toast/Toast";
 import { useToast } from "../../shared/components/Toast/useToast";
 import { TransactionRow } from "../../shared/components/TransactionRow/TransactionRow";
 import { getApiErrorMessage } from "../../shared/services/apiClient";
 import { getBalances } from "../../shared/services/balanceService";
-import { getTransactions } from "../../shared/services/transactionService";
+import { deposit, getTransactions } from "../../shared/services/transactionService";
 import type { Balance, CurrencyCode, Transaction } from "../../shared/types/models";
 import styles from "./Dashboard.module.css";
 
@@ -41,34 +44,69 @@ export function Dashboard() {
   const { message: toast, showToast } = useToast();
   const currencyMenuAnchorRef = useRef<HTMLDivElement>(null);
 
+  const [isDepositOpen, setIsDepositOpen] = useState(false);
+  const [depositCurrency, setDepositCurrency] = useState<CurrencyCode>("USD");
+  const [depositAmount, setDepositAmount] = useState("");
+  const [isDepositing, setIsDepositing] = useState(false);
+  const [depositError, setDepositError] = useState<string | null>(null);
+
+  const loadDashboardData = useCallback(async (cancelled: boolean) => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const [balancesData, transactionsResult] = await Promise.all([
+        getBalances(token as string),
+        getTransactions(token as string, { limit: LATEST_TRANSACTIONS_LIMIT }),
+      ]);
+      if (cancelled) return;
+      setBalances(balancesData);
+      setTransactions(transactionsResult.transactions);
+    } catch (err) {
+      if (cancelled) return;
+      setError(getApiErrorMessage(err));
+    } finally {
+      if (!cancelled) setIsLoading(false);
+    }
+  }, [token]);
+
   useEffect(() => {
     if (!token) return;
     let cancelled = false;
-
-    async function loadDashboardData() {
-      setIsLoading(true);
-      setError(null);
-      try {
-        const [balancesData, transactionsResult] = await Promise.all([
-          getBalances(token as string),
-          getTransactions(token as string, { limit: LATEST_TRANSACTIONS_LIMIT }),
-        ]);
-        if (cancelled) return;
-        setBalances(balancesData);
-        setTransactions(transactionsResult.transactions);
-      } catch (err) {
-        if (cancelled) return;
-        setError(getApiErrorMessage(err));
-      } finally {
-        if (!cancelled) setIsLoading(false);
-      }
-    }
-
-    loadDashboardData();
+    loadDashboardData(cancelled);
     return () => {
       cancelled = true;
     };
-  }, [token]);
+  }, [token, loadDashboardData]);
+
+  function openDepositModal() {
+    setDepositCurrency("USD");
+    setDepositAmount("");
+    setDepositError(null);
+    setIsDepositOpen(true);
+  }
+
+  async function handleDepositSubmit(event: SubmitEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setDepositError(null);
+
+    const parsedAmount = Number(depositAmount);
+    if (!Number.isFinite(parsedAmount) || parsedAmount <= 0) {
+      setDepositError("Ingresá un monto válido, mayor a cero.");
+      return;
+    }
+
+    setIsDepositing(true);
+    try {
+      await deposit(token as string, depositCurrency, parsedAmount);
+      setIsDepositOpen(false);
+      showToast(`Depositaste ${parsedAmount.toLocaleString("es-AR")} ${depositCurrency}.`);
+      await loadDashboardData(false);
+    } catch (err) {
+      setDepositError(getApiErrorMessage(err));
+    } finally {
+      setIsDepositing(false);
+    }
+  }
 
   // Cerrar el menú de moneda con click/tap afuera o Escape — mismo patrón que los
   // popovers de DashboardLayout (pointerdown para cubrir mouse, touch y pen).
@@ -202,6 +240,10 @@ export function Dashboard() {
               <span className="msym" style={{ fontSize: 18 }} aria-hidden="true">remove</span>
               Vender
             </button>
+            <button type="button" className={styles.sellButton} onClick={openDepositModal}>
+              <span className="msym" style={{ fontSize: 18 }} aria-hidden="true">arrow_downward</span>
+              Depositar
+            </button>
           </div>
         </div>
 
@@ -240,6 +282,47 @@ export function Dashboard() {
       </aside>
 
       <Toast message={toast} />
+
+      <Modal isOpen={isDepositOpen} onClose={() => setIsDepositOpen(false)} ariaLabel="Depositar fondos">
+        <form onSubmit={handleDepositSubmit} className={styles.depositForm}>
+          <h2 className={styles.depositTitle}>Depositar fondos</h2>
+          <p className={styles.depositSubtitle}>Simulá recibir dinero en tu cuenta — no es dinero real.</p>
+
+          <div className={styles.depositField}>
+            <label className={styles.label} htmlFor="depositCurrency">Moneda</label>
+            <select
+              id="depositCurrency"
+              className={styles.depositSelect}
+              value={depositCurrency}
+              onChange={(event) => setDepositCurrency(event.target.value as CurrencyCode)}
+            >
+              {CURRENCY_OPTIONS.map((code) => (
+                <option key={code} value={code}>{code}</option>
+              ))}
+            </select>
+          </div>
+
+          <Input
+            label="Monto"
+            type="number"
+            inputMode="decimal"
+            min="0"
+            step="0.01"
+            placeholder="0.00"
+            value={depositAmount}
+            onChange={(event) => setDepositAmount(event.target.value)}
+            required
+          />
+
+          {depositError && (
+            <p className={styles.depositError} role="alert">{depositError}</p>
+          )}
+
+          <Button type="submit" disabled={isDepositing}>
+            {isDepositing ? "Depositando..." : "Confirmar depósito"}
+          </Button>
+        </form>
+      </Modal>
     </div>
   );
 }

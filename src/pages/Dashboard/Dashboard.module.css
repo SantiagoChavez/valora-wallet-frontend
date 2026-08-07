@@ -227,9 +227,19 @@
 
 .buySellRow {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(3, 1fr);
   gap: var(--spacing-md);
   margin-top: 20px;
+}
+
+@media (max-width: 480px) {
+  .buySellRow {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .buySellRow > button:last-child {
+    grid-column: 1 / -1;
+  }
 }
 
 .buyButton,
@@ -395,5 +405,56 @@
   padding: var(--spacing-sm) 0;
   font-size: var(--font-size-md);
   color: var(--text-secondary);
+}
+
+/* Modal de depósito */
+
+.depositForm {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+  width: min(360px, 80vw);
+}
+
+.depositTitle {
+  margin: 0;
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--text-primary);
+}
+
+.depositSubtitle {
+  margin: calc(var(--spacing-xs) * -1) 0 0 0;
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+}
+
+.depositField {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+}
+
+.depositSelect {
+  width: 100%;
+  box-sizing: border-box;
+  background-color: var(--bg-base);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: var(--spacing-sm) var(--spacing-md);
+  color: var(--text-primary);
+  font-family: var(--font-family-base);
+  font-size: 0.95rem;
+}
+
+.depositSelect:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.depositError {
+  margin: 0;
+  color: var(--danger);
+  font-size: var(--font-size-xs);
 }
 
