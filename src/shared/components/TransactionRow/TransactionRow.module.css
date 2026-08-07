@@ -1,0 +1,94 @@
+.txRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--spacing-sm);
+  margin: 0 calc(var(--spacing-sm) * -1);
+  border-radius: var(--radius-md);
+  cursor: default;
+  transition: background-color 0.15s ease;
+}
+
+.txRow:hover {
+  background: var(--bg-inset);
+}
+
+.txRowLeft {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  min-width: 0;
+}
+
+.txIconWrap {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.txIcon {
+  font-size: var(--font-size-xl);
+}
+
+.txTextGroup {
+  display: flex;
+  flex-direction: column;
+}
+
+.txTitle {
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-medium);
+  color: var(--text-primary);
+}
+
+.txDate {
+  font-size: var(--font-size-xs);
+  letter-spacing: var(--tracking-wide);
+  color: var(--text-secondary);
+}
+
+.txRight {
+  text-align: right;
+}
+
+.txAmount {
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-semibold);
+}
+
+.txCurrency {
+  font-size: var(--font-size-xs);
+  letter-spacing: var(--tracking-wide);
+  color: var(--text-secondary);
+}
+
+.tonePos {
+  color: var(--success);
+}
+
+.toneNeg {
+  color: var(--danger);
+}
+
+.toneGold {
+  color: var(--accent);
+}
+
+.txIconWrap.tonePos {
+  background: color-mix(in srgb, var(--success) 15%, transparent);
+  border: 1px solid color-mix(in srgb, var(--success) 20%, transparent);
+}
+
+.txIconWrap.toneNeg {
+  background: color-mix(in srgb, var(--danger) 15%, transparent);
+  border: 1px solid color-mix(in srgb, var(--danger) 20%, transparent);
+}
+
+.txIconWrap.toneGold {
+  background: color-mix(in srgb, var(--accent) 15%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent) 20%, transparent);
+}
