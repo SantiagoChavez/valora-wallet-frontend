@@ -9,7 +9,7 @@ import { AuthMobileHeader } from "../../shared/components/AuthMobileHeader/AuthM
 import { AuthBrandCopy } from "../../shared/components/AuthBrandCopy/AuthBrandCopy";
 import { AuthFormIntro } from "../../shared/components/AuthFormIntro/AuthFormIntro";
 import { useAuth } from "../../shared/auth/useAuth";
-import { ApiError } from "../../shared/services/apiClient";
+import { getApiErrorMessage } from "../../shared/services/apiClient";
 import styles from "./Login.module.css";
 
 export function Login() {
@@ -29,8 +29,7 @@ export function Login() {
       await login(email, password);
       navigate("/", { replace: true });
     } catch (err) {
-      const message = err instanceof ApiError ? err.message : "No se pudo conectar con el servidor. Intentá de nuevo.";
-      setError(message);
+      setError(getApiErrorMessage(err));
     } finally {
       setIsSubmitting(false);
     }

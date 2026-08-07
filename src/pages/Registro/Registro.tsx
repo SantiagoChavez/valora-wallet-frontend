@@ -13,7 +13,7 @@ import { LegalModal, type LegalVariant } from "../../shared/components/LegalModa
 import { Toast } from "../../shared/components/Toast/Toast";
 import { useToast, TOAST_DURATION_MS } from "../../shared/components/Toast/useToast";
 import * as authService from "../../shared/auth/authService";
-import { ApiError } from "../../shared/services/apiClient";
+import { getApiErrorMessage } from "../../shared/services/apiClient";
 import styles from "./Registro.module.css";
 
 const MIN_AGE_YEARS = 18;
@@ -94,8 +94,7 @@ export function Registro() {
         navigate("/login", { replace: true });
       }, TOAST_DURATION_MS);
     } catch (err) {
-      const message = err instanceof ApiError ? err.message : "No se pudo conectar con el servidor. Intentá de nuevo.";
-      setError(message);
+      setError(getApiErrorMessage(err));
       setIsSubmitting(false);
     }
   }

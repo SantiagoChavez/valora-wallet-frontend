@@ -6,7 +6,7 @@ import { AuthMobileGlow, AuthBrandGlow } from "../../shared/components/AuthBlobs
 import { AuthMobileHeader } from "../../shared/components/AuthMobileHeader/AuthMobileHeader";
 import { AuthFormIntro } from "../../shared/components/AuthFormIntro/AuthFormIntro";
 import * as authService from "../../shared/auth/authService";
-import { ApiError } from "../../shared/services/apiClient";
+import { getApiErrorMessage } from "../../shared/services/apiClient";
 import styles from "./RecuperarContrasena.module.css";
 
 type Status = "idle" | "loading" | "success" | "error";
@@ -24,8 +24,7 @@ export function RecuperarContrasena() {
       await authService.requestPasswordReset(email);
       setStatus("success");
     } catch (err) {
-      const message = err instanceof ApiError ? err.message : "No se pudo conectar con el servidor. Intentá de nuevo.";
-      setErrorMessage(message);
+      setErrorMessage(getApiErrorMessage(err));
       setStatus("error");
     }
   }
