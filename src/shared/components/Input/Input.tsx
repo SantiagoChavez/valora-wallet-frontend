@@ -2,7 +2,7 @@ import type { InputHTMLAttributes } from "react";
 import { useId } from "react";
 import styles from "./Input.module.css";
 
-interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
+interface InputProps extends Omit<InputHTMLAttributes<HTMLInputElement>, "size"> {
   label?: string;
   /** Símbolo de Material Symbols. Decorativo salvo que se pase onIconClick. */
   icon?: string;
