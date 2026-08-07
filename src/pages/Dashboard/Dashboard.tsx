@@ -1,64 +1,74 @@
 import { useEffect, useRef, useState } from "react";
+import { Link } from "react-router-dom";
+import { useAuth } from "../../shared/auth/useAuth";
 import { CardDisplay } from "../../shared/components/CardDisplay/CardDisplay";
 import { Toast } from "../../shared/components/Toast/Toast";
 import { useToast } from "../../shared/components/Toast/useToast";
+import { TransactionRow } from "../../shared/components/TransactionRow/TransactionRow";
+import { getApiErrorMessage } from "../../shared/services/apiClient";
+import { getBalances } from "../../shared/services/balanceService";
+import { getTransactions } from "../../shared/services/transactionService";
+import type { Balance, CurrencyCode, Transaction } from "../../shared/types/models";
 import styles from "./Dashboard.module.css";
 
-type CurrencyCode = "USD" | "EUR" | "ARS";
-type TxTone = "pos" | "neg" | "gold";
-
-interface BalanceEntry {
-  code: CurrencyCode;
-  prefix: string;
-  label: string;
-  flagChar: string;
-  value: number;
-}
-
-interface TransactionEntry {
-  id: string;
-  title: string;
-  date: string;
-  amount: string;
-  currency: string;
-  glyph: string;
-  tone: TxTone;
-}
-
-const RATES: Record<CurrencyCode, number> = { USD: 1, EUR: 0.92, ARS: 1350 };
 const CURRENCY_OPTIONS: CurrencyCode[] = ["USD", "EUR", "ARS"];
 
-const BALANCES: BalanceEntry[] = [
-  { code: "USD", prefix: "USD", label: "Dólares", flagChar: "US", value: 8200 },
-  { code: "EUR", prefix: "EUR", label: "Euros", flagChar: "EU", value: 3540 },
-  { code: "ARS", prefix: "ARS", label: "Pesos AR", flagChar: "AR", value: 710400 },
-];
-
-// Antes era un número hardcodeado aparte que no coincidía con la suma real de
-// BALANCES — ahora se deriva de ahí, así no se pueden desincronizar.
-const TOTAL_USD = BALANCES.reduce((sum, bal) => sum + bal.value / RATES[bal.code], 0);
-
-const TRANSACTIONS: TransactionEntry[] = [
-  { id: "1", title: "Venta de EUR", date: "12 Oct", amount: "+$150.00", currency: "EUR", glyph: "arrow_downward", tone: "pos" },
-  { id: "2", title: "Compra de USD", date: "11 Oct", amount: "-$200.00", currency: "USD", glyph: "arrow_upward", tone: "neg" },
-  { id: "3", title: "Intercambio ARS → USD", date: "9 Oct", amount: "$85.000", currency: "ARS", glyph: "sync_alt", tone: "gold" },
-  { id: "4", title: "Depósito recibido", date: "7 Oct", amount: "+$500.00", currency: "USD", glyph: "arrow_downward", tone: "pos" },
-  { id: "5", title: "Retiro a cuenta bancaria", date: "5 Oct", amount: "-$300.00", currency: "USD", glyph: "arrow_upward", tone: "neg" },
-];
-
-const toneClass: Record<TxTone, string> = {
-  pos: styles.tonePos,
-  neg: styles.toneNeg,
-  gold: styles.toneGold,
+const CURRENCY_META: Record<CurrencyCode, { label: string; flagChar: string }> = {
+  USD: { label: "Dólares", flagChar: "US" },
+  EUR: { label: "Euros", flagChar: "EU" },
+  ARS: { label: "Pesos AR", flagChar: "AR" },
 };
 
+// No hay endpoint de cotización pública todavía (el backend solo calcula la tasa
+// real al confirmar un /transactions/exchange) — esto es una aproximación de
+// cliente únicamente para poder mostrar "Balance total" convertido a otra
+// moneda. No es la tasa que se aplica en una operación real.
+const APPROX_RATES: Record<CurrencyCode, number> = { USD: 1, EUR: 0.92, ARS: 1350 };
+
+const LATEST_TRANSACTIONS_LIMIT = 5;
+
 export function Dashboard() {
+  const { token } = useAuth();
+  const [balances, setBalances] = useState<Balance[] | null>(null);
+  const [transactions, setTransactions] = useState<Transaction[] | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
   const [totalHidden, setTotalHidden] = useState(true);
   const [totalCurrency, setTotalCurrency] = useState<CurrencyCode>("USD");
   const [currencyMenuOpen, setCurrencyMenuOpen] = useState(false);
   const [hidden, setHidden] = useState<Record<CurrencyCode, boolean>>({ USD: true, EUR: true, ARS: true });
   const { message: toast, showToast } = useToast();
   const currencyMenuAnchorRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!token) return;
+    let cancelled = false;
+
+    async function loadDashboardData() {
+      setIsLoading(true);
+      setError(null);
+      try {
+        const [balancesData, transactionsResult] = await Promise.all([
+          getBalances(token as string),
+          getTransactions(token as string, { limit: LATEST_TRANSACTIONS_LIMIT }),
+        ]);
+        if (cancelled) return;
+        setBalances(balancesData);
+        setTransactions(transactionsResult.transactions);
+      } catch (err) {
+        if (cancelled) return;
+        setError(getApiErrorMessage(err));
+      } finally {
+        if (!cancelled) setIsLoading(false);
+      }
+    }
+
+    loadDashboardData();
+    return () => {
+      cancelled = true;
+    };
+  }, [token]);
 
   // Cerrar el menú de moneda con click/tap afuera o Escape — mismo patrón que los
   // popovers de DashboardLayout (pointerdown para cubrir mouse, touch y pen).
@@ -87,7 +97,12 @@ export function Dashboard() {
     setHidden((prev) => ({ ...prev, [code]: !prev[code] }));
   }
 
-  const totalConverted = Math.round(TOTAL_USD * RATES[totalCurrency]);
+  function balanceFor(code: CurrencyCode): number {
+    return balances?.find((bal) => bal.currencyCode === code)?.amount ?? 0;
+  }
+
+  const totalUsd = CURRENCY_OPTIONS.reduce((sum, code) => sum + balanceFor(code) / APPROX_RATES[code], 0);
+  const totalConverted = Math.round(totalUsd * APPROX_RATES[totalCurrency]);
   const totalDisplayValue = totalHidden
     ? "••••••"
     : `${totalCurrency} ${totalConverted.toLocaleString("es-AR")}`;
@@ -146,19 +161,20 @@ export function Dashboard() {
           </div>
 
           <div className={styles.currencyGrid}>
-            {BALANCES.map((bal) => {
-              const isHidden = hidden[bal.code];
+            {CURRENCY_OPTIONS.map((code) => {
+              const isHidden = hidden[code];
+              const meta = CURRENCY_META[code];
               return (
-                <div key={bal.code} className={styles.currencyCard}>
+                <div key={code} className={styles.currencyCard}>
                   <div className={styles.currencyCardTop}>
                     <div className={styles.currencyCardLabel}>
-                      <div className={styles.flagBadge}>{bal.flagChar}</div>
-                      <span className={styles.currencyLabelText}>{bal.label}</span>
+                      <div className={styles.flagBadge}>{meta.flagChar}</div>
+                      <span className={styles.currencyLabelText}>{meta.label}</span>
                     </div>
                     <button
                       type="button"
                       className={styles.eyeButton}
-                      onClick={() => toggleBalanceHidden(bal.code)}
+                      onClick={() => toggleBalanceHidden(code)}
                       aria-label={isHidden ? "Mostrar saldo" : "Ocultar saldo"}
                     >
                       <span
@@ -170,7 +186,7 @@ export function Dashboard() {
                     </button>
                   </div>
                   <span className={styles.currencyCardValue}>
-                    {isHidden ? "••••••" : `${bal.prefix} ${bal.value.toLocaleString("es-AR")}`}
+                    {isHidden ? "••••••" : `${code} ${balanceFor(code).toLocaleString("es-AR")}`}
                   </span>
                 </div>
               );
@@ -207,27 +223,15 @@ export function Dashboard() {
         <div className={styles.txCard}>
           <div className={styles.txCardHeader}>
             <span className={styles.label}>Últimas transacciones</span>
-            {/* TODO: cambiar a <Link to="/historial"> cuando el historial se conecte al routing */}
-            <button type="button" className={styles.txLink}>Ver todas</button>
+            <Link to="/actividad" className={styles.txLink}>Ver todas</Link>
           </div>
           <div className={styles.txList}>
-            {TRANSACTIONS.map((tx) => (
-              <div key={tx.id} className={styles.txRow}>
-                <div className={styles.txRowLeft}>
-                  <div className={`${styles.txIconWrap} ${toneClass[tx.tone]}`}>
-                    <span className={`msym ${styles.txIcon}`} aria-hidden="true">{tx.glyph}</span>
-                  </div>
-                  <div className={styles.txTextGroup}>
-                    <span className={styles.txTitle}>{tx.title}</span>
-                    <span className={styles.txDate}>{tx.date}</span>
-                  </div>
-                </div>
-                <div className={styles.txRight}>
-                  <div className={`${styles.txAmount} ${toneClass[tx.tone]}`}>{tx.amount}</div>
-                  <div className={styles.txCurrency}>{tx.currency}</div>
-                </div>
-              </div>
-            ))}
+            {isLoading && <p className={styles.txEmptyState}>Cargando...</p>}
+            {!isLoading && error && <p className={styles.txEmptyState}>{error}</p>}
+            {!isLoading && !error && transactions?.length === 0 && (
+              <p className={styles.txEmptyState}>Todavía no hiciste ninguna operación.</p>
+            )}
+            {!isLoading && !error && transactions?.map((tx) => <TransactionRow key={tx.id} transaction={tx} />)}
           </div>
         </div>
 
