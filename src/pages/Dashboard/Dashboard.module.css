@@ -227,7 +227,7 @@
 
 .buySellRow {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   gap: var(--spacing-md);
   margin-top: 20px;
 }
@@ -235,10 +235,6 @@
 @media (max-width: 480px) {
   .buySellRow {
     grid-template-columns: 1fr 1fr;
-  }
-
-  .buySellRow > button:last-child {
-    grid-column: 1 / -1;
   }
 }
 

@@ -99,7 +99,7 @@ export function Dashboard() {
     try {
       await deposit(token as string, depositCurrency, parsedAmount);
       setIsDepositOpen(false);
-      showToast(`Depositaste ${parsedAmount.toLocaleString("es-AR")} ${depositCurrency}.`);
+      showToast(`Depositaste ${parsedAmount.toLocaleString("es-AR", { maximumFractionDigits: 2 })} ${depositCurrency}.`);
       await loadDashboardData(false);
     } catch (err) {
       setDepositError(getApiErrorMessage(err));
@@ -143,7 +143,7 @@ export function Dashboard() {
   const totalConverted = Math.round(totalUsd * APPROX_RATES[totalCurrency]);
   const totalDisplayValue = totalHidden
     ? "••••••"
-    : `${totalCurrency} ${totalConverted.toLocaleString("es-AR")}`;
+    : `${totalCurrency} ${totalConverted.toLocaleString("es-AR", { maximumFractionDigits: 2 })}`;
 
   return (
     <div className={styles.page}>
@@ -224,7 +224,7 @@ export function Dashboard() {
                     </button>
                   </div>
                   <span className={styles.currencyCardValue}>
-                    {isHidden ? "••••••" : `${code} ${balanceFor(code).toLocaleString("es-AR")}`}
+                    {isHidden ? "••••••" : `${code} ${balanceFor(code).toLocaleString("es-AR", { maximumFractionDigits: 2 })}`}
                   </span>
                 </div>
               );
@@ -243,6 +243,13 @@ export function Dashboard() {
             <button type="button" className={styles.sellButton} onClick={openDepositModal}>
               <span className="msym" style={{ fontSize: 18 }} aria-hidden="true">arrow_downward</span>
               Depositar
+            </button>
+            {/* Sin backend todavía: no hay endpoint de transferencia ni alias/CVU
+                en el modelo de usuario — mismo criterio que Comprar/Vender, botón
+                real que no promete algo que no existe. */}
+            <button type="button" className={styles.sellButton} onClick={() => showToast("Transferencia iniciada — necesitás el alias o CVU del destinatario.")}>
+              <span className="msym" style={{ fontSize: 18 }} aria-hidden="true">send</span>
+              Transferir
             </button>
           </div>
         </div>
