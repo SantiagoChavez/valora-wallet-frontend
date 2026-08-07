@@ -2,17 +2,19 @@ import type { InputHTMLAttributes } from "react";
 import { useId } from "react";
 import styles from "./Input.module.css";
 
-interface InputProps extends Omit<InputHTMLAttributes<HTMLInputElement>, "size"> {
+type IconClickProps =
+  | { onIconClick?: undefined; iconLabel?: string; iconPressed?: boolean }
+  // Botón interactivo sin iconLabel no tiene nombre accesible — se exige acá,
+  // no solo en runtime, para que un consumidor nuevo no se lo olvide.
+  | { onIconClick: () => void; iconLabel: string; iconPressed?: boolean };
+
+type InputProps = Omit<InputHTMLAttributes<HTMLInputElement>, "size"> & {
   label?: string;
   /** Símbolo de Material Symbols. Decorativo salvo que se pase onIconClick. */
   icon?: string;
-  /** Convierte el ícono en un botón interactivo (ej. mostrar/ocultar contraseña). */
-  onIconClick?: () => void;
-  iconLabel?: string;
-  iconPressed?: boolean;
   error?: boolean;
   size?: "sm" | "lg";
-}
+} & IconClickProps;
 
 export function Input({
   label,
