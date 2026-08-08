@@ -9,13 +9,12 @@ import styles from "./HistoryPage.module.css";
 
 const PAGE_SIZE = 10;
 
-// BUY/SELL no están en el filtro a propósito: el backend todavía no tiene esos
-// endpoints (solo DEPOSIT y EXCHANGE), así que ese tipo de transacción nunca
-// puede existir todavía — ofrecerlo como filtro sería prometer algo que no pasa.
 const TYPE_FILTERS: { value: TransactionType | "ALL"; label: string }[] = [
   { value: "ALL", label: "Todas" },
   { value: "DEPOSIT", label: "Depósitos" },
   { value: "EXCHANGE", label: "Intercambios" },
+  { value: "BUY", label: "Compras" },
+  { value: "SELL", label: "Ventas" },
 ];
 
 export function HistoryPage() {
