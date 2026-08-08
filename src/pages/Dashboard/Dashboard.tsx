@@ -1,7 +1,9 @@
 import { useEffect, useRef, useState } from "react";
+import { useOutletContext } from "react-router-dom";
 import { CardDisplay } from "../../shared/components/CardDisplay/CardDisplay";
 import { Toast } from "../../shared/components/Toast/Toast";
 import { useToast } from "../../shared/components/Toast/useToast";
+import type { DashboardOutletContext } from "../../layouts/DashboardLayout/DashboardLayout";
 import styles from "./Dashboard.module.css";
 
 type CurrencyCode = "USD" | "EUR" | "ARS";
@@ -59,6 +61,7 @@ export function Dashboard() {
   const [hidden, setHidden] = useState<Record<CurrencyCode, boolean>>({ USD: true, EUR: true, ARS: true });
   const { message: toast, showToast } = useToast();
   const currencyMenuAnchorRef = useRef<HTMLDivElement>(null);
+  const { onOpenChatbot } = useOutletContext<DashboardOutletContext>();
 
   // Cerrar el menú de moneda con click/tap afuera o Escape — mismo patrón que los
   // popovers de DashboardLayout (pointerdown para cubrir mouse, touch y pen).
@@ -199,7 +202,7 @@ export function Dashboard() {
               Optimizá tus finanzas con IA. Analizamos tus patrones de gasto para ofrecerte mejores rendimientos.
             </p>
           </div>
-          <button type="button" className={styles.aiButton}>Consultar ahora</button>
+          <button type="button" className={styles.aiButton} onClick={onOpenChatbot}>Consultar ahora</button>
         </div>
       </section>
 
