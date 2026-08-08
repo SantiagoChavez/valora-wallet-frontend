@@ -9,8 +9,19 @@ export interface ChatMessage {
 
 const MESSAGE_TOO_LONG_ERROR = `El mensaje no puede superar los ${CHATBOT_MAX_MESSAGE_LENGTH} caracteres.`;
 
+// Mensaje estático de UI, no pasa por chatbotService — no simula un request
+// real, no tiene sentido gastar el mock en esto. Se reinstancia cada vez que
+// se monta el hook (ChatbotWidget se desmonta/monta completo con chatbotOpen,
+// no usa hidden) — reaparece en cada apertura del panel, esperado sin
+// persistencia entre sesiones de chat.
+const WELCOME_MESSAGE: ChatMessage = {
+  id: "welcome",
+  role: "bot",
+  text: "¡Hola! Soy Botsi, tu asistente virtual de Valora. ¿En qué puedo ayudarte hoy?",
+};
+
 export function useChatbot() {
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [messages, setMessages] = useState<ChatMessage[]>([WELCOME_MESSAGE]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
