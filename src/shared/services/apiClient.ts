@@ -79,7 +79,10 @@ export async function apiFetch<T>(path: string, options: ApiFetchOptions = {}): 
   const data = await parseJsonSafely(response);
 
   if (!response.ok) {
-    const message = (data as { error?: string } | undefined)?.error ?? "Ocurrió un error inesperado. Intentá de nuevo.";
+    // El backend manda el texto pensado para mostrarle al usuario en `message`
+    // (ej. "Tasa de cambio no disponible..."), no en `error` — ese campo es el
+    // código de error interno (ej. "RATE_NOT_AVAILABLE"), no texto para UI.
+    const message = (data as { message?: string } | undefined)?.message ?? "Ocurrió un error inesperado. Intentá de nuevo.";
     throw new ApiError(message, response.status);
   }
 
