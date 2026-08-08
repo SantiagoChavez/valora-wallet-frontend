@@ -8,7 +8,16 @@ import { NotificationPanel } from "../../shared/components/NotificationPanel/Not
 import { NOTIFICATIONS } from "../../shared/components/NotificationPanel/mockNotifications";
 import { Sidebar } from "../../shared/components/Sidebar/Sidebar";
 import { SUPPORT_EMAIL } from "../../shared/constants";
+import { ChatbotFAB } from "../../features/chatbot/ChatbotFAB";
+import { ChatbotWidget } from "../../features/chatbot/ChatbotWidget";
 import styles from "./DashboardLayout.module.css";
+
+// Contrato del Outlet entre este layout y las páginas que cuelgan de él —
+// hoy solo lo consume Dashboard.tsx (botón "Consultar ahora"), pero vive acá
+// (el productor) para que no se duplique la forma del objeto en cada consumidor.
+export interface DashboardOutletContext {
+  onOpenChatbot: () => void;
+}
 
 const NAV_ITEMS: NavEntry[] = [
   { id: "home", label: "Inicio", icon: "account_balance_wallet", path: "/" },
@@ -21,6 +30,7 @@ export function DashboardLayout() {
   const [openPanel, setOpenPanel] = useState<"notif" | "hamburger" | null>(null);
   const [legalOpen, setLegalOpen] = useState(false);
   const [legalVariant, setLegalVariant] = useState<LegalVariant>("terms");
+  const [chatbotOpen, setChatbotOpen] = useState(false);
   const notifAnchorRef = useRef<HTMLDivElement>(null);
   const hamburgerAnchorRef = useRef<HTMLDivElement>(null);
   const hasUnread = NOTIFICATIONS.some((note) => note.unread);
@@ -45,6 +55,14 @@ export function DashboardLayout() {
     setOpenPanel(null);
     setLegalVariant(variant);
     setLegalOpen(true);
+  }
+
+  function handleOpenChatbot() {
+    setChatbotOpen(true);
+  }
+
+  function handleCloseChatbot() {
+    setChatbotOpen(false);
   }
 
   // Cerrar el panel abierto al hacer click/tap afuera o presionar Escape. Se usa
@@ -156,10 +174,12 @@ export function DashboardLayout() {
       </header>
       <Sidebar items={NAV_ITEMS} onLogout={handleLogout} onOpenLegal={openLegal} />
       <main className={styles.main}>
-        <Outlet />
+        <Outlet context={{ onOpenChatbot: handleOpenChatbot }} />
       </main>
       <BottomNav items={NAV_ITEMS} />
       <LegalModal isOpen={legalOpen} onClose={() => setLegalOpen(false)} variant={legalVariant} />
+      {chatbotOpen && <ChatbotWidget onClose={handleCloseChatbot} />}
+      {!chatbotOpen && <ChatbotFAB onOpen={handleOpenChatbot} />}
     </div>
   );
 }
