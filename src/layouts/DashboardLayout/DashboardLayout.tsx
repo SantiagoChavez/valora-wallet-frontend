@@ -12,6 +12,29 @@ import { deriveNotifications } from "../../shared/utils/deriveNotifications";
 import styles from "./DashboardLayout.module.css";
 
 const RECENT_NOTIFICATIONS_LIMIT = 10;
+const DISMISSED_NOTIFICATIONS_KEY = "valora_dismissed_notifications";
+
+// "Borrar" una notificación solo la saca del panel — la transacción real que
+// la originó sigue intacta y visible en Actividad, que lee de la misma fuente
+// de datos pero sin este filtro. Se persiste en sessionStorage (mismo criterio
+// que la sesión, ver AuthProvider) para que no reaparezca sola al reabrir el
+// panel, que vuelve a pedir las transacciones cada vez que se abre.
+function readDismissedIds(): Set<string> {
+  try {
+    const raw = sessionStorage.getItem(DISMISSED_NOTIFICATIONS_KEY);
+    return raw ? new Set(JSON.parse(raw)) : new Set();
+  } catch {
+    return new Set();
+  }
+}
+
+function persistDismissedIds(ids: Set<string>) {
+  try {
+    sessionStorage.setItem(DISMISSED_NOTIFICATIONS_KEY, JSON.stringify([...ids]));
+  } catch {
+    // Silencioso: en el peor caso no persiste entre reloads, no rompe nada.
+  }
+}
 
 const NAV_ITEMS: NavEntry[] = [
   { id: "home", label: "Inicio", icon: "account_balance_wallet", path: "/" },
@@ -27,9 +50,20 @@ export function DashboardLayout() {
   const notifAnchorRef = useRef<HTMLDivElement>(null);
   const hamburgerAnchorRef = useRef<HTMLDivElement>(null);
   const [notifications, setNotifications] = useState<AppNotification[]>([]);
-  const hasUnread = notifications.some((note) => note.unread);
+  const [dismissedIds, setDismissedIds] = useState<Set<string>>(() => readDismissedIds());
+  const visibleNotifications = notifications.filter((note) => !dismissedIds.has(note.id));
+  const hasUnread = visibleNotifications.some((note) => note.unread);
   const { token, logout } = useAuth();
   const navigate = useNavigate();
+
+  function handleDismissNotification(id: string) {
+    setDismissedIds((prev) => {
+      const next = new Set(prev);
+      next.add(id);
+      persistDismissedIds(next);
+      return next;
+    });
+  }
 
   // Sin endpoint de notificaciones en el backend — se derivan de las últimas
   // transacciones reales (ver deriveNotifications.ts). Fetch propio acá, aparte
@@ -134,8 +168,9 @@ export function DashboardLayout() {
             </button>
 
             <NotificationPanel
-              notifications={notifications}
+              notifications={visibleNotifications}
               onClose={() => setOpenPanel(null)}
+              onDismiss={handleDismissNotification}
               hidden={openPanel !== "notif"}
             />
           </div>
