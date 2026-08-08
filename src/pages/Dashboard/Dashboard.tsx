@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { useAuth } from "../../shared/auth/useAuth";
 import { Button } from "../../shared/components/Button/Button";
 import { CardDisplay } from "../../shared/components/CardDisplay/CardDisplay";
+import { ConversionModal } from "../../shared/components/ConversionModal/ConversionModal";
 import { Input } from "../../shared/components/Input/Input";
 import { Modal } from "../../shared/components/Modal/Modal";
 import { Toast } from "../../shared/components/Toast/Toast";
@@ -50,6 +51,12 @@ export function Dashboard() {
   const [isDepositing, setIsDepositing] = useState(false);
   const [depositError, setDepositError] = useState<string | null>(null);
 
+  // Un solo estado para "qué modal de conversión está abierto" en vez de dos
+  // booleans (isBuyOpen/isSellOpen) — mismo criterio que openPanel en
+  // DashboardLayout, evita que los dos puedan estar abiertos a la vez.
+  const [conversionMode, setConversionMode] = useState<"BUY" | "SELL">("BUY");
+  const [isConversionOpen, setIsConversionOpen] = useState(false);
+
   const loadDashboardData = useCallback(async (cancelled: boolean) => {
     setIsLoading(true);
     setError(null);
@@ -83,6 +90,19 @@ export function Dashboard() {
     setDepositAmount("");
     setDepositError(null);
     setIsDepositOpen(true);
+  }
+
+  function openConversionModal(mode: "BUY" | "SELL") {
+    setConversionMode(mode);
+    setIsConversionOpen(true);
+  }
+
+  function handleConversionSuccess(transaction: Transaction) {
+    setIsConversionOpen(false);
+    const verb = conversionMode === "BUY" ? "Compraste" : "Vendiste";
+    const receivedAmount = transaction.targetAmount?.toLocaleString("es-AR", { maximumFractionDigits: 2 }) ?? "0";
+    showToast(`${verb} ${receivedAmount} ${transaction.targetCurrency ?? ""}.`);
+    loadDashboardData(false);
   }
 
   async function handleDepositSubmit(event: SubmitEvent<HTMLFormElement>) {
@@ -232,11 +252,11 @@ export function Dashboard() {
           </div>
 
           <div className={styles.buySellRow}>
-            <button type="button" className={styles.buyButton} onClick={() => showToast("Compra iniciada — elegí la moneda a comprar.")}>
+            <button type="button" className={styles.buyButton} onClick={() => openConversionModal("BUY")}>
               <span className="msym" style={{ fontSize: 18 }} aria-hidden="true">add</span>
               Comprar
             </button>
-            <button type="button" className={styles.sellButton} onClick={() => showToast("Venta iniciada — elegí la moneda a vender.")}>
+            <button type="button" className={styles.sellButton} onClick={() => openConversionModal("SELL")}>
               <span className="msym" style={{ fontSize: 18 }} aria-hidden="true">remove</span>
               Vender
             </button>
@@ -289,6 +309,15 @@ export function Dashboard() {
       </aside>
 
       <Toast message={toast} />
+
+      <ConversionModal
+        mode={conversionMode}
+        isOpen={isConversionOpen}
+        onClose={() => setIsConversionOpen(false)}
+        token={token as string}
+        balances={balances}
+        onSuccess={handleConversionSuccess}
+      />
 
       <Modal isOpen={isDepositOpen} onClose={() => setIsDepositOpen(false)} ariaLabel="Depositar fondos">
         <form onSubmit={handleDepositSubmit} className={styles.depositForm}>
