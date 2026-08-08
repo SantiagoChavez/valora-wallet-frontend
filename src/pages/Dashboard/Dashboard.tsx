@@ -307,14 +307,16 @@ export function Dashboard() {
             <span className={styles.label}>Últimas transacciones</span>
             <Link to="/actividad" className={styles.txLink}>Ver todas</Link>
           </div>
-          <div className={styles.txList}>
-            {isLoading && <p className={styles.txEmptyState}>Cargando...</p>}
-            {!isLoading && error && <p className={styles.txEmptyState}>{error}</p>}
-            {!isLoading && !error && transactions?.length === 0 && (
-              <p className={styles.txEmptyState}>Todavía no hiciste ninguna operación.</p>
-            )}
-            {!isLoading && !error && transactions?.map((tx) => <TransactionRow key={tx.id} transaction={tx} />)}
-          </div>
+          {isLoading && <p className={styles.txEmptyState}>Cargando...</p>}
+          {!isLoading && error && <p className={styles.txEmptyState}>{error}</p>}
+          {!isLoading && !error && transactions?.length === 0 && (
+            <p className={styles.txEmptyState}>Todavía no hiciste ninguna operación.</p>
+          )}
+          {!isLoading && !error && transactions && transactions.length > 0 && (
+            <ul className={styles.txList}>
+              {transactions.map((tx) => <TransactionRow key={tx.id} transaction={tx} />)}
+            </ul>
+          )}
         </div>
 
         {/* Vista de tarjeta física: no estaba en el checklist original, se sumó al traer el mock del diseño Geist */}
