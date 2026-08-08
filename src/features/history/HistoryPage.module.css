@@ -28,6 +28,18 @@
   gap: var(--spacing-sm);
 }
 
+@media (max-width: 859px) {
+  /* El título ("Actividad") empuja a los filtros a su propia línea, donde
+     quedaban pegados a la izquierda (el justify-content:space-between de
+     .header no los centra cuando son el único ítem en esa línea). width:100%
+     los hace ocupar toda la línea para que su propio justify-content:center
+     tenga espacio real donde centrarlos, sin mover el título de lugar. */
+  .filters {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
 .filterButton {
   background: var(--bg-inset);
   border: 1px solid var(--border);
