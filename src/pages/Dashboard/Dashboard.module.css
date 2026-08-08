@@ -432,20 +432,7 @@
 }
 
 .depositSelect {
-  width: 100%;
-  box-sizing: border-box;
-  background-color: var(--bg-base);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  padding: var(--spacing-sm) var(--spacing-md);
-  color: var(--text-primary);
-  font-family: var(--font-family-base);
-  font-size: 0.95rem;
-}
-
-.depositSelect:focus {
-  outline: none;
-  border-color: var(--accent);
+  composes: select from "../../shared/styles/formControl.module.css";
 }
 
 .depositError {
