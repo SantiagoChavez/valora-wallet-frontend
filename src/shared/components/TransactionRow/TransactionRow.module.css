@@ -15,6 +15,30 @@
   transition: background-color 0.15s ease;
 }
 
+@media (max-width: 480px) {
+  /* Con título + fecha + tasa (3 líneas posibles) compitiendo por ancho con
+     el importe en la misma fila, no entran los dos lado a lado por debajo de
+     ~480px — probado en 320 (Galaxy S9) y 366px. En vez de forzarlo (que
+     terminaba en overlap, o partiendo "Intercambio" a la mitad), el importe
+     pasa a su propia línea, alineado bajo el texto en vez de bajo el ícono. */
+  .txRow {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 2px;
+  }
+
+  .txRight {
+    display: flex;
+    align-items: baseline;
+    justify-content: flex-end;
+    gap: 6px;
+    /* 40px del ícono + spacing-md del gap de .txRowLeft, para que el importe
+       quede alineado con el texto de arriba, no con el ícono. */
+    padding-left: calc(40px + var(--spacing-md));
+    text-align: right;
+  }
+}
+
 .txRow:hover {
   background: var(--bg-inset);
 }
