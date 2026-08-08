@@ -133,3 +133,13 @@
 .inputRow > *:first-child {
   flex: 1;
 }
+
+/* Input y Button son componentes compartidos (Login, Registro, Usuario...) —
+   no se toca su radius ahí. Override local solo acá, vía el className que
+   Input ya mergea en el <input> nativo (mismo mecanismo que .dateInput en
+   Registro.module.css). Selector con .inputRow adelante (no ".chatInput"
+   suelto) para ganarle en especificidad a ".input" de Input.module.css sin
+   depender del orden real en que Vite bundlea los CSS modules. */
+.inputRow .chatInput {
+  border-radius: var(--radius-md);
+}

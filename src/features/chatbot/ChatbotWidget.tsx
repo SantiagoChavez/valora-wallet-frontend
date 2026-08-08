@@ -85,6 +85,7 @@ export function ChatbotWidget({ onClose }: ChatbotWidgetProps) {
           value={draft}
           onChange={(event) => setDraft(event.target.value)}
           error={draft.length > CHATBOT_MAX_MESSAGE_LENGTH}
+          className={styles.chatInput}
         />
         <Button type="submit" disabled={isLoading || !draft.trim()}>
           Enviar
