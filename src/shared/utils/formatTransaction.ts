@@ -9,8 +9,10 @@ export interface TransactionDisplay {
   currency: CurrencyCode;
   glyph: string;
   tone: TransactionTone;
-  /** Solo presente en EXCHANGE — cuántas unidades de la moneda destino vale 1
-   *  unidad de la moneda origen, tal como la calculó el backend. */
+  /** Presente en EXCHANGE, BUY y SELL — cuántas unidades de la moneda destino
+   *  vale 1 unidad de la moneda origen, tal como la calculó el backend. Las
+   *  tres comparten la misma lógica de conversión del lado del backend (ver
+   *  executeConversion en transactionService.ts del repo backend). */
   rateNote?: string;
 }
 
@@ -23,6 +25,11 @@ function formatAmount(amount: number, currency: CurrencyCode): string {
 
 function formatDate(iso: string): string {
   return new Date(iso).toLocaleDateString("es-AR", { day: "numeric", month: "short" });
+}
+
+function buildRateNote(tx: Transaction): string | undefined {
+  if (!tx.exchangeRate) return undefined;
+  return `1 ${tx.sourceCurrency ?? "?"} = ${tx.exchangeRate.toLocaleString("es-AR", { maximumFractionDigits: 2 })} ${tx.targetCurrency ?? "?"}`;
 }
 
 // Mapea la forma "cruda" que devuelve el backend (con source/target nulleables
@@ -45,9 +52,6 @@ export function formatTransaction(tx: Transaction): TransactionDisplay {
     }
     case "EXCHANGE": {
       const currency = tx.targetCurrency ?? tx.sourceCurrency ?? "USD";
-      const rateNote = tx.exchangeRate
-        ? `1 ${tx.sourceCurrency ?? "?"} = ${tx.exchangeRate.toLocaleString("es-AR", { maximumFractionDigits: 2 })} ${tx.targetCurrency ?? "?"}`
-        : undefined;
       return {
         title: `Intercambio ${tx.sourceCurrency ?? "?"} → ${tx.targetCurrency ?? "?"}`,
         date,
@@ -55,7 +59,7 @@ export function formatTransaction(tx: Transaction): TransactionDisplay {
         currency,
         glyph: "sync_alt",
         tone: "gold",
-        rateNote,
+        rateNote: buildRateNote(tx),
       };
     }
     case "BUY": {
@@ -67,6 +71,7 @@ export function formatTransaction(tx: Transaction): TransactionDisplay {
         currency,
         glyph: "arrow_upward",
         tone: "neg",
+        rateNote: buildRateNote(tx),
       };
     }
     case "SELL": {
@@ -78,6 +83,7 @@ export function formatTransaction(tx: Transaction): TransactionDisplay {
         currency,
         glyph: "arrow_downward",
         tone: "pos",
+        rateNote: buildRateNote(tx),
       };
     }
   }
