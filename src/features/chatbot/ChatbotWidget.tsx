@@ -58,7 +58,10 @@ export function ChatbotWidget({ onClose }: ChatbotWidgetProps) {
   return (
     <div className={styles.panel} ref={panelRef} role="dialog" aria-label="Asistente Valora AI" tabIndex={-1}>
       <div className={styles.header}>
-        <span className={styles.headerTitle}>Valora AI</span>
+        <h2 className={styles.headerTitle}>
+          <span className={`msym ${styles.headerIcon}`} aria-hidden="true">auto_awesome</span>
+          Asistente Valora AI
+        </h2>
         <button type="button" className={styles.closeButton} onClick={onClose} aria-label="Cerrar asistente">
           <span className="msym" aria-hidden="true">close</span>
         </button>

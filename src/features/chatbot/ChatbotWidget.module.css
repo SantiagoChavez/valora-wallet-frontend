@@ -41,9 +41,18 @@
 }
 
 .headerTitle {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
   font-size: var(--font-size-md);
   font-weight: var(--font-weight-semibold);
   color: var(--text-primary);
+}
+
+.headerIcon {
+  font-size: 18px;
+  color: var(--accent);
 }
 
 .closeButton {
