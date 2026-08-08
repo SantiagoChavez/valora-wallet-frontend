@@ -4,10 +4,10 @@
   gap: var(--spacing-sm);
 }
 
-.item {
-  display: flex;
-  justify-content: space-between;
-  padding: var(--spacing-sm) 0;
-  border-bottom: 1px solid var(--border);
+.emptyState {
+  margin: 0;
+  padding: var(--spacing-lg) 0;
+  text-align: center;
+  font-size: var(--font-size-md);
   color: var(--text-secondary);
 }

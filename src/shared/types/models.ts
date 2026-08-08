@@ -27,11 +27,14 @@ export interface Transaction {
   id: string;
   walletId: string;
   transactionType: TransactionType;
-  sourceCurrency: CurrencyCode;
-  targetCurrency: CurrencyCode;
-  sourceAmount: number;
-  targetAmount: number;
-  exchangeRate: number;
+  // El backend manda null en el lado que no aplica (ej. sourceCurrency/sourceAmount
+  // en un DEPOSIT) — reflejado acá tal cual, no como el `CurrencyCode`/`number`
+  // no-nulos que tenía antes este tipo.
+  sourceCurrency: CurrencyCode | null;
+  targetCurrency: CurrencyCode | null;
+  sourceAmount: number | null;
+  targetAmount: number | null;
+  exchangeRate: number | null;
   resultingBalance: number;
   createdAt: string;
 }

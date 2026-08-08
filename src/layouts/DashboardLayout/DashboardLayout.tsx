@@ -1,14 +1,40 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Outlet, useNavigate } from "react-router-dom";
 import logo from "../../shared/assets/valora-logo.png";
 import { useAuth } from "../../shared/auth/useAuth";
 import { BottomNav, type NavEntry } from "../../shared/components/BottomNav/BottomNav";
 import { LegalModal, type LegalVariant } from "../../shared/components/LegalModal/LegalModal";
-import { NotificationPanel } from "../../shared/components/NotificationPanel/NotificationPanel";
-import { NOTIFICATIONS } from "../../shared/components/NotificationPanel/mockNotifications";
+import { NotificationPanel, type AppNotification } from "../../shared/components/NotificationPanel/NotificationPanel";
 import { Sidebar } from "../../shared/components/Sidebar/Sidebar";
 import { SUPPORT_EMAIL } from "../../shared/constants";
+import { getTransactions } from "../../shared/services/transactionService";
+import { deriveNotifications } from "../../shared/utils/deriveNotifications";
 import styles from "./DashboardLayout.module.css";
+
+const RECENT_NOTIFICATIONS_LIMIT = 10;
+const DISMISSED_NOTIFICATIONS_KEY = "valora_dismissed_notifications";
+
+// "Borrar" una notificación solo la saca del panel — la transacción real que
+// la originó sigue intacta y visible en Actividad, que lee de la misma fuente
+// de datos pero sin este filtro. Se persiste en sessionStorage (mismo criterio
+// que la sesión, ver AuthProvider) para que no reaparezca sola al reabrir el
+// panel, que vuelve a pedir las transacciones cada vez que se abre.
+function readDismissedIds(): Set<string> {
+  try {
+    const raw = sessionStorage.getItem(DISMISSED_NOTIFICATIONS_KEY);
+    return raw ? new Set(JSON.parse(raw)) : new Set();
+  } catch {
+    return new Set();
+  }
+}
+
+function persistDismissedIds(ids: Set<string>) {
+  try {
+    sessionStorage.setItem(DISMISSED_NOTIFICATIONS_KEY, JSON.stringify([...ids]));
+  } catch {
+    // Silencioso: en el peor caso no persiste entre reloads, no rompe nada.
+  }
+}
 
 const NAV_ITEMS: NavEntry[] = [
   { id: "home", label: "Inicio", icon: "account_balance_wallet", path: "/" },
@@ -23,9 +49,51 @@ export function DashboardLayout() {
   const [legalVariant, setLegalVariant] = useState<LegalVariant>("terms");
   const notifAnchorRef = useRef<HTMLDivElement>(null);
   const hamburgerAnchorRef = useRef<HTMLDivElement>(null);
-  const hasUnread = NOTIFICATIONS.some((note) => note.unread);
-  const { logout } = useAuth();
+  const [notifications, setNotifications] = useState<AppNotification[]>([]);
+  const [dismissedIds, setDismissedIds] = useState<Set<string>>(() => readDismissedIds());
+  const visibleNotifications = notifications.filter((note) => !dismissedIds.has(note.id));
+  const hasUnread = visibleNotifications.some((note) => note.unread);
+  const { token, logout } = useAuth();
   const navigate = useNavigate();
+
+  function handleDismissNotification(id: string) {
+    setDismissedIds((prev) => {
+      const next = new Set(prev);
+      next.add(id);
+      persistDismissedIds(next);
+      return next;
+    });
+  }
+
+  // Sin endpoint de notificaciones en el backend — se derivan de las últimas
+  // transacciones reales (ver deriveNotifications.ts). Fetch propio acá, aparte
+  // del que hace Dashboard.tsx para sus últimas 5: este vive en el layout,
+  // persiste entre rutas, y no tiene por qué depender de que la vista actual
+  // sea el Dashboard.
+  const loadNotifications = useCallback(async () => {
+    if (!token) return;
+    try {
+      const result = await getTransactions(token, { limit: RECENT_NOTIFICATIONS_LIMIT });
+      setNotifications(deriveNotifications(result.transactions));
+    } catch {
+      // Silencioso a propósito: si falla, el panel simplemente muestra el
+      // estado vacío de NotificationPanel en vez de romper todo el layout.
+    }
+  }, [token]);
+
+  // Trae al montar (para el punto de "no leído" en la campanita antes de que
+  // nadie la abra).
+  useEffect(() => {
+    loadNotifications();
+  }, [loadNotifications]);
+
+  // Y vuelve a traer cada vez que se abre el panel — sin esto, depositar o
+  // intercambiar y después abrir la campanita mostraba la lista vieja (fetch
+  // de al montar nada más, sin enterarse de acciones hechas después en otra
+  // parte de la app).
+  useEffect(() => {
+    if (openPanel === "notif") loadNotifications();
+  }, [openPanel, loadNotifications]);
 
   function handleLogout() {
     logout();
@@ -100,8 +168,9 @@ export function DashboardLayout() {
             </button>
 
             <NotificationPanel
-              notifications={NOTIFICATIONS}
+              notifications={visibleNotifications}
               onClose={() => setOpenPanel(null)}
+              onDismiss={handleDismissNotification}
               hidden={openPanel !== "notif"}
             />
           </div>
