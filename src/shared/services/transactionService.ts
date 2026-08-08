@@ -40,17 +40,48 @@ export function getTransactions(
   }).then((res) => ({ transactions: res.data, pagination: res.pagination }));
 }
 
+// /exchange, /buy y /sell toman exactamente el mismo body — el backend los
+// procesa con la misma lógica de conversión, solo cambia la etiqueta que le
+// pone a la transacción (ver executeConversion en transactionService.ts del back).
+function postConversion(
+  endpoint: "exchange" | "buy" | "sell",
+  token: string,
+  fromCurrency: CurrencyCode,
+  toCurrency: CurrencyCode,
+  amount: number,
+): Promise<Transaction> {
+  return apiFetch<TransactionApiResponse>(`/transactions/${endpoint}`, {
+    method: "POST",
+    token,
+    body: JSON.stringify({ fromCurrency, toCurrency, amount }),
+  }).then((res) => res.data);
+}
+
 export function exchange(
   token: string,
   fromCurrency: CurrencyCode,
   toCurrency: CurrencyCode,
   amount: number,
 ): Promise<Transaction> {
-  return apiFetch<TransactionApiResponse>("/transactions/exchange", {
-    method: "POST",
-    token,
-    body: JSON.stringify({ fromCurrency, toCurrency, amount }),
-  }).then((res) => res.data);
+  return postConversion("exchange", token, fromCurrency, toCurrency, amount);
+}
+
+export function buy(
+  token: string,
+  fromCurrency: CurrencyCode,
+  toCurrency: CurrencyCode,
+  amount: number,
+): Promise<Transaction> {
+  return postConversion("buy", token, fromCurrency, toCurrency, amount);
+}
+
+export function sell(
+  token: string,
+  fromCurrency: CurrencyCode,
+  toCurrency: CurrencyCode,
+  amount: number,
+): Promise<Transaction> {
+  return postConversion("sell", token, fromCurrency, toCurrency, amount);
 }
 
 export function deposit(token: string, currency: CurrencyCode, amount: number): Promise<Transaction> {
