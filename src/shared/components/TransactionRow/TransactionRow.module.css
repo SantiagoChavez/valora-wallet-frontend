@@ -1,7 +1,13 @@
 .txRow {
   display: flex;
-  align-items: center;
+  /* flex-start, no center: con título largo (ej. "Intercambio USD → EUR" +
+     la tasa) el bloque de la izquierda puede envolver a 2-3 líneas — con
+     center, el importe de la derecha quedaba centrado contra esa altura y
+     terminaba pegado a la segunda línea del título en vez de alineado con
+     la primera. */
+  align-items: flex-start;
   justify-content: space-between;
+  gap: var(--spacing-sm);
   padding: var(--spacing-sm);
   margin: 0 calc(var(--spacing-sm) * -1);
   border-radius: var(--radius-md);
@@ -15,8 +21,12 @@
 
 .txRowLeft {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: var(--spacing-md);
+  /* Sin esto, el título se queda con su ancho "natural" (sin envolver) hasta
+     último momento y termina empujando al importe de la derecha en vez de
+     usar el espacio real que le queda dentro de la fila. */
+  flex: 1;
   min-width: 0;
 }
 
@@ -37,6 +47,7 @@
 .txTextGroup {
   display: flex;
   flex-direction: column;
+  min-width: 0;
 }
 
 .txTitle {
@@ -57,6 +68,7 @@
 }
 
 .txRight {
+  flex-shrink: 0;
   text-align: right;
 }
 
