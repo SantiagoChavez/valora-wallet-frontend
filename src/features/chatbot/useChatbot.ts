@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { CHATBOT_MAX_MESSAGE_LENGTH, sendChatMessage } from "./chatbotService";
 import { getApiErrorMessage } from "../../shared/services/apiClient";
+import { useAuth } from "../../shared/auth/useAuth";
 
 export interface ChatMessage {
   id: string;
@@ -32,6 +33,7 @@ const WELCOME_MESSAGE: ChatMessage = {
 };
 
 export function useChatbot() {
+  const { token } = useAuth();
   const [messages, setMessages] = useState<ChatMessage[]>([WELCOME_MESSAGE]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -62,12 +64,22 @@ export function useChatbot() {
       return;
     }
 
+    // A diferencia de Dashboard.tsx (que se desmonta entero vía ProtectedRoute
+    // en cuanto token cae a null), este hook puede seguir vivo con el panel
+    // todavía abierto en ese momento — un `as string` acá escondería el caso
+    // real de sesión vencida en vez de mostrarlo. Guard temprano en vez de
+    // cast: angosta token a string para el resto de la función sin asumir nada.
+    if (!token) {
+      setError("Sesión no válida, iniciá sesión de nuevo.");
+      return;
+    }
+
     setError(null);
     setMessages((prev) => [...prev, { id: generateMessageId(), role: "user", text: trimmed }]);
     setIsLoading(true);
 
     try {
-      const response = await sendChatMessage(trimmed);
+      const response = await sendChatMessage(trimmed, token);
       if (!isMountedRef.current) return;
 
       if (response.success) {

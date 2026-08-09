@@ -1,11 +1,18 @@
-// Contrato real acordado (sin backend todavía): POST /chatbot/message, JWT en
-// header, request { message } (máx CHATBOT_MAX_MESSAGE_LENGTH, sin conversationId
-// — no existe). Sin streaming, sin persistencia, sin memoria de contexto entre
-// mensajes del lado del back.
+import { apiFetch, ApiError, getApiErrorMessage } from "../../shared/services/apiClient";
+
+// Contrato real (confirmado por Daniel, verificado contra el repo del backend):
+// POST /chatbot/message, sin prefijo /api (mismo host que el resto — router.use
+// en routes/index.ts monta /auth, /transactions, /balances y /chatbot todos al
+// mismo nivel), JWT en header vía Authorization: Bearer <token>, request
+// { message } (máx CHATBOT_MAX_MESSAGE_LENGTH, sin conversationId — no existe).
+// Sin streaming, sin persistencia, sin memoria de contexto entre mensajes del
+// lado del back.
 export const CHATBOT_MAX_MESSAGE_LENGTH = 1000;
 
-// No se usa en el mock — queda lista para cuando este service pegue de verdad
-// contra el backend y necesite abortar un request colgado con AbortController.
+// El backend no tiene timeout propio alrededor de la llamada a Gemini (verificado
+// contra geminiService.ts del repo real — sin AbortController/setTimeout en
+// ningún lado de ese archivo ni del resto de src/) — este es la única protección
+// real contra que la llamada a Gemini se cuelgue indefinidamente.
 export const CHATBOT_TIMEOUT_MS = 25000;
 
 export interface ChatbotRequest {
@@ -25,32 +32,45 @@ export interface ChatbotErrorResponse {
 
 export type ChatbotResponse = ChatbotSuccessResponse | ChatbotErrorResponse;
 
-// Respuestas fijas para probar el parser de markdown de renderChatText (negrita
-// + listas numeradas/con guiones) antes de que exista una respuesta real del
-// backend.
-const MOCK_REPLIES: string[] = [
-  "Según tu actividad reciente tenés un balance saludable en **USD**. Algunas recomendaciones:\n1. Diversificá una parte en EUR para reducir tu exposición cambiaria.\n2. Revisá tus últimas transacciones antes de la próxima conversión.\n3. Activá alertas de tasa de cambio para ARS.",
-  "Puedo ayudarte a **optimizar tus finanzas**. Por ejemplo:\n- Consolidar pequeños saldos dispersos\n- Programar conversiones cuando la tasa te favorezca\n- Revisar comisiones de las últimas operaciones",
-  "Todavía no tengo acceso a datos en tiempo real, pero puedo orientarte con **buenas prácticas generales**: mantené un colchón en tu moneda local, diversificá en 2 o 3 monedas y evitá conversiones frecuentes por las comisiones.",
-];
+const TIMEOUT_MESSAGE = "El asistente tardó demasiado en responder, probá de nuevo.";
 
-function pickReply(): string {
-  return MOCK_REPLIES[Math.floor(Math.random() * MOCK_REPLIES.length)];
-}
+// 400/401 son status HTTP reales — apiFetch los intercepta antes de que este
+// service vea el body y tira ApiError (con .message ya resuelto), nunca nos
+// deja leer un ChatbotErrorResponse crudo del backend. Por eso el catch de acá
+// abajo sintetiza el ChatbotErrorResponse a mano en vez de recibirlo directo.
+export async function sendChatMessage(message: string, token: string): Promise<ChatbotResponse> {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), CHATBOT_TIMEOUT_MS);
+  const body: ChatbotRequest = { message };
 
-function randomDelayMs(): number {
-  return 800 + Math.random() * 700;
-}
-
-// No existe endpoint real todavía — simula la latencia de POST /chatbot/message
-// para que el hook/UI se comporten igual el día que se reemplace por un apiFetch
-// real (mismo criterio que userService.ts). Solo hay que cambiar esta función,
-// no el hook ni el componente que la consumen. Nunca rechaza — mismo criterio
-// (y misma limitación conocida) que updatePhone/updateAlias en userService.ts.
-export function sendChatMessage(_message: string): Promise<ChatbotResponse> {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve({ success: true, data: { reply: pickReply() } });
-    }, randomDelayMs());
-  });
+  try {
+    return await apiFetch<ChatbotSuccessResponse>("/chatbot/message", {
+      method: "POST",
+      body: JSON.stringify(body),
+      token,
+      signal: controller.signal,
+    });
+  } catch (err) {
+    // AbortError es un DOMException del fetch nativo (dispara antes de que haya
+    // una respuesta real que leer) — no es un ApiError, así que no pasa por el
+    // fallback message→error→genérico de apiFetch. getApiErrorMessage da un
+    // mensaje pensado para "no se pudo conectar", no para "se cortó la espera"
+    // — mensaje propio acá para no confundir los dos casos.
+    if (err instanceof DOMException && err.name === "AbortError") {
+      return { success: false, error: "TIMEOUT", message: TIMEOUT_MESSAGE };
+    }
+    // El código de error real del backend (ej. "VALIDATION_ERROR",
+    // "UnauthorizedError") no sobrevive dentro de ApiError — apiFetch solo
+    // guarda .message y .status, no el campo `error` original del body. Se
+    // sintetiza un valor propio acá; nada en la app lee este campo hoy
+    // (useChatbot.ts solo usa .message), así que no hace falta que coincida
+    // con el código real del backend.
+    return {
+      success: false,
+      error: err instanceof ApiError ? `HTTP_${err.status}` : "NETWORK_ERROR",
+      message: getApiErrorMessage(err),
+    };
+  } finally {
+    clearTimeout(timeoutId);
+  }
 }
