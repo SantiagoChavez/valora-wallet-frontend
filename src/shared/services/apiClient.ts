@@ -30,6 +30,16 @@ interface ApiFetchOptions extends RequestInit {
   token?: string;
 }
 
+// data es unknown — sin esto, un backend/proxy que manda error como objeto
+// (ej. { code, message }) pasaba el truthiness check igual (un objeto es
+// truthy) y terminaba interpolado como string en algún punto ("[object
+// Object]" en vez del mensaje genérico, que es peor que el fallback).
+function asNonEmptyString(value: unknown): string | undefined {
+  if (typeof value !== "string") return undefined;
+  const trimmed = value.trim();
+  return trimmed.length > 0 ? trimmed : undefined;
+}
+
 async function parseJsonSafely(response: Response): Promise<unknown> {
   if (response.status === 204 || response.status === 205) {
     return undefined;
@@ -81,8 +91,16 @@ export async function apiFetch<T>(path: string, options: ApiFetchOptions = {}): 
   if (!response.ok) {
     // El backend manda el texto pensado para mostrarle al usuario en `message`
     // (ej. "Tasa de cambio no disponible..."), no en `error` — ese campo es el
-    // código de error interno (ej. "RATE_NOT_AVAILABLE"), no texto para UI.
-    const message = (data as { message?: string } | undefined)?.message ?? "Ocurrió un error inesperado. Intentá de nuevo.";
+    // código de error interno (ej. "RATE_NOT_AVAILABLE"), no texto para UI. Pero
+    // algún endpoint (o un proxy intermedio) puede seguir mandando el texto útil
+    // en `error` en vez de `message` — asNonEmptyString descarta undefined,
+    // string vacío y valores no-string (ej. un { code, message } anidado) por
+    // igual, así que cae a `error` y después al genérico en cualquiera de esos casos.
+    const errorBody = data as { message?: unknown; error?: unknown } | undefined;
+    const message =
+      asNonEmptyString(errorBody?.message) ??
+      asNonEmptyString(errorBody?.error) ??
+      "Ocurrió un error inesperado. Intentá de nuevo.";
     throw new ApiError(message, response.status);
   }
 

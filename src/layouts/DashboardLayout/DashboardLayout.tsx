@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Outlet, useNavigate } from "react-router-dom";
 import logo from "../../shared/assets/valora-logo.png";
 import { useAuth } from "../../shared/auth/useAuth";
@@ -7,9 +7,18 @@ import { LegalModal, type LegalVariant } from "../../shared/components/LegalModa
 import { NotificationPanel, type AppNotification } from "../../shared/components/NotificationPanel/NotificationPanel";
 import { Sidebar } from "../../shared/components/Sidebar/Sidebar";
 import { SUPPORT_EMAIL } from "../../shared/constants";
+import { ChatbotFAB } from "../../features/chatbot/ChatbotFAB";
+import { ChatbotWidget } from "../../features/chatbot/ChatbotWidget";
 import { getTransactions } from "../../shared/services/transactionService";
 import { deriveNotifications } from "../../shared/utils/deriveNotifications";
 import styles from "./DashboardLayout.module.css";
+
+// Contrato del Outlet entre este layout y las páginas que cuelgan de él —
+// hoy solo lo consume Dashboard.tsx (botón "Consultar ahora"), pero vive acá
+// (el productor) para que no se duplique la forma del objeto en cada consumidor.
+export interface DashboardOutletContext {
+  onOpenChatbot: () => void;
+}
 
 const RECENT_NOTIFICATIONS_LIMIT = 10;
 const DISMISSED_NOTIFICATIONS_KEY = "valora_dismissed_notifications";
@@ -47,6 +56,7 @@ export function DashboardLayout() {
   const [openPanel, setOpenPanel] = useState<"notif" | "hamburger" | null>(null);
   const [legalOpen, setLegalOpen] = useState(false);
   const [legalVariant, setLegalVariant] = useState<LegalVariant>("terms");
+  const [chatbotOpen, setChatbotOpen] = useState(false);
   const notifAnchorRef = useRef<HTMLDivElement>(null);
   const hamburgerAnchorRef = useRef<HTMLDivElement>(null);
   const [notifications, setNotifications] = useState<AppNotification[]>([]);
@@ -114,6 +124,25 @@ export function DashboardLayout() {
     setLegalVariant(variant);
     setLegalOpen(true);
   }
+
+  // useCallback con deps vacías: ninguna cierra sobre props/state, solo llaman
+  // al setter (identidad estable). Sin esto se recrean en cada render de
+  // DashboardLayout — cualquier cambio ajeno al chat (ej. abrir el panel de
+  // notificaciones) hace que el efecto del Escape en ChatbotWidget (que
+  // depende de onClose) se desuscriba y resuscriba de más.
+  const handleOpenChatbot = useCallback(() => {
+    setChatbotOpen(true);
+  }, []);
+
+  const handleCloseChatbot = useCallback(() => {
+    setChatbotOpen(false);
+  }, []);
+
+  // handleOpenChatbot ya es estable (useCallback con deps vacías) — pero el
+  // objeto que lo envuelve para el Outlet context era un literal nuevo en
+  // cada render igual, así que useOutletContext() en Dashboard.tsx veía un
+  // valor "distinto" aunque el handler adentro fuera el mismo.
+  const outletContextValue = useMemo(() => ({ onOpenChatbot: handleOpenChatbot }), [handleOpenChatbot]);
 
   // Cerrar el panel abierto al hacer click/tap afuera o presionar Escape. Se usa
   // pointerdown (no mousedown) para cubrir mouse, touch y pen por igual — este
@@ -225,10 +254,12 @@ export function DashboardLayout() {
       </header>
       <Sidebar items={NAV_ITEMS} onLogout={handleLogout} onOpenLegal={openLegal} />
       <main className={styles.main}>
-        <Outlet />
+        <Outlet context={outletContextValue} />
       </main>
       <BottomNav items={NAV_ITEMS} />
       <LegalModal isOpen={legalOpen} onClose={() => setLegalOpen(false)} variant={legalVariant} />
+      {chatbotOpen && <ChatbotWidget onClose={handleCloseChatbot} />}
+      <ChatbotFAB onOpen={handleOpenChatbot} hidden={chatbotOpen} />
     </div>
   );
 }

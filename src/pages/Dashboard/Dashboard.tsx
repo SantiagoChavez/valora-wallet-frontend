@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState, type SubmitEvent } from "react";
-import { Link } from "react-router-dom";
+import { Link, useOutletContext } from "react-router-dom";
 import { useAuth } from "../../shared/auth/useAuth";
 import { Button } from "../../shared/components/Button/Button";
 import { CardDisplay } from "../../shared/components/CardDisplay/CardDisplay";
@@ -13,6 +13,7 @@ import { getApiErrorMessage } from "../../shared/services/apiClient";
 import { getBalances } from "../../shared/services/balanceService";
 import { deposit, getTransactions } from "../../shared/services/transactionService";
 import type { Balance, CurrencyCode, Transaction } from "../../shared/types/models";
+import type { DashboardOutletContext } from "../../layouts/DashboardLayout/DashboardLayout";
 import styles from "./Dashboard.module.css";
 
 const CURRENCY_OPTIONS: CurrencyCode[] = ["USD", "EUR", "ARS"];
@@ -44,6 +45,15 @@ export function Dashboard() {
   const [hidden, setHidden] = useState<Record<CurrencyCode, boolean>>({ USD: true, EUR: true, ARS: true });
   const { message: toast, showToast } = useToast();
   const currencyMenuAnchorRef = useRef<HTMLDivElement>(null);
+  // useOutletContext() lee de un Context creado con createContext(null) — sin
+  // un <Outlet context={...}> ancestro (ej. Dashboard montado suelto en un
+  // test, o un reuso futuro de la página) devuelve null, no undefined
+  // (verificado contra el código real de react-router, no contra el tipo
+  // declarado — el .d.ts dice Context a secas, sin el null). Destructurar
+  // directo tiraba "Cannot destructure property 'onOpenChatbot' of null" en
+  // vez de degradar con un fallback claro.
+  const outletContext = useOutletContext<DashboardOutletContext | null>();
+  const onOpenChatbot = outletContext?.onOpenChatbot ?? (() => {});
 
   const [isDepositOpen, setIsDepositOpen] = useState(false);
   const [depositCurrency, setDepositCurrency] = useState<CurrencyCode>("USD");
@@ -57,7 +67,18 @@ export function Dashboard() {
   const [conversionMode, setConversionMode] = useState<"BUY" | "SELL">("BUY");
   const [isConversionOpen, setIsConversionOpen] = useState(false);
 
-  const loadDashboardData = useCallback(async (cancelled: boolean) => {
+  // Contador de generación, no boolean: con un solo cancelledRef reseteado a
+  // false al arrancar cada corrida, un request de una corrida ANTERIOR que
+  // sigue en vuelo podía "revivir" — el reset de la corrida nueva pisaba el
+  // true que había puesto el cleanup de la corrida vieja, así que si esa
+  // respuesta vieja llegaba después (fuera de orden), pasaba el chequeo igual
+  // y pisaba el estado correcto con datos viejos. Acá cada corrida compara
+  // contra su propio requestId capturado al arrancar — no hay reset que pueda
+  // borrar la señal de una corrida anterior.
+  const requestIdRef = useRef(0);
+
+  const loadDashboardData = useCallback(async () => {
+    const requestId = ++requestIdRef.current;
     setIsLoading(true);
     setError(null);
     try {
@@ -65,23 +86,29 @@ export function Dashboard() {
         getBalances(token as string),
         getTransactions(token as string, { limit: LATEST_TRANSACTIONS_LIMIT }),
       ]);
-      if (cancelled) return;
+      if (requestIdRef.current !== requestId) return;
       setBalances(balancesData);
       setTransactions(transactionsResult.transactions);
     } catch (err) {
-      if (cancelled) return;
+      if (requestIdRef.current !== requestId) return;
       setError(getApiErrorMessage(err));
     } finally {
-      if (!cancelled) setIsLoading(false);
+      if (requestIdRef.current === requestId) setIsLoading(false);
     }
   }, [token]);
 
   useEffect(() => {
     if (!token) return;
-    let cancelled = false;
-    loadDashboardData(cancelled);
+    loadDashboardData();
+    // Defensivo, no por un bug encontrado hoy: bumpea el contador al
+    // desmontar/cambiar deps para que un request en vuelo justo antes de
+    // navegar fuera de Dashboard no aplique su resultado sobre una instancia
+    // ya desmontada. En React 18+ un setState post-unmount ya es un no-op
+    // silencioso — mismo criterio que isMountedRef en useChatbot.ts, por
+    // consistencia dentro del mismo PR. Sigue siendo monótono creciente (no
+    // resetea a un valor fijo), así que no reabre la carrera de arriba.
     return () => {
-      cancelled = true;
+      requestIdRef.current += 1;
     };
   }, [token, loadDashboardData]);
 
@@ -102,7 +129,7 @@ export function Dashboard() {
     const verb = conversionMode === "BUY" ? "Compraste" : "Vendiste";
     const receivedAmount = transaction.targetAmount?.toLocaleString("es-AR", { maximumFractionDigits: 2 }) ?? "0";
     showToast(`${verb} ${receivedAmount} ${transaction.targetCurrency ?? ""}.`);
-    loadDashboardData(false);
+    loadDashboardData();
   }
 
   async function handleDepositSubmit(event: SubmitEvent<HTMLFormElement>) {
@@ -120,7 +147,7 @@ export function Dashboard() {
       await deposit(token as string, depositCurrency, parsedAmount);
       setIsDepositOpen(false);
       showToast(`Depositaste ${parsedAmount.toLocaleString("es-AR", { maximumFractionDigits: 2 })} ${depositCurrency}.`);
-      await loadDashboardData(false);
+      await loadDashboardData();
     } catch (err) {
       setDepositError(getApiErrorMessage(err));
     } finally {
@@ -284,7 +311,7 @@ export function Dashboard() {
               Optimizá tus finanzas con IA. Analizamos tus patrones de gasto para ofrecerte mejores rendimientos.
             </p>
           </div>
-          <button type="button" className={styles.aiButton}>Consultar ahora</button>
+          <button type="button" className={styles.aiButton} onClick={onOpenChatbot}>Consultar ahora</button>
         </div>
       </section>
 
@@ -294,14 +321,16 @@ export function Dashboard() {
             <span className={styles.label}>Últimas transacciones</span>
             <Link to="/actividad" className={styles.txLink}>Ver todas</Link>
           </div>
-          <div className={styles.txList}>
-            {isLoading && <p className={styles.txEmptyState}>Cargando...</p>}
-            {!isLoading && error && <p className={styles.txEmptyState}>{error}</p>}
-            {!isLoading && !error && transactions?.length === 0 && (
-              <p className={styles.txEmptyState}>Todavía no hiciste ninguna operación.</p>
-            )}
-            {!isLoading && !error && transactions?.map((tx) => <TransactionRow key={tx.id} transaction={tx} />)}
-          </div>
+          {isLoading && <p className={styles.txEmptyState}>Cargando...</p>}
+          {!isLoading && error && <p className={styles.txEmptyState}>{error}</p>}
+          {!isLoading && !error && transactions?.length === 0 && (
+            <p className={styles.txEmptyState}>Todavía no hiciste ninguna operación.</p>
+          )}
+          {!isLoading && !error && transactions && transactions.length > 0 && (
+            <ul className={styles.txList}>
+              {transactions.map((tx) => <TransactionRow key={tx.id} transaction={tx} />)}
+            </ul>
+          )}
         </div>
 
         {/* Vista de tarjeta física: no estaba en el checklist original, se sumó al traer el mock del diseño Geist */}
