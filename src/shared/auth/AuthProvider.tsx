@@ -47,9 +47,9 @@ export function AuthProvider({ children }: PropsWithChildren) {
 
   function logout() {
     // El historial del chatbot vive en localStorage, scopeado por userId
-    // (ver convención en CLAUDE.md) — no se borra solo, hay que limpiarlo acá
-    // a mano. Mismo criterio que el resto de esta función: si falla (storage
-    // bloqueado/sin cuota), no bloquea el logout en sí.
+    // (ver CHATBOT_HISTORY_KEY_PREFIX en shared/constants.ts) — no se borra
+    // solo, hay que limpiarlo acá a mano. Mismo criterio que el resto de esta
+    // función: si falla (storage bloqueado/sin cuota), no bloquea el logout en sí.
     if (auth) {
       try {
         localStorage.removeItem(`${CHATBOT_HISTORY_KEY_PREFIX}${auth.user.id}`);
