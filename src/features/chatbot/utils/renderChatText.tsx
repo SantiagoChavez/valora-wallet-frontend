@@ -44,7 +44,11 @@ function renderInline(line: string, keyPrefix: string): ReactNode[] {
 }
 
 export function renderChatText(text: string): ReactNode {
-  const lines = text.split("\n");
+  // \r?\n, no "\n" a secas — un texto con CRLF (ej. copiado/pegado desde
+  // Windows, o generado por el backend real el día que reemplace al mock)
+  // dejaba un "\r" colgando al final de cada línea, que classifyLine/
+  // lineContent no filtran.
+  const lines = text.split(/\r?\n/);
   const blocks: ReactNode[] = [];
   let index = 0;
 
