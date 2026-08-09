@@ -67,7 +67,7 @@ export function ChatbotWidget({ onClose }: ChatbotWidgetProps) {
         </button>
       </div>
 
-      <div className={styles.messages}>
+      <div className={styles.messages} aria-live="polite">
         {messages.map((msg) => (
           <div key={msg.id} className={msg.role === "user" ? styles.bubbleUser : styles.bubbleBot}>
             {msg.role === "bot" ? renderChatText(msg.text) : msg.text}
