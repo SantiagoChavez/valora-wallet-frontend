@@ -18,6 +18,16 @@ export function ChatbotWidget({ onClose }: ChatbotWidgetProps) {
   const { messages, isLoading, error, sendMessage } = useChatbot();
   const panelRef = useRef<HTMLDivElement>(null);
   const previousFocusRef = useRef<HTMLElement | null>(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Auto-scroll al último mensaje. useEffect (no algo inline durante el render)
+  // corre después de que React ya aplicó el DOM del mensaje nuevo — para cuando
+  // esto se ejecuta, messagesEndRef ya está en su posición final, sin necesidad
+  // de requestAnimationFrame. También depende de isLoading para que la burbuja
+  // de "Escribiendo…" quede visible apenas aparece, no recién con la respuesta.
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ block: "end" });
+  }, [messages, isLoading]);
 
   // Foco inicial al abrir + devolución de foco al trigger (card "Consultar
   // ahora" o FAB) al cerrar — mismo criterio que Modal.tsx, pero sin
@@ -83,6 +93,7 @@ export function ChatbotWidget({ onClose }: ChatbotWidgetProps) {
           </div>
         ))}
         {isLoading && <div className={styles.bubbleBot}>Escribiendo…</div>}
+        <div ref={messagesEndRef} />
       </div>
 
       {error && (
