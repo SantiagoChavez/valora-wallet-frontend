@@ -51,12 +51,15 @@ export async function sendChatMessage(message: string, token: string): Promise<C
       signal: controller.signal,
     });
   } catch (err) {
-    // AbortError es un DOMException del fetch nativo (dispara antes de que haya
-    // una respuesta real que leer) — no es un ApiError, así que no pasa por el
-    // fallback message→error→genérico de apiFetch. getApiErrorMessage da un
-    // mensaje pensado para "no se pudo conectar", no para "se cortó la espera"
-    // — mensaje propio acá para no confundir los dos casos.
-    if (err instanceof DOMException && err.name === "AbortError") {
+    // AbortError normalmente es un DOMException del fetch nativo (dispara antes
+    // de que haya una respuesta real que leer) — no es un ApiError, así que no
+    // pasa por el fallback message→error→genérico de apiFetch. getApiErrorMessage
+    // da un mensaje pensado para "no se pudo conectar", no para "se cortó la
+    // espera" — mensaje propio acá para no confundir los dos casos.
+    // instanceof Error (no instanceof DOMException): DOMException puede no
+    // existir como global en webviews/runtimes viejos, y esa expresión tira
+    // ReferenceError si el global no está — Error sí es universal.
+    if (err instanceof Error && err.name === "AbortError") {
       return { success: false, error: "TIMEOUT", message: TIMEOUT_MESSAGE };
     }
     // El código de error real del backend (ej. "VALIDATION_ERROR",
