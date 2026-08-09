@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useAuth } from "../../auth/useAuth";
 import styles from "./CardDisplay.module.css";
 
@@ -67,19 +67,40 @@ export function CardDisplay({ brand = "VALORA PLATINUM" }: CardDisplayProps) {
   // Sembrado por el id del usuario: mismo número/vencimiento/CVV mientras dure
   // la sesión (no cambia en cada render ni al abrir/cerrar el ojito), sin
   // persistir nada — no hace falta que sobreviva a un refresh (ver consigna).
-  const random = useMemo(() => seededRandom(user?.id ?? "guest"), [user?.id]);
-  const cardDigits = useMemo(() => generateCardDigits(random), [random]);
-  const expiry = useMemo(() => generateExpiry(random), [random]);
-  const cvv = useMemo(() => generateCvv(random), [random]);
+  // Un solo useMemo (no uno por dato encadenado a otro) — los tres valores
+  // salen de la misma corrida del PRNG, así que da lo mismo memoizarlos juntos
+  // que encadenar tres memos sobre la identidad de un cuarto.
+  const { cardDigits, expiry, cvv } = useMemo(() => {
+    const random = seededRandom(user?.id ?? "guest");
+    return {
+      cardDigits: generateCardDigits(random),
+      expiry: generateExpiry(random),
+      cvv: generateCvv(random),
+    };
+  }, [user?.id]);
 
   const [isRevealed, setIsRevealed] = useState(false);
   const [isCopied, setIsCopied] = useState(false);
+  const copyTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+
+  useEffect(() => () => clearTimeout(copyTimeoutRef.current), []);
+
+  function toggleRevealed() {
+    setIsRevealed((v) => !v);
+    // Sin esto, ocultar y volver a mostrar la tarjeta antes de que pasen los
+    // COPY_CONFIRMATION_MS revivía el ícono de "copiado" de la vez anterior
+    // (isCopied vive en CardDisplay, no en el botón — no se resetea solo por
+    // desmontar/remontar el botón de copiar al togglear el ojo).
+    clearTimeout(copyTimeoutRef.current);
+    setIsCopied(false);
+  }
 
   async function handleCopy() {
     try {
       await navigator.clipboard.writeText(cardDigits);
       setIsCopied(true);
-      setTimeout(() => setIsCopied(false), COPY_CONFIRMATION_MS);
+      clearTimeout(copyTimeoutRef.current);
+      copyTimeoutRef.current = setTimeout(() => setIsCopied(false), COPY_CONFIRMATION_MS);
     } catch {
       // Portapapeles bloqueado (permisos, contexto no seguro) — no rompe nada,
       // simplemente no hay confirmación visual de que se copió.
@@ -114,7 +135,7 @@ export function CardDisplay({ brand = "VALORA PLATINUM" }: CardDisplayProps) {
             <button
               type="button"
               className={styles.cardIconButton}
-              onClick={() => setIsRevealed((v) => !v)}
+              onClick={toggleRevealed}
               aria-label={isRevealed ? "Ocultar datos de la tarjeta" : "Mostrar datos de la tarjeta"}
             >
               <span className="msym" style={{ fontSize: 18 }} aria-hidden="true">
