@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Outlet, useNavigate } from "react-router-dom";
 import logo from "../../shared/assets/valora-logo.png";
 import { useAuth } from "../../shared/auth/useAuth";
@@ -138,6 +138,12 @@ export function DashboardLayout() {
     setChatbotOpen(false);
   }, []);
 
+  // handleOpenChatbot ya es estable (useCallback con deps vacías) — pero el
+  // objeto que lo envuelve para el Outlet context era un literal nuevo en
+  // cada render igual, así que useOutletContext() en Dashboard.tsx veía un
+  // valor "distinto" aunque el handler adentro fuera el mismo.
+  const outletContextValue = useMemo(() => ({ onOpenChatbot: handleOpenChatbot }), [handleOpenChatbot]);
+
   // Cerrar el panel abierto al hacer click/tap afuera o presionar Escape. Se usa
   // pointerdown (no mousedown) para cubrir mouse, touch y pen por igual — este
   // proyecto es mobile-first, mousedown no está garantizado en pantallas táctiles.
@@ -248,7 +254,7 @@ export function DashboardLayout() {
       </header>
       <Sidebar items={NAV_ITEMS} onLogout={handleLogout} onOpenLegal={openLegal} />
       <main className={styles.main}>
-        <Outlet context={{ onOpenChatbot: handleOpenChatbot }} />
+        <Outlet context={outletContextValue} />
       </main>
       <BottomNav items={NAV_ITEMS} />
       <LegalModal isOpen={legalOpen} onClose={() => setLegalOpen(false)} variant={legalVariant} />
