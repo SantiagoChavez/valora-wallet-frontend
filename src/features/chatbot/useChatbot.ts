@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { CHATBOT_MAX_MESSAGE_LENGTH, sendChatMessage } from "./chatbotService";
 import { getApiErrorMessage } from "../../shared/services/apiClient";
 import { useAuth } from "../../shared/auth/useAuth";
+import { CHATBOT_HISTORY_KEY_PREFIX } from "../../shared/constants";
 
 export interface ChatMessage {
   id: string;
@@ -10,6 +11,31 @@ export interface ChatMessage {
 }
 
 const MESSAGE_TOO_LONG_ERROR = `El mensaje no puede superar los ${CHATBOT_MAX_MESSAGE_LENGTH} caracteres.`;
+
+// 50 mensajes ≈ 25 intercambios pregunta/respuesta — historial reciente
+// razonable sin arriesgar la cuota de localStorage (~5-10MB por origen,
+// compartida con lo que sea que se guarde ahí en el futuro). Un mensaje real
+// ronda unos pocos cientos de caracteres incluso con markdown, así que 50
+// mensajes son unos pocos KB en el peor caso.
+const CHATBOT_HISTORY_LIMIT = 50;
+
+function chatbotHistoryKey(userId: string): string {
+  return `${CHATBOT_HISTORY_KEY_PREFIX}${userId}`;
+}
+
+function readStoredMessages(userId: string | undefined): ChatMessage[] | null {
+  if (!userId) return null;
+  try {
+    const raw = localStorage.getItem(chatbotHistoryKey(userId));
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? (parsed as ChatMessage[]) : null;
+  } catch {
+    // localStorage bloqueado (modo privado, cuota) o JSON corrupto — arranca
+    // sin historial guardado en vez de romper el chat.
+    return null;
+  }
+}
 
 // crypto.randomUUID() necesita contexto seguro (HTTPS/localhost) y no existe
 // en navegadores/webviews viejos — puede tirar en runtime. Fallback simple,
@@ -21,11 +47,10 @@ function generateMessageId(): string {
   return `msg-${Date.now()}-${Math.random().toString(36).slice(2)}`;
 }
 
-// Mensaje estático de UI, no pasa por chatbotService — no simula un request
-// real, no tiene sentido gastar el mock en esto. Se reinstancia cada vez que
-// se monta el hook (ChatbotWidget se desmonta/monta completo con chatbotOpen,
-// no usa hidden) — reaparece en cada apertura del panel, esperado sin
-// persistencia entre sesiones de chat.
+// Mensaje estático de UI, no pasa por chatbotService — fallback para cuando
+// no hay historial guardado (primera vez que este usuario abre el chat, o
+// después de un logout que lo borró). Si hay historial persistido en
+// localStorage, ese gana y este mensaje no se vuelve a inyectar encima.
 const WELCOME_MESSAGE: ChatMessage = {
   id: "welcome",
   role: "bot",
@@ -33,10 +58,27 @@ const WELCOME_MESSAGE: ChatMessage = {
 };
 
 export function useChatbot() {
-  const { token } = useAuth();
-  const [messages, setMessages] = useState<ChatMessage[]>([WELCOME_MESSAGE]);
+  const { token, user } = useAuth();
+  const userId = user?.id;
+  const [messages, setMessages] = useState<ChatMessage[]>(
+    () => readStoredMessages(userId) ?? [WELCOME_MESSAGE],
+  );
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Persiste el historial en cada cambio, acotado a los últimos
+  // CHATBOT_HISTORY_LIMIT. userId siempre está presente en la práctica (el
+  // panel solo se monta detrás de ProtectedRoute), pero se chequea igual —
+  // sin usuario no hay dónde scopear la key.
+  useEffect(() => {
+    if (!userId) return;
+    try {
+      localStorage.setItem(chatbotHistoryKey(userId), JSON.stringify(messages.slice(-CHATBOT_HISTORY_LIMIT)));
+    } catch {
+      // localStorage bloqueado o sin cuota — el chat sigue andando en memoria
+      // para esta sesión, solo no persiste entre recargas.
+    }
+  }, [messages, userId]);
 
   // El hook vive exactamente lo que vive ChatbotWidget — un solo mount/unmount
   // por instancia (a diferencia de loadDashboardData en Dashboard.tsx, que
