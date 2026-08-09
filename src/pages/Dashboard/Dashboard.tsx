@@ -45,7 +45,15 @@ export function Dashboard() {
   const [hidden, setHidden] = useState<Record<CurrencyCode, boolean>>({ USD: true, EUR: true, ARS: true });
   const { message: toast, showToast } = useToast();
   const currencyMenuAnchorRef = useRef<HTMLDivElement>(null);
-  const { onOpenChatbot } = useOutletContext<DashboardOutletContext>();
+  // useOutletContext() lee de un Context creado con createContext(null) — sin
+  // un <Outlet context={...}> ancestro (ej. Dashboard montado suelto en un
+  // test, o un reuso futuro de la página) devuelve null, no undefined
+  // (verificado contra el código real de react-router, no contra el tipo
+  // declarado — el .d.ts dice Context a secas, sin el null). Destructurar
+  // directo tiraba "Cannot destructure property 'onOpenChatbot' of null" en
+  // vez de degradar con un fallback claro.
+  const outletContext = useOutletContext<DashboardOutletContext | null>();
+  const onOpenChatbot = outletContext?.onOpenChatbot ?? (() => {});
 
   const [isDepositOpen, setIsDepositOpen] = useState(false);
   const [depositCurrency, setDepositCurrency] = useState<CurrencyCode>("USD");
