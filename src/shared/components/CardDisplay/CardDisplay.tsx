@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useAuth } from "../../auth/useAuth";
+import { Toast } from "../Toast/Toast";
+import { useToast } from "../Toast/useToast";
 import styles from "./CardDisplay.module.css";
 
 const EXPIRY_MIN_YEARS = 2;
@@ -82,6 +84,7 @@ export function CardDisplay({ brand = "VALORA PLATINUM" }: CardDisplayProps) {
   const [isRevealed, setIsRevealed] = useState(false);
   const [isCopied, setIsCopied] = useState(false);
   const copyTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const { message: toast, showToast } = useToast();
 
   useEffect(() => () => clearTimeout(copyTimeoutRef.current), []);
 
@@ -99,6 +102,7 @@ export function CardDisplay({ brand = "VALORA PLATINUM" }: CardDisplayProps) {
     try {
       await navigator.clipboard.writeText(cardDigits);
       setIsCopied(true);
+      showToast("Copiaste el número de tarjeta.");
       clearTimeout(copyTimeoutRef.current);
       copyTimeoutRef.current = setTimeout(() => setIsCopied(false), COPY_CONFIRMATION_MS);
     } catch {
@@ -108,54 +112,62 @@ export function CardDisplay({ brand = "VALORA PLATINUM" }: CardDisplayProps) {
   }
 
   return (
-    <div className={styles.cardView}>
-      <div className={styles.cardGlow} />
-      <div className={styles.cardTop}>
-        <span className="msym" style={{ fontSize: 22, color: "var(--accent)" }} aria-hidden="true">contactless</span>
-        <span className={styles.cardBrand}>{brand}</span>
-      </div>
-      <div className={styles.cardBottom}>
-        <div className={styles.cardNumberRow}>
-          <div className={styles.cardNumber}>
-            {isRevealed ? formatCardDigits(cardDigits) : maskCardDigits(cardDigits)}
-          </div>
-          <div className={styles.cardActions}>
-            {isRevealed && (
+    <>
+      <div className={styles.cardView}>
+        <div className={styles.cardGlow} />
+        <div className={styles.cardTop}>
+          <span className="msym" style={{ fontSize: 22, color: "var(--accent)" }} aria-hidden="true">contactless</span>
+          <span className={styles.cardBrand}>{brand}</span>
+        </div>
+        <div className={styles.cardBottom}>
+          <div className={styles.cardNumberRow}>
+            <div className={styles.cardNumber}>
+              {isRevealed ? formatCardDigits(cardDigits) : maskCardDigits(cardDigits)}
+            </div>
+            <div className={styles.cardActions}>
+              {isRevealed && (
+                <button
+                  type="button"
+                  className={styles.cardIconButton}
+                  onClick={handleCopy}
+                  aria-label={isCopied ? "Número copiado" : "Copiar número de tarjeta"}
+                >
+                  <span className="msym" style={{ fontSize: 18 }} aria-hidden="true">
+                    {isCopied ? "check" : "content_copy"}
+                  </span>
+                </button>
+              )}
               <button
                 type="button"
                 className={styles.cardIconButton}
-                onClick={handleCopy}
-                aria-label={isCopied ? "Número copiado" : "Copiar número de tarjeta"}
+                onClick={toggleRevealed}
+                aria-label={isRevealed ? "Ocultar datos de la tarjeta" : "Mostrar datos de la tarjeta"}
               >
                 <span className="msym" style={{ fontSize: 18 }} aria-hidden="true">
-                  {isCopied ? "check" : "content_copy"}
+                  {isRevealed ? "visibility_off" : "visibility"}
                 </span>
               </button>
-            )}
-            <button
-              type="button"
-              className={styles.cardIconButton}
-              onClick={toggleRevealed}
-              aria-label={isRevealed ? "Ocultar datos de la tarjeta" : "Mostrar datos de la tarjeta"}
-            >
-              <span className="msym" style={{ fontSize: 18 }} aria-hidden="true">
-                {isRevealed ? "visibility_off" : "visibility"}
-              </span>
-            </button>
+            </div>
           </div>
-        </div>
-        <div className={styles.cardMeta}>
-          <span>{isRevealed ? expiry : "••/••"}</span>
-          <span>{isRevealed ? cvv : "•••"}</span>
-        </div>
-        <div className={styles.cardHolderRow}>
-          <span className={styles.cardHolder}>{holderName}</span>
-          <div className={styles.cardNetwork}>
-            <div className={styles.networkDotRed} />
-            <div className={styles.networkDotGold} />
+          <div className={styles.cardMeta}>
+            <span>{isRevealed ? expiry : "••/••"}</span>
+            <span>{isRevealed ? cvv : "•••"}</span>
+          </div>
+          <div className={styles.cardHolderRow}>
+            <span className={styles.cardHolder}>{holderName}</span>
+            <div className={styles.cardNetwork}>
+              <div className={styles.networkDotRed} />
+              <div className={styles.networkDotGold} />
+            </div>
           </div>
         </div>
       </div>
-    </div>
+      {/* Fuera de .cardView a propósito: ese div puede ganar `transform` vía
+          :hover (scale 1.08), lo que crea un containing block nuevo para
+          position:fixed — el Toast quedaba posicionado/clippeado relativo a
+          la tarjeta en vez de flotar sobre el viewport entero (bug real, visto
+          con Playwright al hacer click sobre un botón adentro de la tarjeta). */}
+      <Toast message={toast} />
+    </>
   );
 }
