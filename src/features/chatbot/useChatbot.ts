@@ -23,13 +23,32 @@ function chatbotHistoryKey(userId: string): string {
   return `${CHATBOT_HISTORY_KEY_PREFIX}${userId}`;
 }
 
+// Valida cada elemento, no solo que el JSON sea un array — un localStorage con
+// objetos incompletos (ej. escrito por una versión vieja del código, o tocado
+// a mano) podía romper el render (msg.role/msg.text undefined) en vez de
+// degradar con claridad.
+function isValidChatMessage(value: unknown): value is ChatMessage {
+  if (typeof value !== "object" || value === null) return false;
+  const candidate = value as Record<string, unknown>;
+  return (
+    typeof candidate.id === "string" &&
+    (candidate.role === "user" || candidate.role === "bot") &&
+    typeof candidate.text === "string"
+  );
+}
+
 function readStoredMessages(userId: string | undefined): ChatMessage[] | null {
   if (!userId) return null;
   try {
     const raw = localStorage.getItem(chatbotHistoryKey(userId));
     if (!raw) return null;
     const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? (parsed as ChatMessage[]) : null;
+    if (!Array.isArray(parsed)) return null;
+    const valid = parsed.filter(isValidChatMessage);
+    // Si no queda nada válido después de filtrar, es lo mismo que no tener
+    // historial — cae al flujo de WELCOME_MESSAGE, no un array vacío sin
+    // saludo inicial.
+    return valid.length > 0 ? valid : null;
   } catch {
     // localStorage bloqueado (modo privado, cuota) o JSON corrupto — arranca
     // sin historial guardado en vez de romper el chat.
