@@ -47,7 +47,18 @@ export function useChatbot() {
   // instancia ya desmontada.
   const isMountedRef = useRef(true);
 
+  // El setup también lo prende, no solo useRef(true) al declarar — en dev con
+  // StrictMode, React monta, corre el efecto, corre el cleanup enseguida
+  // (isMountedRef.current = false) y vuelve a correr el efecto una segunda vez
+  // sin desmontar de verdad. Con un setup vacío, esa segunda pasada no repone
+  // el true — el ref queda apagado para siempre aunque el componente siga
+  // montado, y sendMessage frena todos sus setState (incluido el
+  // setIsLoading(false) del finally) como si estuviera desmontado. Repetir
+  // isMountedRef.current = true acá cancela ese ciclo sin afectar la
+  // protección real: en un desmontaje genuino, el último cleanup en correr
+  // sigue siendo el que lo deja en false.
   useEffect(() => {
+    isMountedRef.current = true;
     return () => {
       isMountedRef.current = false;
     };
