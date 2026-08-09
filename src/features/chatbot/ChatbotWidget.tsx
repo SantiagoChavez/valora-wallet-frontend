@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type SubmitEvent } from "react";
+import { useEffect, useRef, useState, type KeyboardEvent, type SubmitEvent } from "react";
 import { Button } from "../../shared/components/Button/Button";
 import { Input } from "../../shared/components/Input/Input";
 import { CHATBOT_MAX_MESSAGE_LENGTH } from "./chatbotService";
@@ -34,13 +34,15 @@ export function ChatbotWidget({ onClose }: ChatbotWidgetProps) {
     };
   }, []);
 
-  useEffect(() => {
-    function handleKeyDown(event: KeyboardEvent) {
-      if (event.key === "Escape") onClose();
-    }
-    document.addEventListener("keydown", handleKeyDown);
-    return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [onClose]);
+  // onKeyDown en el propio panel (bubbling normal), no document.addEventListener
+  // — mismo patrón que Modal.tsx. Un listener global en document dispara sin
+  // importar dónde está el foco: con un Modal/ConversionModal abierto encima
+  // del chat al mismo tiempo, un solo Escape cerraba los dos (bug real,
+  // confirmado con Playwright). Acá el evento solo llega si el foco está
+  // dentro de este panel.
+  function handleKeyDown(event: KeyboardEvent<HTMLDivElement>) {
+    if (event.key === "Escape") onClose();
+  }
 
   function handleSubmit(event: SubmitEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -56,7 +58,14 @@ export function ChatbotWidget({ onClose }: ChatbotWidgetProps) {
   }
 
   return (
-    <div className={styles.panel} ref={panelRef} role="dialog" aria-label="Asistente Valora AI" tabIndex={-1}>
+    <div
+      className={styles.panel}
+      ref={panelRef}
+      role="dialog"
+      aria-label="Asistente Valora AI"
+      tabIndex={-1}
+      onKeyDown={handleKeyDown}
+    >
       <div className={styles.header}>
         <h2 className={styles.headerTitle}>
           <span className={`msym ${styles.headerIcon}`} aria-hidden="true">auto_awesome</span>
