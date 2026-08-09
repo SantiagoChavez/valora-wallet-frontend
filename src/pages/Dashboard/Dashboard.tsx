@@ -59,14 +59,18 @@ export function Dashboard() {
   const [conversionMode, setConversionMode] = useState<"BUY" | "SELL">("BUY");
   const [isConversionOpen, setIsConversionOpen] = useState(false);
 
-  // Ref, no variable local: loadDashboardData es async y chequea cancelledRef
-  // después de un await — un boolean pasado por parámetro se copia por valor
-  // en ese punto y queda leyendo el estado "congelado" de cuando se llamó a la
-  // función, no el valor real que muta el cleanup del efecto. El ref sí lee el
-  // valor actual en cada chequeo, sin importar cuánto haya avanzado el await.
-  const cancelledRef = useRef(false);
+  // Contador de generación, no boolean: con un solo cancelledRef reseteado a
+  // false al arrancar cada corrida, un request de una corrida ANTERIOR que
+  // sigue en vuelo podía "revivir" — el reset de la corrida nueva pisaba el
+  // true que había puesto el cleanup de la corrida vieja, así que si esa
+  // respuesta vieja llegaba después (fuera de orden), pasaba el chequeo igual
+  // y pisaba el estado correcto con datos viejos. Acá cada corrida compara
+  // contra su propio requestId capturado al arrancar — no hay reset que pueda
+  // borrar la señal de una corrida anterior.
+  const requestIdRef = useRef(0);
 
   const loadDashboardData = useCallback(async () => {
+    const requestId = ++requestIdRef.current;
     setIsLoading(true);
     setError(null);
     try {
@@ -74,27 +78,29 @@ export function Dashboard() {
         getBalances(token as string),
         getTransactions(token as string, { limit: LATEST_TRANSACTIONS_LIMIT }),
       ]);
-      if (cancelledRef.current) return;
+      if (requestIdRef.current !== requestId) return;
       setBalances(balancesData);
       setTransactions(transactionsResult.transactions);
     } catch (err) {
-      if (cancelledRef.current) return;
+      if (requestIdRef.current !== requestId) return;
       setError(getApiErrorMessage(err));
     } finally {
-      if (!cancelledRef.current) setIsLoading(false);
+      if (requestIdRef.current === requestId) setIsLoading(false);
     }
   }, [token]);
 
   useEffect(() => {
     if (!token) return;
-    // Reset explícito: a diferencia de `let cancelled = false` (variable nueva
-    // en cada corrida del efecto), el ref persiste entre corridas — sin este
-    // reset, un cleanup previo (ej. token cambió) dejaría cancelledRef en true
-    // y esta corrida nueva se cancelaría a sí misma antes de arrancar.
-    cancelledRef.current = false;
     loadDashboardData();
+    // Defensivo, no por un bug encontrado hoy: bumpea el contador al
+    // desmontar/cambiar deps para que un request en vuelo justo antes de
+    // navegar fuera de Dashboard no aplique su resultado sobre una instancia
+    // ya desmontada. En React 18+ un setState post-unmount ya es un no-op
+    // silencioso — mismo criterio que isMountedRef en useChatbot.ts, por
+    // consistencia dentro del mismo PR. Sigue siendo monótono creciente (no
+    // resetea a un valor fijo), así que no reabre la carrera de arriba.
     return () => {
-      cancelledRef.current = true;
+      requestIdRef.current += 1;
     };
   }, [token, loadDashboardData]);
 
