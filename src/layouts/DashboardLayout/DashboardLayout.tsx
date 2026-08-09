@@ -248,7 +248,7 @@ export function DashboardLayout() {
       <BottomNav items={NAV_ITEMS} />
       <LegalModal isOpen={legalOpen} onClose={() => setLegalOpen(false)} variant={legalVariant} />
       {chatbotOpen && <ChatbotWidget onClose={handleCloseChatbot} />}
-      {!chatbotOpen && <ChatbotFAB onOpen={handleOpenChatbot} />}
+      <ChatbotFAB onOpen={handleOpenChatbot} hidden={chatbotOpen} />
     </div>
   );
 }

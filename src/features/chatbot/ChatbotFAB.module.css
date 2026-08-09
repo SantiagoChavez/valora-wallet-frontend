@@ -31,6 +31,10 @@
     background: var(--accent-hover);
   }
 
+  .fabHidden {
+    pointer-events: none;
+  }
+
   .fabIcon {
     font-size: 26px;
   }
