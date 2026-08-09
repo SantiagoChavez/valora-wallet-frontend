@@ -125,13 +125,18 @@ export function DashboardLayout() {
     setLegalOpen(true);
   }
 
-  function handleOpenChatbot() {
+  // useCallback con deps vacías: ninguna cierra sobre props/state, solo llaman
+  // al setter (identidad estable). Sin esto se recrean en cada render de
+  // DashboardLayout — cualquier cambio ajeno al chat (ej. abrir el panel de
+  // notificaciones) hace que el efecto del Escape en ChatbotWidget (que
+  // depende de onClose) se desuscriba y resuscriba de más.
+  const handleOpenChatbot = useCallback(() => {
     setChatbotOpen(true);
-  }
+  }, []);
 
-  function handleCloseChatbot() {
+  const handleCloseChatbot = useCallback(() => {
     setChatbotOpen(false);
-  }
+  }, []);
 
   // Cerrar el panel abierto al hacer click/tap afuera o presionar Escape. Se usa
   // pointerdown (no mousedown) para cubrir mouse, touch y pen por igual — este
