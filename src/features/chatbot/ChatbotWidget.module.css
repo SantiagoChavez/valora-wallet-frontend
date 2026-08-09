@@ -103,6 +103,23 @@
   font-size: var(--font-size-sm);
 }
 
+/* Texto real en el DOM para que la live region (aria-live="polite" en
+   .messages) tenga algo que anunciar — los puntos animados de acá abajo son
+   aria-hidden, así que sin esto no hay nada que un lector de pantalla lea
+   cuando aparece "Escribiendo…". Oculto visualmente, no con display:none
+   (eso lo sacaría del árbol de accesibilidad, contraproducente acá). */
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
 .typingDots {
   display: inline-flex;
   align-items: center;

@@ -93,7 +93,8 @@ export function ChatbotWidget({ onClose }: ChatbotWidgetProps) {
           </div>
         ))}
         {isLoading && (
-          <div className={styles.bubbleBot} aria-label="Escribiendo…">
+          <div className={styles.bubbleBot}>
+            <span className={styles.srOnly}>Escribiendo…</span>
             <span className={styles.typingDots} aria-hidden="true">
               <span className={styles.typingDot} />
               <span className={styles.typingDot} />
