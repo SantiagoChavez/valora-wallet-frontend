@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { CHATBOT_MAX_MESSAGE_LENGTH, sendChatMessage } from "./chatbotService";
+import { getApiErrorMessage } from "../../shared/services/apiClient";
 
 export interface ChatMessage {
   id: string;
@@ -25,6 +26,21 @@ export function useChatbot() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // El hook vive exactamente lo que vive ChatbotWidget — un solo mount/unmount
+  // por instancia (a diferencia de loadDashboardData en Dashboard.tsx, que
+  // corre varias veces dentro del mismo componente por cambios de token, y por
+  // eso necesita resetear su ref en cada corrida). Acá alcanza con apagar el
+  // ref una sola vez al desmontar: si el panel se cierra con un
+  // sendChatMessage en vuelo, la respuesta no actualiza el estado de una
+  // instancia ya desmontada.
+  const isMountedRef = useRef(true);
+
+  useEffect(() => {
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
+
   async function sendMessage(text: string) {
     const trimmed = text.trim();
     if (!trimmed) return;
@@ -40,14 +56,24 @@ export function useChatbot() {
     setMessages((prev) => [...prev, { id: crypto.randomUUID(), role: "user", text: trimmed }]);
     setIsLoading(true);
 
-    const response = await sendChatMessage(trimmed);
+    try {
+      const response = await sendChatMessage(trimmed);
+      if (!isMountedRef.current) return;
 
-    if (response.success) {
-      setMessages((prev) => [...prev, { id: crypto.randomUUID(), role: "bot", text: response.data.reply }]);
-    } else {
-      setError(response.message);
+      if (response.success) {
+        setMessages((prev) => [...prev, { id: crypto.randomUUID(), role: "bot", text: response.data.reply }]);
+      } else {
+        setError(response.message);
+      }
+    } catch (err) {
+      // El mock nunca rechaza, pero el service real (fetch) sí puede — sin
+      // este catch, una promesa rechazada dejaba isLoading en true para
+      // siempre y el error nunca llegaba a mostrarse.
+      if (!isMountedRef.current) return;
+      setError(getApiErrorMessage(err));
+    } finally {
+      if (isMountedRef.current) setIsLoading(false);
     }
-    setIsLoading(false);
   }
 
   return { messages, isLoading, error, sendMessage };
