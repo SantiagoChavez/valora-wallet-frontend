@@ -135,6 +135,7 @@ export function CardDisplay({ brand = "VALORA PLATINUM" }: CardDisplayProps) {
                   <span className="msym" style={{ fontSize: 18 }} aria-hidden="true">
                     {isCopied ? "check" : "content_copy"}
                   </span>
+                  <span className={styles.copyTooltip} aria-hidden="true">Copiar número de tarjeta</span>
                 </button>
               )}
               <button
