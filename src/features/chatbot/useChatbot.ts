@@ -10,6 +10,16 @@ export interface ChatMessage {
 
 const MESSAGE_TOO_LONG_ERROR = `El mensaje no puede superar los ${CHATBOT_MAX_MESSAGE_LENGTH} caracteres.`;
 
+// crypto.randomUUID() necesita contexto seguro (HTTPS/localhost) y no existe
+// en navegadores/webviews viejos — puede tirar en runtime. Fallback simple,
+// solo necesita ser único dentro de esta sesión de chat (no persiste).
+function generateMessageId(): string {
+  if (typeof crypto !== "undefined" && crypto.randomUUID) {
+    return crypto.randomUUID();
+  }
+  return `msg-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+}
+
 // Mensaje estático de UI, no pasa por chatbotService — no simula un request
 // real, no tiene sentido gastar el mock en esto. Se reinstancia cada vez que
 // se monta el hook (ChatbotWidget se desmonta/monta completo con chatbotOpen,
@@ -53,7 +63,7 @@ export function useChatbot() {
     }
 
     setError(null);
-    setMessages((prev) => [...prev, { id: crypto.randomUUID(), role: "user", text: trimmed }]);
+    setMessages((prev) => [...prev, { id: generateMessageId(), role: "user", text: trimmed }]);
     setIsLoading(true);
 
     try {
@@ -61,7 +71,7 @@ export function useChatbot() {
       if (!isMountedRef.current) return;
 
       if (response.success) {
-        setMessages((prev) => [...prev, { id: crypto.randomUUID(), role: "bot", text: response.data.reply }]);
+        setMessages((prev) => [...prev, { id: generateMessageId(), role: "bot", text: response.data.reply }]);
       } else {
         setError(response.message);
       }
