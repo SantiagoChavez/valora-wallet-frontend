@@ -92,7 +92,15 @@ export function ChatbotWidget({ onClose }: ChatbotWidgetProps) {
             {msg.role === "bot" ? renderChatText(msg.text) : msg.text}
           </div>
         ))}
-        {isLoading && <div className={styles.bubbleBot}>Escribiendo…</div>}
+        {isLoading && (
+          <div className={styles.bubbleBot} aria-label="Escribiendo…">
+            <span className={styles.typingDots} aria-hidden="true">
+              <span className={styles.typingDot} />
+              <span className={styles.typingDot} />
+              <span className={styles.typingDot} />
+            </span>
+          </div>
+        )}
         <div ref={messagesEndRef} />
       </div>
 
