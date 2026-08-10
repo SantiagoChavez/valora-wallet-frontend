@@ -1,21 +1,32 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useAuth } from "../../auth/useAuth";
-import { Toast } from "../Toast/Toast";
-import { useToast } from "../Toast/useToast";
 import styles from "./CardDisplay.module.css";
 
 const EXPIRY_MIN_YEARS = 2;
 const EXPIRY_MAX_YEARS = 4;
 const COPY_CONFIRMATION_MS = 1500;
 
+// Exportado para que los callers armen su propio onCopy sin hardcodear el
+// texto aparte (ver por qué CardDisplay no muestra su propio toast más abajo).
+export const CARD_NUMBER_COPIED_MESSAGE = "Copiaste el número de tarjeta.";
+
 interface CardDisplayProps {
   brand?: string;
+  /** Se llama después de copiar el número al portapapeles con éxito — quien
+   *  use CardDisplay decide cómo avisarlo (ej. su propio showToast de página),
+   *  en vez de que este componente monte su propia instancia de Toast: las dos
+   *  páginas que lo usan (Dashboard, Tarjetas) ya tienen la suya para otras
+   *  acciones, y dos <Toast> independientes en la misma pantalla comparten
+   *  position:fixed/z-index — si llegan a coincidir en el tiempo (ej. copiar
+   *  justo después de un depósito), uno tapa al otro. */
+  onCopy?: () => void;
 }
 
-// PRNG determinístico sembrado por string (mulberry32) — no criptográfico, no
-// hace falta: esto es puramente decorativo (ver Estado actual en CLAUDE.md,
-// "vista de tarjeta física... vino con el mock del diseño Geist"), nunca es
-// dinero ni datos reales de una tarjeta.
+// Generador congruencial lineal (LCG) sembrado por string — no es mulberry32
+// (los constantes 1664525/1013904223 son las clásicas de Numerical Recipes),
+// no criptográfico, no hace falta: esto es puramente decorativo (ver Estado
+// actual en CLAUDE.md, "vista de tarjeta física... vino con el mock del
+// diseño Geist"), nunca es dinero ni datos reales de una tarjeta.
 function seededRandom(seed: string): () => number {
   let h = 0;
   for (let i = 0; i < seed.length; i++) {
@@ -62,7 +73,7 @@ function maskCardDigits(digits: string): string {
   return `•••• •••• •••• ${digits.slice(12, 16)}`;
 }
 
-export function CardDisplay({ brand = "VALORA PLATINUM" }: CardDisplayProps) {
+export function CardDisplay({ brand = "VALORA PLATINUM", onCopy }: CardDisplayProps) {
   const { user } = useAuth();
   const holderName = user ? `${user.firstName} ${user.lastName}`.toUpperCase() : "USUARIO VALORA";
 
@@ -84,7 +95,6 @@ export function CardDisplay({ brand = "VALORA PLATINUM" }: CardDisplayProps) {
   const [isRevealed, setIsRevealed] = useState(false);
   const [isCopied, setIsCopied] = useState(false);
   const copyTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
-  const { message: toast, showToast } = useToast();
 
   useEffect(() => () => clearTimeout(copyTimeoutRef.current), []);
 
@@ -102,7 +112,7 @@ export function CardDisplay({ brand = "VALORA PLATINUM" }: CardDisplayProps) {
     try {
       await navigator.clipboard.writeText(cardDigits);
       setIsCopied(true);
-      showToast("Copiaste el número de tarjeta.");
+      onCopy?.();
       clearTimeout(copyTimeoutRef.current);
       copyTimeoutRef.current = setTimeout(() => setIsCopied(false), COPY_CONFIRMATION_MS);
     } catch {
@@ -112,63 +122,55 @@ export function CardDisplay({ brand = "VALORA PLATINUM" }: CardDisplayProps) {
   }
 
   return (
-    <>
-      <div className={styles.cardView}>
-        <div className={styles.cardGlow} />
-        <div className={styles.cardTop}>
-          <span className="msym" style={{ fontSize: 22, color: "var(--accent)" }} aria-hidden="true">contactless</span>
-          <span className={styles.cardBrand}>{brand}</span>
-        </div>
-        <div className={styles.cardBottom}>
-          <div className={styles.cardNumberRow}>
-            <div className={styles.cardNumber}>
-              {isRevealed ? formatCardDigits(cardDigits) : maskCardDigits(cardDigits)}
-            </div>
-            <div className={styles.cardActions}>
-              {isRevealed && (
-                <button
-                  type="button"
-                  className={styles.cardIconButton}
-                  onClick={handleCopy}
-                  aria-label={isCopied ? "Número copiado" : "Copiar número de tarjeta"}
-                >
-                  <span className="msym" style={{ fontSize: 18 }} aria-hidden="true">
-                    {isCopied ? "check" : "content_copy"}
-                  </span>
-                  <span className={styles.copyTooltip} aria-hidden="true">Copiar número de tarjeta</span>
-                </button>
-              )}
+    <div className={styles.cardView}>
+      <div className={styles.cardGlow} />
+      <div className={styles.cardTop}>
+        <span className="msym" style={{ fontSize: 22, color: "var(--accent)" }} aria-hidden="true">contactless</span>
+        <span className={styles.cardBrand}>{brand}</span>
+      </div>
+      <div className={styles.cardBottom}>
+        <div className={styles.cardNumberRow}>
+          <div className={styles.cardNumber}>
+            {isRevealed ? formatCardDigits(cardDigits) : maskCardDigits(cardDigits)}
+          </div>
+          <div className={styles.cardActions}>
+            {isRevealed && (
               <button
                 type="button"
                 className={styles.cardIconButton}
-                onClick={toggleRevealed}
-                aria-label={isRevealed ? "Ocultar datos de la tarjeta" : "Mostrar datos de la tarjeta"}
+                onClick={handleCopy}
+                aria-label={isCopied ? "Número copiado" : "Copiar número de tarjeta"}
               >
                 <span className="msym" style={{ fontSize: 18 }} aria-hidden="true">
-                  {isRevealed ? "visibility_off" : "visibility"}
+                  {isCopied ? "check" : "content_copy"}
                 </span>
+                <span className={styles.copyTooltip} aria-hidden="true">Copiar número de tarjeta</span>
               </button>
-            </div>
+            )}
+            <button
+              type="button"
+              className={styles.cardIconButton}
+              onClick={toggleRevealed}
+              aria-label={isRevealed ? "Ocultar datos de la tarjeta" : "Mostrar datos de la tarjeta"}
+            >
+              <span className="msym" style={{ fontSize: 18 }} aria-hidden="true">
+                {isRevealed ? "visibility_off" : "visibility"}
+              </span>
+            </button>
           </div>
-          <div className={styles.cardMeta}>
-            <span>{isRevealed ? expiry : "••/••"}</span>
-            <span>{isRevealed ? cvv : "•••"}</span>
-          </div>
-          <div className={styles.cardHolderRow}>
-            <span className={styles.cardHolder}>{holderName}</span>
-            <div className={styles.cardNetwork}>
-              <div className={styles.networkDotRed} />
-              <div className={styles.networkDotGold} />
-            </div>
+        </div>
+        <div className={styles.cardMeta}>
+          <span>{isRevealed ? expiry : "••/••"}</span>
+          <span>{isRevealed ? cvv : "•••"}</span>
+        </div>
+        <div className={styles.cardHolderRow}>
+          <span className={styles.cardHolder}>{holderName}</span>
+          <div className={styles.cardNetwork}>
+            <div className={styles.networkDotRed} />
+            <div className={styles.networkDotGold} />
           </div>
         </div>
       </div>
-      {/* Fuera de .cardView a propósito: ese div puede ganar `transform` vía
-          :hover (scale 1.08), lo que crea un containing block nuevo para
-          position:fixed — el Toast quedaba posicionado/clippeado relativo a
-          la tarjeta en vez de flotar sobre el viewport entero (bug real, visto
-          con Playwright al hacer click sobre un botón adentro de la tarjeta). */}
-      <Toast message={toast} />
-    </>
+    </div>
   );
 }

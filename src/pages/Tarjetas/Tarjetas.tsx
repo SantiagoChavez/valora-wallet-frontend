@@ -1,4 +1,4 @@
-import { CardDisplay } from "../../shared/components/CardDisplay/CardDisplay";
+import { CARD_NUMBER_COPIED_MESSAGE, CardDisplay } from "../../shared/components/CardDisplay/CardDisplay";
 import { Toast } from "../../shared/components/Toast/Toast";
 import { useToast } from "../../shared/components/Toast/useToast";
 import styles from "./Tarjetas.module.css";
@@ -13,7 +13,7 @@ export function Tarjetas() {
 
       <div className={styles.cardRow}>
         <div className={styles.cardSlot}>
-          <CardDisplay />
+          <CardDisplay onCopy={() => showToast(CARD_NUMBER_COPIED_MESSAGE)} />
         </div>
 
         {/* Sin backend para múltiples tarjetas todavía (una sola por wallet) —
