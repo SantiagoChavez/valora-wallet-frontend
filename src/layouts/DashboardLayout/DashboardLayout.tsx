@@ -109,48 +109,58 @@ export function DashboardLayout() {
   // transacciones reales (ver deriveNotifications.ts). Fetch propio acá, aparte
   // del que hace Dashboard.tsx para sus últimas 5: este vive en el layout,
   // persiste entre rutas, y no tiene por qué depender de que la vista actual
-  // sea el Dashboard.
-  const loadNotifications = useCallback(async () => {
-    if (!token) return;
+  // sea el Dashboard. Devuelve lo que trajo (o null si no hubo fetch real) para
+  // que el efecto de apertura del panel pueda encadenar "marcar como vistas"
+  // sobre el resultado de ESTE fetch puntual, no sobre el estado en general.
+  const loadNotifications = useCallback(async (): Promise<AppNotification[] | null> => {
+    if (!token) return null;
     try {
       const result = await getTransactions(token, { limit: RECENT_NOTIFICATIONS_LIMIT });
-      setNotifications(deriveNotifications(result.transactions));
+      const derived = deriveNotifications(result.transactions);
+      setNotifications(derived);
+      return derived;
     } catch {
       // Silencioso a propósito: si falla, el panel simplemente muestra el
       // estado vacío de NotificationPanel en vez de romper todo el layout.
+      return null;
     }
   }, [token]);
 
   // Trae al montar (para el punto de "no leído" en la campanita antes de que
-  // nadie la abra).
+  // nadie la abra) — a propósito NO marca nada como visto, a diferencia del
+  // efecto de apertura de panel de abajo.
   useEffect(() => {
     loadNotifications();
   }, [loadNotifications]);
 
-  // Y vuelve a traer cada vez que se abre el panel — sin esto, depositar o
-  // intercambiar y después abrir la campanita mostraba la lista vieja (fetch
-  // de al montar nada más, sin enterarse de acciones hechas después en otra
-  // parte de la app).
-  useEffect(() => {
-    if (openPanel === "notif") loadNotifications();
-  }, [openPanel, loadNotifications]);
-
-  // Marca como vistas las notificaciones visibles al abrir el panel — apaga
-  // el punto rojo sin borrar nada (eso sigue siendo dismissedIds, aparte).
-  // Guard de "¿hay algo nuevo?" antes de actualizar estado: visibleNotifications
-  // es un array nuevo en cada render, así que sin el guard este efecto
-  // reintentaría un setSeenIds en cada render mientras el panel esté abierto.
+  // Al abrir el panel: un solo flujo, no dos efectos reactivos compitiendo.
+  // Antes había un efecto separado que marcaba como vista cualquier elemento
+  // de visibleNotifications apenas esa lista cambiaba — incluyendo el cambio
+  // que producía este mismo fetch, así que una notificación nueva quedaba
+  // "vista" en el mismo ciclo en que se cargaba, antes de que el punto rojo
+  // llegara a reflejarla como no leída en ningún frame observable. Acá se
+  // encadena explícitamente: primero el fetch, y recién cuando ESE fetch
+  // puntual resuelve, se marcan como vistas las notificaciones que trajo.
+  // `cancelled` evita aplicar el resultado si el panel se cerró (o el
+  // componente se desmontó) antes de que la promesa resolviera.
   useEffect(() => {
     if (openPanel !== "notif") return;
-    const newIds = visibleNotifications.map((note) => note.id).filter((id) => !seenIds.has(id));
-    if (newIds.length === 0) return;
-    setSeenIds((prev) => {
-      const next = new Set(prev);
-      newIds.forEach((id) => next.add(id));
-      persistSeenIds(user?.id, next);
-      return next;
+    let cancelled = false;
+    loadNotifications().then((derived) => {
+      if (cancelled || !derived) return;
+      setSeenIds((prev) => {
+        const newIds = derived.map((note) => note.id).filter((id) => !prev.has(id));
+        if (newIds.length === 0) return prev;
+        const next = new Set(prev);
+        newIds.forEach((id) => next.add(id));
+        persistSeenIds(user?.id, next);
+        return next;
+      });
     });
-  }, [openPanel, visibleNotifications, seenIds, user?.id]);
+    return () => {
+      cancelled = true;
+    };
+  }, [openPanel, loadNotifications, user?.id]);
 
   function handleLogout() {
     logout();
