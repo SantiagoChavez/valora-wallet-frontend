@@ -1,5 +1,5 @@
 import { apiFetch } from "../services/apiClient";
-import type { User } from "../types/models";
+import type { User, Wallet } from "../types/models";
 import type {
   ForgotPasswordRequest,
   ForgotPasswordResponse,
@@ -10,14 +10,24 @@ import type {
 export interface AuthResponse {
   token: string;
   user: User;
-  walletId: string;
+  wallet: Wallet;
+}
+
+// El backend envuelve /auth/login, /auth/register y /auth/google en
+// {success, data} desde el informe de sincronización de Santiago — antes
+// devolvían el objeto plano directo. Se desenvuelve acá, una sola vez, así
+// el resto del código (AuthProvider, callers) sigue trabajando con
+// AuthResponse tal cual.
+interface AuthApiResponse {
+  success: boolean;
+  data: AuthResponse;
 }
 
 export function login(email: string, password: string): Promise<AuthResponse> {
-  return apiFetch<AuthResponse>("/auth/login", {
+  return apiFetch<AuthApiResponse>("/auth/login", {
     method: "POST",
     body: JSON.stringify({ email, password }),
-  });
+  }).then((res) => res.data);
 }
 
 export function register(
@@ -27,11 +37,13 @@ export function register(
   lastName: string,
   dateOfBirth: string,
   phone: string,
+  du: string,
+  country: string = "AR",
 ): Promise<AuthResponse> {
-  return apiFetch<AuthResponse>("/auth/register", {
+  return apiFetch<AuthApiResponse>("/auth/register", {
     method: "POST",
-    body: JSON.stringify({ email, password, firstName, lastName, dateOfBirth, phone }),
-  });
+    body: JSON.stringify({ email, password, firstName, lastName, dateOfBirth, phone, du, country }),
+  }).then((res) => res.data);
 }
 
 export function requestPasswordReset(email: string): Promise<ForgotPasswordResponse> {

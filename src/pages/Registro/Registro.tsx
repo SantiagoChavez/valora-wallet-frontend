@@ -57,6 +57,7 @@ export function Registro() {
   const [email, setEmail] = useState("");
   const [dateOfBirth, setDateOfBirth] = useState("");
   const [phone, setPhone] = useState("");
+  const [du, setDu] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -88,7 +89,7 @@ export function Registro() {
 
     setIsSubmitting(true);
     try {
-      await authService.register(email, password, firstName, lastName, toBackendDate(dateOfBirth), phone);
+      await authService.register(email, password, firstName, lastName, toBackendDate(dateOfBirth), phone, du);
       showToast("Cuenta creada, iniciá sesión.");
       redirectTimer.current = setTimeout(() => {
         navigate("/login", { replace: true });
@@ -199,6 +200,31 @@ export function Registro() {
               onChange={(event) => setPhone(event.target.value)}
               autoComplete="tel"
               icon="call"
+              required
+            />
+
+            {/* country va fijo en "AR" (ver authService.register) — a propósito
+                sin selector de país: el enum de authSchema.ts del backend hoy
+                solo acepta AR/PE/CO/MX, y un dropdown con esos 4 nada más le
+                muestra a cualquiera del resto de LATAM (Chile, Uruguay,
+                Ecuador, Centroamérica, etc.) una lista que no lo incluye —
+                peor que no mostrar el selector. Vuelve cuando el backend
+                soporte el resto de la región. Mientras tanto, el formato
+                validado acá es el de DNI argentino (7 u 8 dígitos). */}
+            <Input
+              id="du"
+              label="Documento único"
+              type="text"
+              inputMode="numeric"
+              size="lg"
+              placeholder="12345678"
+              value={du}
+              onChange={(event) => setDu(event.target.value)}
+              autoComplete="off"
+              icon="badge"
+              pattern="[0-9]{7,8}"
+              minLength={7}
+              maxLength={8}
               required
             />
 
