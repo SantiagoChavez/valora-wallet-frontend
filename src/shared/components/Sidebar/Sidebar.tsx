@@ -8,10 +8,10 @@ interface SidebarProps {
   items: NavEntry[];
   onLogout: () => void;
   onOpenLegal: (variant: LegalVariant) => void;
-  onOpenChatbot: () => void;
+  onToggleChatbot: () => void;
 }
 
-export function Sidebar({ items, onLogout, onOpenLegal, onOpenChatbot }: SidebarProps) {
+export function Sidebar({ items, onLogout, onOpenLegal, onToggleChatbot }: SidebarProps) {
   return (
     <aside className={styles.sidebar}>
       <nav className={styles.nav} aria-label="Navegación principal">
@@ -37,7 +37,7 @@ export function Sidebar({ items, onLogout, onOpenLegal, onOpenChatbot }: Sidebar
           </NavLink>
         ))}
 
-        <button type="button" className={styles.navItem} onClick={onOpenChatbot}>
+        <button type="button" className={styles.navItem} onClick={onToggleChatbot}>
           <span className={`msym ${styles.navIcon}`} aria-hidden="true">chat</span>
           <span className={styles.navLabel}>Asistente AI</span>
         </button>

@@ -196,6 +196,20 @@ export function DashboardLayout() {
     setChatbotOpen(false);
   }, []);
 
+  // El Sidebar (desktop) necesita toggle, no un "abrir" a secas: un click abre,
+  // el siguiente (con el chatbot ya abierto) lo cierra. Reusa
+  // handleOpenChatbot/handleCloseChatbot en vez de un setChatbotOpen directo
+  // acá, para no duplicar nada que esos dos hagan además de togglear el estado.
+  // ChatbotFAB (mobile) sigue usando handleOpenChatbot sin togglear — en mobile
+  // el chatbot ocupa toda la pantalla al abrirse, no hace falta un toggle ahí.
+  const handleToggleChatbot = useCallback(() => {
+    if (chatbotOpen) {
+      handleCloseChatbot();
+    } else {
+      handleOpenChatbot();
+    }
+  }, [chatbotOpen, handleOpenChatbot, handleCloseChatbot]);
+
   // Canal explícito para que cualquier página bajo este layout (Dashboard,
   // ExchangeForm) avise "se creó una transacción" sin pasar datos de la
   // transacción en sí — el fetch de loadNotifications ya trae todo de nuevo.
@@ -324,7 +338,7 @@ export function DashboardLayout() {
           </div>
         </div>
       </header>
-      <Sidebar items={NAV_ITEMS} onLogout={handleLogout} onOpenLegal={openLegal} onOpenChatbot={handleOpenChatbot} />
+      <Sidebar items={NAV_ITEMS} onLogout={handleLogout} onOpenLegal={openLegal} onToggleChatbot={handleToggleChatbot} />
       <main className={styles.main}>
         <Outlet context={outletContextValue} />
       </main>
