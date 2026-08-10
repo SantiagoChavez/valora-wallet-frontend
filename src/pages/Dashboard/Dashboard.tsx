@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState, type SubmitEvent } from "reac
 import { Link, useOutletContext } from "react-router-dom";
 import { useAuth } from "../../shared/auth/useAuth";
 import { Button } from "../../shared/components/Button/Button";
-import { CardDisplay } from "../../shared/components/CardDisplay/CardDisplay";
+import { CARD_NUMBER_COPIED_MESSAGE, CardDisplay } from "../../shared/components/CardDisplay/CardDisplay";
 import { ConversionModal } from "../../shared/components/ConversionModal/ConversionModal";
 import { Input } from "../../shared/components/Input/Input";
 import { Modal } from "../../shared/components/Modal/Modal";
@@ -334,7 +334,7 @@ export function Dashboard() {
         </div>
 
         {/* Vista de tarjeta física: no estaba en el checklist original, se sumó al traer el mock del diseño Geist */}
-        <CardDisplay />
+        <CardDisplay onCopy={() => showToast(CARD_NUMBER_COPIED_MESSAGE)} />
       </aside>
 
       <Toast message={toast} />
