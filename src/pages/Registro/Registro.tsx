@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { Button } from "../../shared/components/Button/Button";
 import { GoogleButton } from "../../shared/components/GoogleButton/GoogleButton";
 import { Input } from "../../shared/components/Input/Input";
+import inputStyles from "../../shared/components/Input/Input.module.css";
 import { AuthMobileGlow, AuthBrandGlow } from "../../shared/components/AuthBlobs/AuthBlobs";
 import { AuthBrandHeader } from "../../shared/components/AuthBrandHeader/AuthBrandHeader";
 import { AuthMobileHeader } from "../../shared/components/AuthMobileHeader/AuthMobileHeader";
@@ -44,6 +45,30 @@ function getMaxBirthdate(): string {
 
 const MAX_BIRTHDATE = getMaxBirthdate();
 
+type CountryCode = "AR" | "PE" | "CO" | "MX";
+
+interface DuFieldConfig {
+  countryLabel: string;
+  duLabel: string;
+  placeholder: string;
+  pattern: string;
+  minLength: number;
+  maxLength: number;
+  inputMode: "numeric" | "text";
+}
+
+// Un solo lugar con el formato real de documento por país — mismas reglas que
+// valida el backend de verdad (superRefine en authSchema.ts), para dar
+// feedback inmediato en el campo en vez de esperar el 400 del submit. El
+// backend sigue siendo la fuente de verdad, esto es solo UX.
+const COUNTRY_CONFIG: Record<CountryCode, DuFieldConfig> = {
+  AR: { countryLabel: "Argentina", duLabel: "DNI", placeholder: "12345678", pattern: "[0-9]{7,8}", minLength: 7, maxLength: 8, inputMode: "numeric" },
+  PE: { countryLabel: "Perú", duLabel: "DNI", placeholder: "12345678", pattern: "[0-9]{8}", minLength: 8, maxLength: 8, inputMode: "numeric" },
+  CO: { countryLabel: "Colombia", duLabel: "Cédula", placeholder: "1234567890", pattern: "[0-9]{8,10}", minLength: 8, maxLength: 10, inputMode: "numeric" },
+  MX: { countryLabel: "México", duLabel: "CURP", placeholder: "ABCD123456HDFXYZ01", pattern: "[A-Za-z0-9]{10,18}", minLength: 10, maxLength: 18, inputMode: "text" },
+};
+const COUNTRY_OPTIONS: CountryCode[] = ["AR", "PE", "CO", "MX"];
+
 // El backend (Zod, ver authSchema.ts) espera la fecha en DD/MM/YYYY, no en el
 // formato ISO (YYYY-MM-DD) que devuelve un <input type="date"> nativo.
 function toBackendDate(isoDate: string): string {
@@ -57,6 +82,7 @@ export function Registro() {
   const [email, setEmail] = useState("");
   const [dateOfBirth, setDateOfBirth] = useState("");
   const [phone, setPhone] = useState("");
+  const [country, setCountry] = useState<CountryCode>("AR");
   const [du, setDu] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -77,6 +103,16 @@ export function Registro() {
   useEffect(() => () => clearTimeout(redirectTimer.current), []);
 
   const passwordMismatch = confirmPassword.length > 0 && confirmPassword !== password;
+  const duConfig = COUNTRY_CONFIG[country];
+
+  // Si el usuario ya escribió un documento y después cambia de país, el
+  // formato anterior casi seguro no vale para el país nuevo (ej. 8 dígitos de
+  // AR no es un CURP de MX) — mejor limpiarlo que dejar un valor con pinta de
+  // válido que el submit va a rechazar igual.
+  function handleCountryChange(value: CountryCode) {
+    setCountry(value);
+    setDu("");
+  }
 
   async function handleSubmit(event: SubmitEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -89,7 +125,7 @@ export function Registro() {
 
     setIsSubmitting(true);
     try {
-      await authService.register(email, password, firstName, lastName, toBackendDate(dateOfBirth), phone, du);
+      await authService.register(email, password, firstName, lastName, toBackendDate(dateOfBirth), phone, du, country);
       showToast("Cuenta creada, iniciá sesión.");
       redirectTimer.current = setTimeout(() => {
         navigate("/login", { replace: true });
@@ -203,23 +239,36 @@ export function Registro() {
               required
             />
 
-            {/* country va fijo en "AR" (ver authService.register) — sin selector
-                de país todavía, así que el formato validado acá es el de DNI
-                argentino (7 u 8 dígitos, ver authSchema.ts del backend). */}
+            <div className={inputStyles.wrapper}>
+              <label className={inputStyles.labelLg} htmlFor="country">País</label>
+              <select
+                id="country"
+                className={inputStyles.inputLg}
+                value={country}
+                onChange={(event) => handleCountryChange(event.target.value as CountryCode)}
+                autoComplete="country"
+                required
+              >
+                {COUNTRY_OPTIONS.map((code) => (
+                  <option key={code} value={code}>{COUNTRY_CONFIG[code].countryLabel}</option>
+                ))}
+              </select>
+            </div>
+
             <Input
               id="du"
-              label="DNI"
+              label={duConfig.duLabel}
               type="text"
-              inputMode="numeric"
+              inputMode={duConfig.inputMode}
               size="lg"
-              placeholder="12345678"
+              placeholder={duConfig.placeholder}
               value={du}
               onChange={(event) => setDu(event.target.value)}
               autoComplete="off"
               icon="badge"
-              pattern="[0-9]{7,8}"
-              minLength={7}
-              maxLength={8}
+              pattern={duConfig.pattern}
+              minLength={duConfig.minLength}
+              maxLength={duConfig.maxLength}
               required
             />
 
