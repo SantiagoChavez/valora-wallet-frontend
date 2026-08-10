@@ -26,6 +26,19 @@ export function getApiErrorMessage(err: unknown): string {
   return err instanceof ApiError ? err.message : "No se pudo conectar con el servidor. Intentá de nuevo.";
 }
 
+// apiClient.ts es un módulo plano, no un componente — no tiene acceso directo a
+// useAuth()/useNavigate() para forzar un logout limpio cuando el JWT vence (15
+// minutos, sin refresh token del lado del backend). AuthProvider se registra acá
+// una sola vez al montar; cualquier 401 de un request autenticado dispara esto
+// en vez de dejar el error crudo del backend ("Token inválido o expirado.")
+// mostrado donde sea que esa pantalla puntual muestre errores.
+type UnauthorizedHandler = () => void;
+let unauthorizedHandler: UnauthorizedHandler | null = null;
+
+export function setUnauthorizedHandler(handler: UnauthorizedHandler | null): void {
+  unauthorizedHandler = handler;
+}
+
 interface ApiFetchOptions extends RequestInit {
   token?: string;
 }
@@ -101,6 +114,12 @@ export async function apiFetch<T>(path: string, options: ApiFetchOptions = {}): 
       asNonEmptyString(errorBody?.message) ??
       asNonEmptyString(errorBody?.error) ??
       "Ocurrió un error inesperado. Intentá de nuevo.";
+    // Solo si el request llevaba token: /auth/login, /auth/register, /auth/google
+    // y demás endpoints públicos también pueden devolver 401 (ej. credenciales
+    // inválidas, idToken de Google inválido) sin que haya ninguna sesión que cerrar.
+    if (response.status === 401 && token) {
+      unauthorizedHandler?.();
+    }
     throw new ApiError(message, response.status);
   }
 
