@@ -119,13 +119,30 @@ export function DashboardLayout() {
       const result = await getTransactions(token, { limit: RECENT_NOTIFICATIONS_LIMIT });
       const derived = deriveNotifications(result.transactions);
       setNotifications(derived);
+      // Poda seenIds a la intersección con lo que trajo ESTE fetch. notifications
+      // siempre viene acotado por RECENT_NOTIFICATIONS_LIMIT (10) — cualquier id
+      // persistido que ya no aparezca acá es basura: no aporta nada a hasUnread
+      // (que solo mira visibleNotifications) pero quedaría en localStorage para
+      // siempre si no se descarta. Corre en los dos fetches (montaje y apertura
+      // de panel) — una notificación puede salir del top 10 sin que el usuario
+      // haya abierto el panel en el medio. Va acá adentro (no un tercer efecto)
+      // porque este es el único punto que ambos fetches ya comparten; forma
+      // funcional (prev => ...) para no depender de seenIds como dependencia de
+      // este useCallback.
+      const currentIds = new Set(derived.map((note) => note.id));
+      setSeenIds((prev) => {
+        const pruned = new Set([...prev].filter((id) => currentIds.has(id)));
+        if (pruned.size === prev.size) return prev;
+        persistSeenIds(user?.id, pruned);
+        return pruned;
+      });
       return derived;
     } catch {
       // Silencioso a propósito: si falla, el panel simplemente muestra el
       // estado vacío de NotificationPanel en vez de romper todo el layout.
       return null;
     }
-  }, [token]);
+  }, [token, user?.id]);
 
   // Trae al montar (para el punto de "no leído" en la campanita antes de que
   // nadie la abra) — a propósito NO marca nada como visto, a diferencia del
