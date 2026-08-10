@@ -18,6 +18,7 @@ import styles from "./DashboardLayout.module.css";
 // (el productor) para que no se duplique la forma del objeto en cada consumidor.
 export interface DashboardOutletContext {
   onOpenChatbot: () => void;
+  onTransactionCreated: () => void;
 }
 
 const RECENT_NOTIFICATIONS_LIMIT = 10;
@@ -195,11 +196,25 @@ export function DashboardLayout() {
     setChatbotOpen(false);
   }, []);
 
-  // handleOpenChatbot ya es estable (useCallback con deps vacías) — pero el
-  // objeto que lo envuelve para el Outlet context era un literal nuevo en
-  // cada render igual, así que useOutletContext() en Dashboard.tsx veía un
-  // valor "distinto" aunque el handler adentro fuera el mismo.
-  const outletContextValue = useMemo(() => ({ onOpenChatbot: handleOpenChatbot }), [handleOpenChatbot]);
+  // Canal explícito para que cualquier página bajo este layout (Dashboard,
+  // ExchangeForm) avise "se creó una transacción" sin pasar datos de la
+  // transacción en sí — el fetch de loadNotifications ya trae todo de nuevo.
+  // No hace falta distinguir "panel abierto cuando llega el aviso": el panel
+  // solo se cierra con click afuera (ver el useEffect de pointerdown/Escape
+  // más abajo), así que si el usuario está confirmando una transacción en
+  // otra parte de la UI, este panel ya está cerrado.
+  const handleTransactionCreated = useCallback(() => {
+    loadNotifications();
+  }, [loadNotifications]);
+
+  // handleOpenChatbot/handleTransactionCreated ya son estables (useCallback) —
+  // pero el objeto que los envuelve para el Outlet context era un literal
+  // nuevo en cada render igual, así que useOutletContext() en los consumidores
+  // veía un valor "distinto" aunque los handlers adentro fueran los mismos.
+  const outletContextValue = useMemo(
+    () => ({ onOpenChatbot: handleOpenChatbot, onTransactionCreated: handleTransactionCreated }),
+    [handleOpenChatbot, handleTransactionCreated],
+  );
 
   // Cerrar el panel abierto al hacer click/tap afuera o presionar Escape. Se usa
   // pointerdown (no mousedown) para cubrir mouse, touch y pen por igual — este

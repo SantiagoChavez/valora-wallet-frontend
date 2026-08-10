@@ -1,4 +1,5 @@
 import { useEffect, useState, type SubmitEvent } from "react";
+import { useOutletContext } from "react-router-dom";
 import { useAuth } from "../../shared/auth/useAuth";
 import { Button } from "../../shared/components/Button/Button";
 import { Card } from "../../shared/components/Card/Card";
@@ -7,12 +8,18 @@ import { getApiErrorMessage } from "../../shared/services/apiClient";
 import { getBalances } from "../../shared/services/balanceService";
 import { exchange } from "../../shared/services/transactionService";
 import type { Balance, CurrencyCode } from "../../shared/types/models";
+import type { DashboardOutletContext } from "../../layouts/DashboardLayout/DashboardLayout";
 import styles from "./ExchangeForm.module.css";
 
 const CURRENCY_OPTIONS: CurrencyCode[] = ["USD", "EUR", "ARS"];
 
 export function ExchangeForm() {
   const { token } = useAuth();
+  // Mismo criterio que Dashboard.tsx: useOutletContext() puede devolver null
+  // sin un <Outlet context={...}> ancestro, así que se destructura con
+  // fallback en vez de asumir que siempre viene de DashboardLayout.
+  const outletContext = useOutletContext<DashboardOutletContext | null>();
+  const onTransactionCreated = outletContext?.onTransactionCreated ?? (() => {});
   const [balances, setBalances] = useState<Balance[] | null>(null);
   const [fromCurrency, setFromCurrency] = useState<CurrencyCode>("USD");
   const [toCurrency, setToCurrency] = useState<CurrencyCode>("ARS");
@@ -66,6 +73,7 @@ export function ExchangeForm() {
       setAmount("");
       const updatedBalances = await getBalances(token as string);
       setBalances(updatedBalances);
+      onTransactionCreated();
     } catch (err) {
       setError(getApiErrorMessage(err));
     } finally {
