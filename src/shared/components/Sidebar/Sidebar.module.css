@@ -94,7 +94,7 @@
 .footer {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-sm);
+  gap: var(--spacing-xs);
   /* --spacing-sm (no --spacing-lg) — medido: con --spacing-lg (24px) este
      tramo (línea→"Contacta a Soporte") dominaba toda la distancia visible
      entre "Cerrar sesión" y el footer, mientras que el margin-top de abajo
