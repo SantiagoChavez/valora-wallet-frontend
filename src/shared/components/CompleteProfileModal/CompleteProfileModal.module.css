@@ -1,0 +1,77 @@
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+  width: min(400px, 85vw);
+}
+
+.title {
+  margin: 0;
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--text-primary);
+}
+
+.subtitle {
+  margin: calc(var(--spacing-xs) * -1) 0 0 0;
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+}
+
+.phoneRow {
+  display: flex;
+  gap: var(--spacing-sm);
+  align-items: flex-end;
+}
+
+.phoneField {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+  flex: 0 0 auto;
+  width: 40%;
+}
+
+.phoneInput {
+  flex: 1;
+  min-width: 0;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+}
+
+.label {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+.select {
+  composes: select from "../../styles/formControl.module.css";
+}
+
+.error {
+  margin: 0;
+  color: var(--danger);
+  font-size: var(--font-size-xs);
+}
+
+.submitButton {
+  width: 100%;
+}
+
+@media (max-width: 859px) {
+  .phoneRow {
+    flex-wrap: wrap;
+  }
+
+  .phoneField {
+    width: 100%;
+  }
+
+  .phoneInput {
+    width: 100%;
+  }
+}
