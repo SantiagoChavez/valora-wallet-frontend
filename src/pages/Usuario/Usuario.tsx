@@ -2,6 +2,7 @@ import { useAuth } from "../../shared/auth/useAuth";
 import { Button } from "../../shared/components/Button/Button";
 import { Card } from "../../shared/components/Card/Card";
 import { Input } from "../../shared/components/Input/Input";
+import { ApiError } from "../../shared/services/apiClient";
 import { updateDu, updatePhone } from "../../shared/services/userService";
 import { updateAlias } from "../../shared/services/walletService";
 import { useEditableField } from "./useEditableField";
@@ -57,13 +58,22 @@ export function Usuario() {
     save: saveAlias,
   } = useEditableField(
     wallet?.alias ?? "",
-    (draft) => updateAlias(token as string, draft).then((updated) => {
-      // Sin esto, el alias nuevo solo se ve en el estado local de este hook —
-      // el resto de la app (y un refresh, que relee sessionStorage) seguiría
-      // mostrando el viejo hasta el próximo login.
-      updateWallet(updated);
-      return updated.alias;
-    }),
+    (draft) => {
+      // Usuario solo se monta detrás de ProtectedRoute (token no debería ser
+      // null acá en la práctica), pero el guard explícito evita mandar el
+      // request sin Authorization si igual llega a pasar — mismo criterio que
+      // el resto de shared/auth (ver AuthProvider.tsx) en vez de un cast ciego.
+      if (!token) {
+        return Promise.reject(new ApiError("Sesión no válida, iniciá sesión de nuevo.", 401));
+      }
+      return updateAlias(token, draft).then((updated) => {
+        // Sin esto, el alias nuevo solo se ve en el estado local de este hook —
+        // el resto de la app (y un refresh, que relee sessionStorage) seguiría
+        // mostrando el viejo hasta el próximo login.
+        updateWallet(updated);
+        return updated.alias;
+      });
+    },
   );
 
   const avatarInitial = user?.firstName ? user.firstName.charAt(0).toUpperCase() : "?";
