@@ -252,7 +252,7 @@ export function DashboardLayout() {
           </div>
         </div>
       </header>
-      <Sidebar items={NAV_ITEMS} onLogout={handleLogout} onOpenLegal={openLegal} />
+      <Sidebar items={NAV_ITEMS} onLogout={handleLogout} onOpenLegal={openLegal} onOpenChatbot={handleOpenChatbot} />
       <main className={styles.main}>
         <Outlet context={outletContextValue} />
       </main>
