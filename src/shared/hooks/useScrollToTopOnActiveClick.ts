@@ -14,7 +14,11 @@ function isModifiedClick(event: MouseEvent): boolean {
 // Sin helper propio en shared/ para esto (grepeado antes de escribir esta
 // función) — si aparece un segundo consumidor de prefers-reduced-motion en el
 // proyecto, ahí se justifica extraerlo.
+// matchMedia no está garantizado: jsdom (entorno de los tests de Vitest) no lo
+// implementa por defecto, y algunos webviews tampoco — sin este guard, un test
+// que dispare un click sobre el ítem activo del nav tira runtime error acá.
 function prefersReducedMotion(): boolean {
+  if (typeof window === "undefined" || typeof window.matchMedia !== "function") return false;
   return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 }
 
