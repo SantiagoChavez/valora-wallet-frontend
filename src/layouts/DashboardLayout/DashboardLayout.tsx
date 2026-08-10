@@ -6,7 +6,7 @@ import { BottomNav, type NavEntry } from "../../shared/components/BottomNav/Bott
 import { LegalModal, type LegalVariant } from "../../shared/components/LegalModal/LegalModal";
 import { NotificationPanel, type AppNotification } from "../../shared/components/NotificationPanel/NotificationPanel";
 import { Sidebar } from "../../shared/components/Sidebar/Sidebar";
-import { SUPPORT_EMAIL } from "../../shared/constants";
+import { NOTIF_SEEN_KEY_PREFIX, SUPPORT_EMAIL } from "../../shared/constants";
 import { ChatbotFAB } from "../../features/chatbot/ChatbotFAB";
 import { ChatbotWidget } from "../../features/chatbot/ChatbotWidget";
 import { getTransactions } from "../../shared/services/transactionService";
@@ -18,6 +18,7 @@ import styles from "./DashboardLayout.module.css";
 // (el productor) para que no se duplique la forma del objeto en cada consumidor.
 export interface DashboardOutletContext {
   onOpenChatbot: () => void;
+  onTransactionCreated: () => void;
 }
 
 const RECENT_NOTIFICATIONS_LIMIT = 10;
@@ -45,6 +46,35 @@ function persistDismissedIds(ids: Set<string>) {
   }
 }
 
+// "Vista" es un tercer estado, separado de unread (ventana de 24hs sobre
+// createdAt, ver deriveNotifications.ts) y de dismissedIds (borrado manual,
+// arriba): se apaga el punto rojo de la campanita al abrir el panel, sin
+// borrar ninguna notificación. Persiste en localStorage scopeado por userId
+// (ver NOTIF_SEEN_KEY_PREFIX en shared/constants.ts) — a diferencia de
+// dismissedIds (sessionStorage, sin scope por usuario, ver arriba), esto sí
+// sobrevive entre sesiones del navegador para el mismo usuario.
+function readSeenIds(userId: string | undefined): Set<string> {
+  if (!userId) return new Set();
+  try {
+    const raw = localStorage.getItem(`${NOTIF_SEEN_KEY_PREFIX}${userId}`);
+    if (!raw) return new Set();
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return new Set();
+    return new Set(parsed.filter((id): id is string => typeof id === "string"));
+  } catch {
+    return new Set();
+  }
+}
+
+function persistSeenIds(userId: string | undefined, ids: Set<string>) {
+  if (!userId) return;
+  try {
+    localStorage.setItem(`${NOTIF_SEEN_KEY_PREFIX}${userId}`, JSON.stringify([...ids]));
+  } catch {
+    // Silencioso: en el peor caso no persiste entre reloads, no rompe nada.
+  }
+}
+
 const NAV_ITEMS: NavEntry[] = [
   { id: "home", label: "Inicio", icon: "account_balance_wallet", path: "/" },
   { id: "cards", label: "Tarjetas", icon: "credit_card", path: "/tarjetas" },
@@ -61,9 +91,10 @@ export function DashboardLayout() {
   const hamburgerAnchorRef = useRef<HTMLDivElement>(null);
   const [notifications, setNotifications] = useState<AppNotification[]>([]);
   const [dismissedIds, setDismissedIds] = useState<Set<string>>(() => readDismissedIds());
+  const { token, user, logout } = useAuth();
+  const [seenIds, setSeenIds] = useState<Set<string>>(() => readSeenIds(user?.id));
   const visibleNotifications = notifications.filter((note) => !dismissedIds.has(note.id));
-  const hasUnread = visibleNotifications.some((note) => note.unread);
-  const { token, logout } = useAuth();
+  const hasUnread = visibleNotifications.some((note) => note.unread && !seenIds.has(note.id));
   const navigate = useNavigate();
 
   function handleDismissNotification(id: string) {
@@ -79,31 +110,75 @@ export function DashboardLayout() {
   // transacciones reales (ver deriveNotifications.ts). Fetch propio acá, aparte
   // del que hace Dashboard.tsx para sus últimas 5: este vive en el layout,
   // persiste entre rutas, y no tiene por qué depender de que la vista actual
-  // sea el Dashboard.
-  const loadNotifications = useCallback(async () => {
-    if (!token) return;
+  // sea el Dashboard. Devuelve lo que trajo (o null si no hubo fetch real) para
+  // que el efecto de apertura del panel pueda encadenar "marcar como vistas"
+  // sobre el resultado de ESTE fetch puntual, no sobre el estado en general.
+  const loadNotifications = useCallback(async (): Promise<AppNotification[] | null> => {
+    if (!token) return null;
     try {
       const result = await getTransactions(token, { limit: RECENT_NOTIFICATIONS_LIMIT });
-      setNotifications(deriveNotifications(result.transactions));
+      const derived = deriveNotifications(result.transactions);
+      setNotifications(derived);
+      // Poda seenIds a la intersección con lo que trajo ESTE fetch. notifications
+      // siempre viene acotado por RECENT_NOTIFICATIONS_LIMIT (10) — cualquier id
+      // persistido que ya no aparezca acá es basura: no aporta nada a hasUnread
+      // (que solo mira visibleNotifications) pero quedaría en localStorage para
+      // siempre si no se descarta. Corre en los dos fetches (montaje y apertura
+      // de panel) — una notificación puede salir del top 10 sin que el usuario
+      // haya abierto el panel en el medio. Va acá adentro (no un tercer efecto)
+      // porque este es el único punto que ambos fetches ya comparten; forma
+      // funcional (prev => ...) para no depender de seenIds como dependencia de
+      // este useCallback.
+      const currentIds = new Set(derived.map((note) => note.id));
+      setSeenIds((prev) => {
+        const pruned = new Set([...prev].filter((id) => currentIds.has(id)));
+        if (pruned.size === prev.size) return prev;
+        persistSeenIds(user?.id, pruned);
+        return pruned;
+      });
+      return derived;
     } catch {
       // Silencioso a propósito: si falla, el panel simplemente muestra el
       // estado vacío de NotificationPanel en vez de romper todo el layout.
+      return null;
     }
-  }, [token]);
+  }, [token, user?.id]);
 
   // Trae al montar (para el punto de "no leído" en la campanita antes de que
-  // nadie la abra).
+  // nadie la abra) — a propósito NO marca nada como visto, a diferencia del
+  // efecto de apertura de panel de abajo.
   useEffect(() => {
     loadNotifications();
   }, [loadNotifications]);
 
-  // Y vuelve a traer cada vez que se abre el panel — sin esto, depositar o
-  // intercambiar y después abrir la campanita mostraba la lista vieja (fetch
-  // de al montar nada más, sin enterarse de acciones hechas después en otra
-  // parte de la app).
+  // Al abrir el panel: un solo flujo, no dos efectos reactivos compitiendo.
+  // Antes había un efecto separado que marcaba como vista cualquier elemento
+  // de visibleNotifications apenas esa lista cambiaba — incluyendo el cambio
+  // que producía este mismo fetch, así que una notificación nueva quedaba
+  // "vista" en el mismo ciclo en que se cargaba, antes de que el punto rojo
+  // llegara a reflejarla como no leída en ningún frame observable. Acá se
+  // encadena explícitamente: primero el fetch, y recién cuando ESE fetch
+  // puntual resuelve, se marcan como vistas las notificaciones que trajo.
+  // `cancelled` evita aplicar el resultado si el panel se cerró (o el
+  // componente se desmontó) antes de que la promesa resolviera.
   useEffect(() => {
-    if (openPanel === "notif") loadNotifications();
-  }, [openPanel, loadNotifications]);
+    if (openPanel !== "notif") return;
+    let cancelled = false;
+    loadNotifications().then((derived) => {
+      if (cancelled || !derived) return;
+      setSeenIds((prev) => {
+        const newIds = derived.map((note) => note.id).filter((id) => !prev.has(id));
+        if (newIds.length === 0) return prev;
+        const next = new Set(prev);
+        newIds.forEach((id) => next.add(id));
+        persistSeenIds(user?.id, next);
+        return next;
+      });
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [openPanel, loadNotifications, user?.id]);
 
   function handleLogout() {
     logout();
@@ -138,11 +213,39 @@ export function DashboardLayout() {
     setChatbotOpen(false);
   }, []);
 
-  // handleOpenChatbot ya es estable (useCallback con deps vacías) — pero el
-  // objeto que lo envuelve para el Outlet context era un literal nuevo en
-  // cada render igual, así que useOutletContext() en Dashboard.tsx veía un
-  // valor "distinto" aunque el handler adentro fuera el mismo.
-  const outletContextValue = useMemo(() => ({ onOpenChatbot: handleOpenChatbot }), [handleOpenChatbot]);
+  // El Sidebar (desktop) necesita toggle, no un "abrir" a secas: un click abre,
+  // el siguiente (con el chatbot ya abierto) lo cierra. Reusa
+  // handleOpenChatbot/handleCloseChatbot en vez de un setChatbotOpen directo
+  // acá, para no duplicar nada que esos dos hagan además de togglear el estado.
+  // ChatbotFAB (mobile) sigue usando handleOpenChatbot sin togglear — en mobile
+  // el chatbot ocupa toda la pantalla al abrirse, no hace falta un toggle ahí.
+  const handleToggleChatbot = useCallback(() => {
+    if (chatbotOpen) {
+      handleCloseChatbot();
+    } else {
+      handleOpenChatbot();
+    }
+  }, [chatbotOpen, handleOpenChatbot, handleCloseChatbot]);
+
+  // Canal explícito para que cualquier página bajo este layout (Dashboard,
+  // ExchangeForm) avise "se creó una transacción" sin pasar datos de la
+  // transacción en sí — el fetch de loadNotifications ya trae todo de nuevo.
+  // No hace falta distinguir "panel abierto cuando llega el aviso": el panel
+  // solo se cierra con click afuera (ver el useEffect de pointerdown/Escape
+  // más abajo), así que si el usuario está confirmando una transacción en
+  // otra parte de la UI, este panel ya está cerrado.
+  const handleTransactionCreated = useCallback(() => {
+    loadNotifications();
+  }, [loadNotifications]);
+
+  // handleOpenChatbot/handleTransactionCreated ya son estables (useCallback) —
+  // pero el objeto que los envuelve para el Outlet context era un literal
+  // nuevo en cada render igual, así que useOutletContext() en los consumidores
+  // veía un valor "distinto" aunque los handlers adentro fueran los mismos.
+  const outletContextValue = useMemo(
+    () => ({ onOpenChatbot: handleOpenChatbot, onTransactionCreated: handleTransactionCreated }),
+    [handleOpenChatbot, handleTransactionCreated],
+  );
 
   // Cerrar el panel abierto al hacer click/tap afuera o presionar Escape. Se usa
   // pointerdown (no mousedown) para cubrir mouse, touch y pen por igual — este
@@ -252,7 +355,7 @@ export function DashboardLayout() {
           </div>
         </div>
       </header>
-      <Sidebar items={NAV_ITEMS} onLogout={handleLogout} onOpenLegal={openLegal} />
+      <Sidebar items={NAV_ITEMS} onLogout={handleLogout} onOpenLegal={openLegal} onToggleChatbot={handleToggleChatbot} />
       <main className={styles.main}>
         <Outlet context={outletContextValue} />
       </main>

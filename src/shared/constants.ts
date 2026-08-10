@@ -10,3 +10,10 @@ export const SUPPORT_EMAIL = "nexot.solutions@gmail.com";
 // en el mismo dispositivo), prefijo como constante acá en vez de hardcodeado
 // en cada lugar que lo usa, y limpieza explícita en logout().
 export const CHATBOT_HISTORY_KEY_PREFIX = "chatbot_history_";
+
+// Prefijo de la key de localStorage de notificaciones ya vistas — la key final
+// es `${NOTIF_SEEN_KEY_PREFIX}${userId}`. Mismo patrón que
+// CHATBOT_HISTORY_KEY_PREFIX de arriba: compartido entre
+// layouts/DashboardLayout/DashboardLayout.tsx (lee/escribe qué notificaciones
+// ya se vieron) y shared/auth/AuthProvider.tsx (lo borra en logout).
+export const NOTIF_SEEN_KEY_PREFIX = "notif_seen_";
