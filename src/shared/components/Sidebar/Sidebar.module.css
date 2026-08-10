@@ -1,7 +1,6 @@
 .sidebar {
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
   position: fixed;
   top: 0;
   left: 0;
@@ -37,6 +36,12 @@
   display: flex;
   flex-direction: column;
   gap: 4px;
+  /* Crece y absorbe el espacio libre del .sidebar — con 3 hijos directos
+     (.nav, el botón de logout, .footer) ya no alcanza con justify-content:
+     space-between en .sidebar (solo reparte bien entre 2). Esto empuja
+     el botón de logout + .footer juntos al fondo real, sin importar
+     cuántos hijos haya después de .nav. */
+  flex: 1;
 }
 
 .navItem {
@@ -90,8 +95,18 @@
   display: flex;
   flex-direction: column;
   gap: var(--spacing-sm);
-  padding-top: var(--spacing-lg);
-  margin-top: var(--spacing-lg);
+  /* --spacing-sm (no --spacing-lg) — medido: con --spacing-lg (24px) este
+     tramo (línea→"Contacta a Soporte") dominaba toda la distancia visible
+     entre "Cerrar sesión" y el footer, mientras que el margin-top de abajo
+     ya era casi imperceptible. Se achica para que quede compacto sin pegar
+     la línea al primer link. */
+  padding-top: var(--spacing-sm);
+  /* 0 — el tramo "Cerrar sesión"→línea ya venía bajando (--spacing-lg,
+     después --spacing-xs) sin notarse; en vez de seguir angostando un token
+     casi invisible, el botón queda pegado directo a la línea. .sidebar no
+     tiene gap propio, así que este margin-top era la única fuente de ese
+     espacio. */
+  margin-top: 0;
   border-top: 1px solid var(--border);
 }
 

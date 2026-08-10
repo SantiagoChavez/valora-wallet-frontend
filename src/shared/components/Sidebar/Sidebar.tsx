@@ -35,12 +35,12 @@ export function Sidebar({ items, onLogout, onOpenLegal }: SidebarProps) {
             <span className={styles.navLabel}>{item.label}</span>
           </NavLink>
         ))}
-
-        <button type="button" className={styles.navItem} onClick={onLogout}>
-          <span className={`msym ${styles.navIcon}`} aria-hidden="true">logout</span>
-          <span className={styles.navLabel}>Cerrar sesión</span>
-        </button>
       </nav>
+
+      <button type="button" className={styles.navItem} onClick={onLogout}>
+        <span className={`msym ${styles.navIcon}`} aria-hidden="true">logout</span>
+        <span className={styles.navLabel}>Cerrar sesión</span>
+      </button>
 
       <div className={styles.footer}>
         <a href={`mailto:${SUPPORT_EMAIL}`} className={styles.footerLink}>
