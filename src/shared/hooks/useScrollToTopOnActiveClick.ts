@@ -1,16 +1,21 @@
 import type { MouseEvent } from "react";
 import { useLocation } from "react-router-dom";
 
-// Mismo criterio que shouldProcessLinkClick/isModifiedEvent de react-router
-// (ver node_modules/react-router/dist/development/chunk-62JRHF6Z.mjs) — es el
-// guard que usa react-router internamente antes de interceptar un click de
-// <a> para navegar. Nuestro onClick corre ANTES que el de react-router
-// (Link.handleClick llama primero al onClick que le pasamos, y solo sigue con
-// su propia navegación si no llamamos preventDefault) — sin este mismo guard,
-// un Ctrl/Cmd+click para abrir el ítem activo en una pestaña nueva quedaría
-// roto por nuestro propio preventDefault().
+// Un click con Ctrl/Cmd/Alt/Shift, o que no sea con el botón izquierdo, tiene
+// un significado nativo del navegador sobre un <a> (abrir en pestaña nueva,
+// en ventana nueva, etc.) que no nos corresponde pisar — nuestro onClick corre
+// antes que el de react-router, así que si llamamos preventDefault() sin este
+// guard, esos comportamientos nativos quedarían rotos también para el ítem
+// del nav que ya está activo.
 function isModifiedClick(event: MouseEvent): boolean {
   return event.metaKey || event.altKey || event.ctrlKey || event.shiftKey;
+}
+
+// Sin helper propio en shared/ para esto (grepeado antes de escribir esta
+// función) — si aparece un segundo consumidor de prefers-reduced-motion en el
+// proyecto, ahí se justifica extraerlo.
+function prefersReducedMotion(): boolean {
+  return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 }
 
 // Compartido entre Sidebar (desktop) y BottomNav (mobile): tapear/clickear un
@@ -27,6 +32,6 @@ export function useScrollToTopOnActiveClick() {
     if (itemPath !== location.pathname) return;
     if (event.button !== 0 || isModifiedClick(event)) return;
     event.preventDefault();
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    window.scrollTo({ top: 0, behavior: prefersReducedMotion() ? "auto" : "smooth" });
   };
 }
