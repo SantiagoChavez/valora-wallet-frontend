@@ -45,6 +45,13 @@ export function AuthProvider({ children }: PropsWithChildren) {
     setAuth(response);
   }
 
+  // auth no puede ser null acá en la práctica (solo se llama desde la vista
+  // Usuario, montada detrás de ProtectedRoute) — igual se chequea explícito
+  // en vez de asumir, mismo criterio que el resto de este archivo.
+  function updateWallet(wallet: Wallet) {
+    setAuth((prev) => (prev ? { ...prev, wallet } : prev));
+  }
+
   function logout() {
     // El historial del chatbot vive en localStorage, scopeado por userId
     // (ver CHATBOT_HISTORY_KEY_PREFIX en shared/constants.ts) — no se borra
@@ -64,10 +71,12 @@ export function AuthProvider({ children }: PropsWithChildren) {
     <AuthContext.Provider
       value={{
         user: auth?.user ?? null,
+        wallet: auth?.wallet ?? null,
         token: auth?.token ?? null,
         isAuthenticated: Boolean(auth?.token),
         login,
         logout,
+        updateWallet,
       }}
     >
       {children}

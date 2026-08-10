@@ -8,9 +8,12 @@ export function updatePhone(phone: string): Promise<{ phone: string }> {
   });
 }
 
-// Mismo criterio que updatePhone: mock de latencia hasta que exista endpoint real.
-export function updateAlias(alias: string): Promise<{ alias: string }> {
+// Mismo criterio que updatePhone: sin endpoint real, mock de latencia. Hace
+// falta de verdad — cuentas creadas antes de que "du" existiera en el backend
+// (o cualquier cuenta a la que ese dato le haya quedado null) no tienen forma
+// de cargarlo hoy, ni self-service ni por otro lado.
+export function updateDu(du: string): Promise<{ du: string }> {
   return new Promise((resolve) => {
-    setTimeout(() => resolve({ alias }), 400);
+    setTimeout(() => resolve({ du }), 400);
   });
 }
