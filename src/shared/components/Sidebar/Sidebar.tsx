@@ -1,5 +1,6 @@
 import { NavLink } from "react-router-dom";
 import { SUPPORT_EMAIL } from "../../constants";
+import { useScrollToTopOnActiveClick } from "../../hooks/useScrollToTopOnActiveClick";
 import type { NavEntry } from "../BottomNav/BottomNav";
 import type { LegalVariant } from "../LegalModal/LegalModal";
 import styles from "./Sidebar.module.css";
@@ -12,12 +13,15 @@ interface SidebarProps {
 }
 
 export function Sidebar({ items, onLogout, onOpenLegal, onToggleChatbot }: SidebarProps) {
+  const handleNavItemClick = useScrollToTopOnActiveClick();
+
   return (
     <aside className={styles.sidebar}>
       <nav className={styles.nav} aria-label="Navegación principal">
         <NavLink
           to="/usuario"
           className={({ isActive }) => `${styles.navItem} ${isActive ? styles.navItemActive : ""}`}
+          onClick={(event) => handleNavItemClick("/usuario", event)}
         >
           <span className={`msym ${styles.navIcon}`} aria-hidden="true">person</span>
           <span className={styles.navLabel}>Usuario</span>
@@ -31,6 +35,7 @@ export function Sidebar({ items, onLogout, onOpenLegal, onToggleChatbot }: Sideb
             to={item.path}
             end={item.path === "/"}
             className={({ isActive }) => `${styles.navItem} ${isActive ? styles.navItemActive : ""}`}
+            onClick={(event) => handleNavItemClick(item.path, event)}
           >
             <span className={`msym ${styles.navIcon}`} aria-hidden="true">{item.icon}</span>
             <span className={styles.navLabel}>{item.label}</span>
