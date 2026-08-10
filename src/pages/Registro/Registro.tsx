@@ -213,7 +213,7 @@ export function Registro() {
                 validado acá es el de DNI argentino (7 u 8 dígitos). */}
             <Input
               id="du"
-              label="DNI"
+              label="Documento único"
               type="text"
               inputMode="numeric"
               size="lg"
