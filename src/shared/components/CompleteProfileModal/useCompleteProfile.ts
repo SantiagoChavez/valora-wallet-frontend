@@ -24,6 +24,11 @@ export function useCompleteProfile() {
     setIsSubmitting(true);
     try {
       const user = await completeProfile(phone, country, du, token);
+      if (!user.profileComplete) {
+        setError("No pudimos confirmar la actualización, probá de nuevo.");
+        setIsSubmitting(false);
+        return;
+      }
       // Sin setIsSubmitting(false) acá a propósito: al llegar profileComplete
       // en true, DashboardLayout desmonta este modal (y este hook con él) en
       // el próximo render — nada que resetear en una instancia por desmontarse.
