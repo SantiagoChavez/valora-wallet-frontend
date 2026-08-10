@@ -1,18 +1,32 @@
 export type CurrencyCode = 'USD' | 'EUR' | 'ARS';
 export type TransactionType = 'BUY' | 'SELL' | 'EXCHANGE' | 'DEPOSIT';
 
+// Códigos ISO 3166-1 alpha-2 de los 19 países de LATAM que acepta el backend
+// (ver PAISES_LATAM en authSchema.ts del repo de backend) — mismo orden, mismos
+// valores, verificado contra el código real, no reconstruido de memoria.
+export type CountryCode =
+  | "AR" | "BO" | "BR" | "CL" | "CO" | "CR" | "CU" | "EC" | "SV"
+  | "GT" | "HN" | "MX" | "NI" | "PA" | "PY" | "PE" | "DO" | "UY" | "VE";
+
 export interface User {
   id: string;
   email: string;
   firstName: string;
   lastName: string;
   dateOfBirth?: string | null;
-  phone?: string | null;
+  // Null para altas por Google sin celular cargado todavía.
+  phone: string | null;
+  // Nunca null, ni en altas por Google sin perfil completo — el backend le
+  // asigna "AR" por defecto en la creación (verificado contra authController.ts
+  // del backend), así que el frontend no tiene que contemplar ese caso.
+  country: CountryCode;
   // "du" = Documento Único — nombre real del campo en el backend (varía de
   // formato según country: DNI en AR, etc). Null para altas por Google sin
-  // documento cargado.
-  country: string;
+  // documento cargado todavía.
   du: string | null;
+  // true solo si phone y du están cargados — gatilla el modal de "completar
+  // perfil" en DashboardLayout cuando es false (ver CompleteProfileModal).
+  profileComplete: boolean;
 }
 
 export interface Wallet {
