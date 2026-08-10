@@ -8,12 +8,17 @@ export interface User {
   lastName: string;
   dateOfBirth?: string | null;
   phone?: string | null;
-  documentNumber?: string | null;
+  // "du" = Documento Único — nombre real del campo en el backend (varía de
+  // formato según country: DNI en AR, etc). Null para altas por Google sin
+  // documento cargado.
+  country: string;
+  du: string | null;
 }
 
 export interface Wallet {
   id: string;
-  userId: string;
+  cvu: string;
+  alias: string;
 }
 
 export interface Balance {

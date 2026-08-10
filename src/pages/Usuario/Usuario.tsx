@@ -156,7 +156,7 @@ export function Usuario() {
 
         <div className={styles.field}>
           <span className={styles.label}>Documento</span>
-          <span className={styles.value}>{user?.documentNumber ?? MOCK_DOCUMENT_NUMBER}</span>
+          <span className={styles.value}>{user?.du ?? MOCK_DOCUMENT_NUMBER}</span>
         </div>
 
         <div className={styles.field}>

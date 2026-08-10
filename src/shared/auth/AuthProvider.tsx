@@ -1,7 +1,7 @@
 import { useEffect, useState, type PropsWithChildren } from "react";
 import { AuthContext } from "./AuthContext";
 import * as authService from "./authService";
-import type { User } from "../types/models";
+import type { User, Wallet } from "../types/models";
 import { CHATBOT_HISTORY_KEY_PREFIX } from "../constants";
 
 const STORAGE_KEY = "valora_auth";
@@ -9,7 +9,7 @@ const STORAGE_KEY = "valora_auth";
 interface StoredAuth {
   token: string;
   user: User;
-  walletId: string;
+  wallet: Wallet;
 }
 
 function readStoredAuth(): StoredAuth | null {

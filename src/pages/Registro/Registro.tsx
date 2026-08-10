@@ -57,6 +57,7 @@ export function Registro() {
   const [email, setEmail] = useState("");
   const [dateOfBirth, setDateOfBirth] = useState("");
   const [phone, setPhone] = useState("");
+  const [du, setDu] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -88,7 +89,7 @@ export function Registro() {
 
     setIsSubmitting(true);
     try {
-      await authService.register(email, password, firstName, lastName, toBackendDate(dateOfBirth), phone);
+      await authService.register(email, password, firstName, lastName, toBackendDate(dateOfBirth), phone, du);
       showToast("Cuenta creada, iniciá sesión.");
       redirectTimer.current = setTimeout(() => {
         navigate("/login", { replace: true });
@@ -199,6 +200,26 @@ export function Registro() {
               onChange={(event) => setPhone(event.target.value)}
               autoComplete="tel"
               icon="call"
+              required
+            />
+
+            {/* country va fijo en "AR" (ver authService.register) — sin selector
+                de país todavía, así que el formato validado acá es el de DNI
+                argentino (7 u 8 dígitos, ver authSchema.ts del backend). */}
+            <Input
+              id="du"
+              label="DNI"
+              type="text"
+              inputMode="numeric"
+              size="lg"
+              placeholder="12345678"
+              value={du}
+              onChange={(event) => setDu(event.target.value)}
+              autoComplete="off"
+              icon="badge"
+              pattern="[0-9]{7,8}"
+              minLength={7}
+              maxLength={8}
               required
             />
 
