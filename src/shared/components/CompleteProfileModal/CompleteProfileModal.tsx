@@ -13,11 +13,11 @@ import styles from "./CompleteProfileModal.module.css";
 // de nombres de país.
 const RESIDENCE_COUNTRY_CODES = PHONE_COUNTRY_CODES.filter((entry) => entry.code !== "US" && entry.code !== "ES");
 
-const DEFAULT_PHONE_DIAL_CODE = PHONE_COUNTRY_CODES[0].dialCode;
+const DEFAULT_PHONE_COUNTRY_CODE = PHONE_COUNTRY_CODES[0].code;
 const DEFAULT_RESIDENCE_COUNTRY = RESIDENCE_COUNTRY_CODES[0].code as CountryCode;
 
 export function CompleteProfileModal() {
-  const [phoneDialCode, setPhoneDialCode] = useState(DEFAULT_PHONE_DIAL_CODE);
+  const [phoneCountryCode, setPhoneCountryCode] = useState(DEFAULT_PHONE_COUNTRY_CODE);
   const [phoneLocal, setPhoneLocal] = useState("");
   const [country, setCountry] = useState<CountryCode>(DEFAULT_RESIDENCE_COUNTRY);
   const [du, setDu] = useState("");
@@ -25,11 +25,15 @@ export function CompleteProfileModal() {
 
   function handleSubmit(event: SubmitEvent<HTMLFormElement>) {
     event.preventDefault();
+    // DO/US comparten dialCode ("+1") — el <select> value es entry.code
+    // (único por país), así que el dialCode real se busca acá recién al
+    // enviar, no se guarda directo en el estado del select.
+    const dialCode = PHONE_COUNTRY_CODES.find((entry) => entry.code === phoneCountryCode)?.dialCode ?? "";
     // Sin espacios/guiones que el usuario haya tipeado en el número local —
     // el backend espera el string en formato E.164-like, prefijo pegado
     // directo al número (ej. "+5511961234567", no "+55 11961234567").
     const sanitizedLocal = phoneLocal.replace(/[\s-]/g, "");
-    submit(`${phoneDialCode}${sanitizedLocal}`, country, du);
+    submit(`${dialCode}${sanitizedLocal}`, country, du);
   }
 
   return (
@@ -46,11 +50,11 @@ export function CompleteProfileModal() {
             <select
               id="profileDialCode"
               className={styles.select}
-              value={phoneDialCode}
-              onChange={(event) => setPhoneDialCode(event.target.value)}
+              value={phoneCountryCode}
+              onChange={(event) => setPhoneCountryCode(event.target.value)}
             >
               {PHONE_COUNTRY_CODES.map((entry) => (
-                <option key={entry.code} value={entry.dialCode}>
+                <option key={entry.code} value={entry.code}>
                   {entry.flag} {entry.label} ({entry.dialCode})
                 </option>
               ))}
