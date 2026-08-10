@@ -6,7 +6,7 @@ import { BottomNav, type NavEntry } from "../../shared/components/BottomNav/Bott
 import { LegalModal, type LegalVariant } from "../../shared/components/LegalModal/LegalModal";
 import { NotificationPanel, type AppNotification } from "../../shared/components/NotificationPanel/NotificationPanel";
 import { Sidebar } from "../../shared/components/Sidebar/Sidebar";
-import { SUPPORT_EMAIL } from "../../shared/constants";
+import { NOTIF_SEEN_KEY_PREFIX, SUPPORT_EMAIL } from "../../shared/constants";
 import { ChatbotFAB } from "../../features/chatbot/ChatbotFAB";
 import { ChatbotWidget } from "../../features/chatbot/ChatbotWidget";
 import { getTransactions } from "../../shared/services/transactionService";
@@ -45,6 +45,35 @@ function persistDismissedIds(ids: Set<string>) {
   }
 }
 
+// "Vista" es un tercer estado, separado de unread (ventana de 24hs sobre
+// createdAt, ver deriveNotifications.ts) y de dismissedIds (borrado manual,
+// arriba): se apaga el punto rojo de la campanita al abrir el panel, sin
+// borrar ninguna notificación. Persiste en localStorage scopeado por userId
+// (ver NOTIF_SEEN_KEY_PREFIX en shared/constants.ts) — a diferencia de
+// dismissedIds (sessionStorage, sin scope por usuario, ver arriba), esto sí
+// sobrevive entre sesiones del navegador para el mismo usuario.
+function readSeenIds(userId: string | undefined): Set<string> {
+  if (!userId) return new Set();
+  try {
+    const raw = localStorage.getItem(`${NOTIF_SEEN_KEY_PREFIX}${userId}`);
+    if (!raw) return new Set();
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return new Set();
+    return new Set(parsed.filter((id): id is string => typeof id === "string"));
+  } catch {
+    return new Set();
+  }
+}
+
+function persistSeenIds(userId: string | undefined, ids: Set<string>) {
+  if (!userId) return;
+  try {
+    localStorage.setItem(`${NOTIF_SEEN_KEY_PREFIX}${userId}`, JSON.stringify([...ids]));
+  } catch {
+    // Silencioso: en el peor caso no persiste entre reloads, no rompe nada.
+  }
+}
+
 const NAV_ITEMS: NavEntry[] = [
   { id: "home", label: "Inicio", icon: "account_balance_wallet", path: "/" },
   { id: "cards", label: "Tarjetas", icon: "credit_card", path: "/tarjetas" },
@@ -61,9 +90,10 @@ export function DashboardLayout() {
   const hamburgerAnchorRef = useRef<HTMLDivElement>(null);
   const [notifications, setNotifications] = useState<AppNotification[]>([]);
   const [dismissedIds, setDismissedIds] = useState<Set<string>>(() => readDismissedIds());
+  const { token, user, logout } = useAuth();
+  const [seenIds, setSeenIds] = useState<Set<string>>(() => readSeenIds(user?.id));
   const visibleNotifications = notifications.filter((note) => !dismissedIds.has(note.id));
-  const hasUnread = visibleNotifications.some((note) => note.unread);
-  const { token, logout } = useAuth();
+  const hasUnread = visibleNotifications.some((note) => note.unread && !seenIds.has(note.id));
   const navigate = useNavigate();
 
   function handleDismissNotification(id: string) {
@@ -104,6 +134,23 @@ export function DashboardLayout() {
   useEffect(() => {
     if (openPanel === "notif") loadNotifications();
   }, [openPanel, loadNotifications]);
+
+  // Marca como vistas las notificaciones visibles al abrir el panel — apaga
+  // el punto rojo sin borrar nada (eso sigue siendo dismissedIds, aparte).
+  // Guard de "¿hay algo nuevo?" antes de actualizar estado: visibleNotifications
+  // es un array nuevo en cada render, así que sin el guard este efecto
+  // reintentaría un setSeenIds en cada render mientras el panel esté abierto.
+  useEffect(() => {
+    if (openPanel !== "notif") return;
+    const newIds = visibleNotifications.map((note) => note.id).filter((id) => !seenIds.has(id));
+    if (newIds.length === 0) return;
+    setSeenIds((prev) => {
+      const next = new Set(prev);
+      newIds.forEach((id) => next.add(id));
+      persistSeenIds(user?.id, next);
+      return next;
+    });
+  }, [openPanel, visibleNotifications, seenIds, user?.id]);
 
   function handleLogout() {
     logout();
