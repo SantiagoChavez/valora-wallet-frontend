@@ -8,9 +8,10 @@ interface SidebarProps {
   items: NavEntry[];
   onLogout: () => void;
   onOpenLegal: (variant: LegalVariant) => void;
+  onToggleChatbot: () => void;
 }
 
-export function Sidebar({ items, onLogout, onOpenLegal }: SidebarProps) {
+export function Sidebar({ items, onLogout, onOpenLegal, onToggleChatbot }: SidebarProps) {
   return (
     <aside className={styles.sidebar}>
       <nav className={styles.nav} aria-label="Navegación principal">
@@ -36,11 +37,16 @@ export function Sidebar({ items, onLogout, onOpenLegal }: SidebarProps) {
           </NavLink>
         ))}
 
-        <button type="button" className={styles.navItem} onClick={onLogout}>
-          <span className={`msym ${styles.navIcon}`} aria-hidden="true">logout</span>
-          <span className={styles.navLabel}>Cerrar sesión</span>
+        <button type="button" className={styles.navItem} onClick={onToggleChatbot}>
+          <span className={`msym ${styles.navIcon}`} aria-hidden="true">chat</span>
+          <span className={styles.navLabel}>Asistente AI</span>
         </button>
       </nav>
+
+      <button type="button" className={styles.navItem} onClick={onLogout}>
+        <span className={`msym ${styles.navIcon}`} aria-hidden="true">logout</span>
+        <span className={styles.navLabel}>Cerrar sesión</span>
+      </button>
 
       <div className={styles.footer}>
         <a href={`mailto:${SUPPORT_EMAIL}`} className={styles.footerLink}>

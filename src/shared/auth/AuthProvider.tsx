@@ -2,7 +2,7 @@ import { useEffect, useState, type PropsWithChildren } from "react";
 import { AuthContext } from "./AuthContext";
 import * as authService from "./authService";
 import type { User } from "../types/models";
-import { CHATBOT_HISTORY_KEY_PREFIX } from "../constants";
+import { CHATBOT_HISTORY_KEY_PREFIX, NOTIF_SEEN_KEY_PREFIX } from "../constants";
 
 const STORAGE_KEY = "valora_auth";
 
@@ -46,13 +46,15 @@ export function AuthProvider({ children }: PropsWithChildren) {
   }
 
   function logout() {
-    // El historial del chatbot vive en localStorage, scopeado por userId
-    // (ver CHATBOT_HISTORY_KEY_PREFIX en shared/constants.ts) — no se borra
-    // solo, hay que limpiarlo acá a mano. Mismo criterio que el resto de esta
-    // función: si falla (storage bloqueado/sin cuota), no bloquea el logout en sí.
+    // El historial del chatbot y las notificaciones vistas viven en
+    // localStorage, scopeados por userId (ver CHATBOT_HISTORY_KEY_PREFIX y
+    // NOTIF_SEEN_KEY_PREFIX en shared/constants.ts) — no se borran solos, hay
+    // que limpiarlos acá a mano. Mismo criterio que el resto de esta función:
+    // si falla (storage bloqueado/sin cuota), no bloquea el logout en sí.
     if (auth) {
       try {
         localStorage.removeItem(`${CHATBOT_HISTORY_KEY_PREFIX}${auth.user.id}`);
+        localStorage.removeItem(`${NOTIF_SEEN_KEY_PREFIX}${auth.user.id}`);
       } catch {
         // Storage bloqueado o sin cuota — no bloquea el logout.
       }

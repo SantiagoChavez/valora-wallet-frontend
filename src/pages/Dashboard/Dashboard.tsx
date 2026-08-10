@@ -54,6 +54,7 @@ export function Dashboard() {
   // vez de degradar con un fallback claro.
   const outletContext = useOutletContext<DashboardOutletContext | null>();
   const onOpenChatbot = outletContext?.onOpenChatbot ?? (() => {});
+  const onTransactionCreated = outletContext?.onTransactionCreated ?? (() => {});
 
   const [isDepositOpen, setIsDepositOpen] = useState(false);
   const [depositCurrency, setDepositCurrency] = useState<CurrencyCode>("USD");
@@ -130,6 +131,7 @@ export function Dashboard() {
     const receivedAmount = transaction.targetAmount?.toLocaleString("es-AR", { maximumFractionDigits: 2 }) ?? "0";
     showToast(`${verb} ${receivedAmount} ${transaction.targetCurrency ?? ""}.`);
     loadDashboardData();
+    onTransactionCreated();
   }
 
   async function handleDepositSubmit(event: SubmitEvent<HTMLFormElement>) {
@@ -148,6 +150,7 @@ export function Dashboard() {
       setIsDepositOpen(false);
       showToast(`Depositaste ${parsedAmount.toLocaleString("es-AR", { maximumFractionDigits: 2 })} ${depositCurrency}.`);
       await loadDashboardData();
+      onTransactionCreated();
     } catch (err) {
       setDepositError(getApiErrorMessage(err));
     } finally {
