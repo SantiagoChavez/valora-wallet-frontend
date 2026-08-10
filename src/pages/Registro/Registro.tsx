@@ -203,9 +203,14 @@ export function Registro() {
               required
             />
 
-            {/* country va fijo en "AR" (ver authService.register) — sin selector
-                de país todavía, así que el formato validado acá es el de DNI
-                argentino (7 u 8 dígitos, ver authSchema.ts del backend). */}
+            {/* country va fijo en "AR" (ver authService.register) — a propósito
+                sin selector de país: el enum de authSchema.ts del backend hoy
+                solo acepta AR/PE/CO/MX, y un dropdown con esos 4 nada más le
+                muestra a cualquiera del resto de LATAM (Chile, Uruguay,
+                Ecuador, Centroamérica, etc.) una lista que no lo incluye —
+                peor que no mostrar el selector. Vuelve cuando el backend
+                soporte el resto de la región. Mientras tanto, el formato
+                validado acá es el de DNI argentino (7 u 8 dígitos). */}
             <Input
               id="du"
               label="DNI"
