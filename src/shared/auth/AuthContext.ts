@@ -12,6 +12,10 @@ export interface AuthContextValue {
   // /wallet/alias) — sin esto, el alias nuevo se vería recién después de un
   // refresh (que vuelve a leer sessionStorage, pero con el valor viejo).
   updateWallet: (wallet: Wallet) => void;
+  // Mismo criterio que updateWallet, para el user — ej. tras PATCH /auth/me
+  // (ver CompleteProfileModal). Mergea sobre el user actual en vez de
+  // reemplazarlo entero.
+  updateUser: (partial: Partial<User>) => void;
 }
 
 export const AuthContext = createContext<AuthContextValue | undefined>(undefined);

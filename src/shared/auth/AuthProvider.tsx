@@ -72,6 +72,13 @@ export function AuthProvider({ children }: PropsWithChildren) {
     setAuth((prev) => (prev ? { ...prev, wallet } : prev));
   }
 
+  // Mismo criterio que updateWallet — CompleteProfileModal la llama con el
+  // user completo que devuelve PATCH /auth/me, pero acepta un Partial<User>
+  // para no atarla a mandar siempre el objeto entero.
+  function updateUser(partial: Partial<User>) {
+    setAuth((prev) => (prev ? { ...prev, user: { ...prev.user, ...partial } } : prev));
+  }
+
   function logout() {
     // El historial del chatbot y las notificaciones vistas viven en
     // localStorage, scopeados por userId (ver CHATBOT_HISTORY_KEY_PREFIX y
@@ -99,6 +106,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
         login,
         logout,
         updateWallet,
+        updateUser,
       }}
     >
       {children}
