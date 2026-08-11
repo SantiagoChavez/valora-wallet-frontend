@@ -61,18 +61,19 @@ export function CompleteProfileModal() {
             </select>
           </div>
 
-          <Input
-            id="profilePhoneLocal"
-            label="Celular"
-            type="tel"
-            size="lg"
-            placeholder="11 96123-4567"
-            value={phoneLocal}
-            onChange={(event) => setPhoneLocal(event.target.value)}
-            autoComplete="tel-national"
-            className={styles.phoneInput}
-            required
-          />
+          <div className={styles.phoneInputField}>
+            <Input
+              id="profilePhoneLocal"
+              label="Celular"
+              type="tel"
+              size="lg"
+              placeholder="11 96123-4567"
+              value={phoneLocal}
+              onChange={(event) => setPhoneLocal(event.target.value)}
+              autoComplete="tel-national"
+              required
+            />
+          </div>
         </div>
 
         <div className={styles.field}>
