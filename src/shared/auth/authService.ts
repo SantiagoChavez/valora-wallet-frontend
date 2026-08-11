@@ -46,6 +46,13 @@ export function register(
   }).then((res) => res.data);
 }
 
+export function googleLogin(idToken: string): Promise<AuthResponse> {
+  return apiFetch<AuthApiResponse>("/auth/google", {
+    method: "POST",
+    body: JSON.stringify({ idToken }),
+  }).then((res) => res.data);
+}
+
 export function requestPasswordReset(email: string): Promise<ForgotPasswordResponse> {
   const body: ForgotPasswordRequest = { email };
   return apiFetch<ForgotPasswordResponse>("/auth/forgot-password", {

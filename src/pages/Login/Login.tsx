@@ -9,16 +9,34 @@ import { AuthMobileHeader } from "../../shared/components/AuthMobileHeader/AuthM
 import { AuthBrandCopy } from "../../shared/components/AuthBrandCopy/AuthBrandCopy";
 import { AuthFormIntro } from "../../shared/components/AuthFormIntro/AuthFormIntro";
 import { useAuth } from "../../shared/auth/useAuth";
+import { SESSION_EXPIRED_KEY, SESSION_EXPIRED_MESSAGE } from "../../shared/auth/AuthProvider";
 import { getApiErrorMessage } from "../../shared/services/apiClient";
 import styles from "./Login.module.css";
+
+// El único origen hoy es AuthProvider marcando esto tras un 401 por JWT
+// vencido. Se lee vía useState lazy (una sola vez, al montar) y se borra en
+// el mismo momento — no en location.state: ProtectedRoute también redirige a
+// /login (sin state) apenas isAuthenticated pasa a false, y esa segunda
+// navegación pisaba el state de la primera (confirmado con Playwright, el
+// mensaje nunca llegaba a mostrarse). sessionStorage no depende de cuál de
+// las dos navegaciones "gana".
+function readAndClearSessionExpiredFlag(): string | null {
+  try {
+    if (sessionStorage.getItem(SESSION_EXPIRED_KEY) !== "1") return null;
+    sessionStorage.removeItem(SESSION_EXPIRED_KEY);
+    return SESSION_EXPIRED_MESSAGE;
+  } catch {
+    return null;
+  }
+}
 
 export function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(readAndClearSessionExpiredFlag);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { login } = useAuth();
+  const { login, loginWithGoogle } = useAuth();
   const navigate = useNavigate();
 
   async function handleSubmit(event: SubmitEvent<HTMLFormElement>) {
@@ -27,6 +45,19 @@ export function Login() {
     setIsSubmitting(true);
     try {
       await login(email, password);
+      navigate("/", { replace: true });
+    } catch (err) {
+      setError(getApiErrorMessage(err));
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
+
+  async function handleGoogleSuccess(idToken: string) {
+    setError(null);
+    setIsSubmitting(true);
+    try {
+      await loginWithGoogle(idToken);
       navigate("/", { replace: true });
     } catch (err) {
       setError(getApiErrorMessage(err));
@@ -123,7 +154,7 @@ export function Login() {
               <span className={styles.dividerLine} />
             </div>
 
-            <GoogleButton />
+            <GoogleButton onSuccess={handleGoogleSuccess} onError={setError} />
           </form>
 
           <p className={styles.signupHint}>
