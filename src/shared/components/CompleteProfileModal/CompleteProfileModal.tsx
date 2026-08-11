@@ -47,6 +47,25 @@ export function CompleteProfileModal() {
           Necesitamos tu celular y tu documento para que puedas operar con tu billetera.
         </p>
 
+        <div className={styles.field}>
+          <label className={styles.label} htmlFor="profileCountry">País de residencia</label>
+          <div className={styles.selectWrap}>
+            <select
+              id="profileCountry"
+              className={styles.select}
+              value={country}
+              onChange={(event) => setCountry(event.target.value as CountryCode)}
+            >
+              {RESIDENCE_COUNTRY_CODES.map((entry) => (
+                <option key={entry.code} value={entry.code}>
+                  {entry.label}
+                </option>
+              ))}
+            </select>
+            <span className={`msym ${styles.selectIcon}`} aria-hidden="true">expand_more</span>
+          </div>
+        </div>
+
         <div className={styles.phoneRow}>
           <div className={styles.phoneField}>
             <label className={styles.label} htmlFor="profileDialCode">País del celular</label>
@@ -79,25 +98,6 @@ export function CompleteProfileModal() {
               autoComplete="tel-national"
               required
             />
-          </div>
-        </div>
-
-        <div className={styles.field}>
-          <label className={styles.label} htmlFor="profileCountry">País de residencia</label>
-          <div className={styles.selectWrap}>
-            <select
-              id="profileCountry"
-              className={styles.select}
-              value={country}
-              onChange={(event) => setCountry(event.target.value as CountryCode)}
-            >
-              {RESIDENCE_COUNTRY_CODES.map((entry) => (
-                <option key={entry.code} value={entry.code}>
-                  {entry.label}
-                </option>
-              ))}
-            </select>
-            <span className={`msym ${styles.selectIcon}`} aria-hidden="true">expand_more</span>
           </div>
         </div>
 
