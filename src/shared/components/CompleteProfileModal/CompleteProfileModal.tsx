@@ -5,6 +5,7 @@ import { Modal } from "../Modal/Modal";
 import { PHONE_COUNTRY_CODES } from "../../constants";
 import type { CountryCode } from "../../types/models";
 import { useCompleteProfile } from "./useCompleteProfile";
+import { useDocumentTypes } from "./useDocumentTypes";
 import styles from "./CompleteProfileModal.module.css";
 
 // Los 19 países LATAM que acepta country (residencia) son un subconjunto de
@@ -22,6 +23,8 @@ export function CompleteProfileModal() {
   const [country, setCountry] = useState<CountryCode>(DEFAULT_RESIDENCE_COUNTRY);
   const [du, setDu] = useState("");
   const { isSubmitting, error, submit } = useCompleteProfile();
+  const documentTypes = useDocumentTypes();
+  const documentLabel = documentTypes?.[country] ?? "Documento";
 
   function handleSubmit(event: SubmitEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -90,7 +93,7 @@ export function CompleteProfileModal() {
             >
               {RESIDENCE_COUNTRY_CODES.map((entry) => (
                 <option key={entry.code} value={entry.code}>
-                  {entry.flag} {entry.label}
+                  {entry.label}
                 </option>
               ))}
             </select>
@@ -100,7 +103,7 @@ export function CompleteProfileModal() {
 
         <Input
           id="profileDu"
-          label="Documento"
+          label={documentLabel}
           type="text"
           size="lg"
           placeholder="12345678"
