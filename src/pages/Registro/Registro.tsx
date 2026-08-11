@@ -14,7 +14,19 @@ import { Toast } from "../../shared/components/Toast/Toast";
 import { useToast, TOAST_DURATION_MS } from "../../shared/components/Toast/useToast";
 import * as authService from "../../shared/auth/authService";
 import { getApiErrorMessage } from "../../shared/services/apiClient";
+import { PHONE_COUNTRY_CODES } from "../../shared/constants";
+import type { CountryCode } from "../../shared/types/models";
+// Import cruzado a propósito, sin mover el hook todavía — ver nota de
+// "pendiente" en el PR (candidato a shared/hooks/, no ejecutado en este push).
+import { useDocumentTypes } from "../../shared/components/CompleteProfileModal/useDocumentTypes";
 import styles from "./Registro.module.css";
+
+// Mismo criterio que CompleteProfileModal.tsx (RESIDENCE_COUNTRY_CODES):
+// los 19 países LATAM que acepta el backend para country/du/phone son un
+// subconjunto de PHONE_COUNTRY_CODES (esa lista suma US/ES). Duplicado acá a
+// propósito en vez de importar la constante del modal — no está exportada, y
+// es una sola línea derivada, no justifica cruzar a otro componente por eso.
+const RESIDENCE_COUNTRY_CODES = PHONE_COUNTRY_CODES.filter((entry) => entry.code !== "US" && entry.code !== "ES");
 
 const MIN_AGE_YEARS = 18;
 
@@ -56,7 +68,9 @@ export function Registro() {
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [dateOfBirth, setDateOfBirth] = useState("");
+  const [phoneCountryCode, setPhoneCountryCode] = useState(PHONE_COUNTRY_CODES[0].code);
   const [phone, setPhone] = useState("");
+  const [country, setCountry] = useState<CountryCode>(RESIDENCE_COUNTRY_CODES[0].code as CountryCode);
   const [du, setDu] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -73,6 +87,10 @@ export function Registro() {
   const { message: toast, showToast } = useToast();
   const navigate = useNavigate();
   const redirectTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const documentTypes = useDocumentTypes();
+  const documentLabel = documentTypes?.[country] ?? "Documento";
+  const phonePlaceholder =
+    PHONE_COUNTRY_CODES.find((entry) => entry.code === phoneCountryCode)?.example ?? "+54 9 11 1234-5678";
 
   useEffect(() => () => clearTimeout(redirectTimer.current), []);
 
@@ -89,7 +107,21 @@ export function Registro() {
 
     setIsSubmitting(true);
     try {
-      await authService.register(email, password, firstName, lastName, toBackendDate(dateOfBirth), phone, du);
+      // Mismo criterio que CompleteProfileModal.tsx (busca el dialCode real
+      // por el code elegido, en vez de guardarlo directo en el estado, y le
+      // saca espacios/guiones al número local antes de concatenar).
+      const dialCode = PHONE_COUNTRY_CODES.find((entry) => entry.code === phoneCountryCode)?.dialCode ?? "";
+      const sanitizedPhone = phone.replace(/[\s-]/g, "");
+      await authService.register(
+        email,
+        password,
+        firstName,
+        lastName,
+        toBackendDate(dateOfBirth),
+        `${dialCode}${sanitizedPhone}`,
+        du,
+        country,
+      );
       showToast("Cuenta creada, iniciá sesión.");
       redirectTimer.current = setTimeout(() => {
         navigate("/login", { replace: true });
@@ -190,41 +222,85 @@ export function Registro() {
               required
             />
 
-            <Input
-              id="phone"
-              label="Celular"
-              type="tel"
-              size="lg"
-              placeholder="+54 9 11 1234-5678"
-              value={phone}
-              onChange={(event) => setPhone(event.target.value)}
-              autoComplete="tel"
-              icon="call"
-              required
-            />
+            <div className={styles.field}>
+              <label className={styles.selectLabel} htmlFor="country">País de residencia</label>
+              <div className={styles.selectWrap}>
+                <select
+                  id="country"
+                  className={styles.select}
+                  value={country}
+                  onChange={(event) => setCountry(event.target.value as CountryCode)}
+                >
+                  {RESIDENCE_COUNTRY_CODES.map((entry) => (
+                    <option key={entry.code} value={entry.code}>
+                      {entry.label}
+                    </option>
+                  ))}
+                </select>
+                <span className={`msym ${styles.selectIcon}`} aria-hidden="true">expand_more</span>
+              </div>
+            </div>
 
-            {/* country va fijo en "AR" (ver authService.register) — a propósito
-                sin selector de país: el enum de authSchema.ts del backend hoy
-                solo acepta AR/PE/CO/MX, y un dropdown con esos 4 nada más le
-                muestra a cualquiera del resto de LATAM (Chile, Uruguay,
-                Ecuador, Centroamérica, etc.) una lista que no lo incluye —
-                peor que no mostrar el selector. Vuelve cuando el backend
-                soporte el resto de la región. Mientras tanto, el formato
-                validado acá es el de DNI argentino (7 u 8 dígitos). */}
+            <div className={styles.phoneRow}>
+              <div className={styles.phoneField}>
+                <label className={styles.selectLabel} htmlFor="phoneCountryCode">Prefijo</label>
+                <div className={styles.selectWrap}>
+                  <select
+                    id="phoneCountryCode"
+                    className={styles.select}
+                    value={phoneCountryCode}
+                    onChange={(event) => setPhoneCountryCode(event.target.value)}
+                  >
+                    {PHONE_COUNTRY_CODES.map((entry) => (
+                      <option key={entry.code} value={entry.code}>
+                        {entry.code} ({entry.dialCode})
+                      </option>
+                    ))}
+                  </select>
+                  <span className={`msym ${styles.selectIcon}`} aria-hidden="true">expand_more</span>
+                </div>
+              </div>
+
+              <div className={styles.phoneInputField}>
+                <Input
+                  id="phone"
+                  label="Celular"
+                  type="tel"
+                  size="lg"
+                  placeholder={phonePlaceholder}
+                  value={phone}
+                  onChange={(event) => setPhone(event.target.value)}
+                  autoComplete="tel-national"
+                  icon="call"
+                  required
+                />
+              </div>
+            </div>
+
+            {/* Retomado tras el desbloqueo del backend del 10/08 — reemplaza
+                la intención de 55281b9 (Analía, mismo día 02:04, revertido en
+                db74ca7 a las 02:10 porque el enum de authSchema.ts todavía
+                solo aceptaba AR/PE/CO/MX en ese momento). El backend se
+                destrabó horas después, mismo día (a458ce2, backend, 16:34:
+                "reemplazar validacion de documento por pais con una generica
+                para los 19 paises de LATAM") — country/du/phone ya validan
+                contra los 19 países LATAM tanto en /auth/register como en
+                PATCH /auth/me. Mismo criterio que CompleteProfileModal:
+                documento genérico alfanumérico, no el formato fijo de DNI
+                argentino de antes. */}
             <Input
               id="du"
-              label="Documento único"
+              label={documentLabel}
               type="text"
-              inputMode="numeric"
               size="lg"
               placeholder="12345678"
               value={du}
               onChange={(event) => setDu(event.target.value)}
               autoComplete="off"
               icon="badge"
-              pattern="[0-9]{7,8}"
-              minLength={7}
-              maxLength={8}
+              pattern="[A-Za-z0-9]{5,15}"
+              minLength={5}
+              maxLength={15}
               required
             />
 

@@ -23,6 +23,13 @@ export interface PhoneCountryCode {
   dialCode: string;
   flag: string;
   label: string;
+  // Número de ejemplo completo (prefijo + local), formato típico del país —
+  // puramente ilustrativo para el placeholder del campo de celular (ver
+  // Registro.tsx), nunca se manda tal cual al backend. Igual criterio que se
+  // usó para no traer libphonenumber-js al front: dato armado a mano, la
+  // validación real de formato la hace el backend (validarCelular,
+  // phoneValidation.ts, con libphonenumber-js/max).
+  example: string;
 }
 
 // Lista estática propia (sin libphonenumber-js del lado del front, ver
@@ -32,25 +39,25 @@ export interface PhoneCountryCode {
 // de residencia (que reusa esta misma lista filtrada a los 19 LATAM) — un
 // usuario puede vivir en un país y tener un celular con prefijo de otro.
 export const PHONE_COUNTRY_CODES: PhoneCountryCode[] = [
-  { code: "AR", dialCode: "+54", flag: "🇦🇷", label: "Argentina" },
-  { code: "BO", dialCode: "+591", flag: "🇧🇴", label: "Bolivia" },
-  { code: "BR", dialCode: "+55", flag: "🇧🇷", label: "Brasil" },
-  { code: "CL", dialCode: "+56", flag: "🇨🇱", label: "Chile" },
-  { code: "CO", dialCode: "+57", flag: "🇨🇴", label: "Colombia" },
-  { code: "CR", dialCode: "+506", flag: "🇨🇷", label: "Costa Rica" },
-  { code: "CU", dialCode: "+53", flag: "🇨🇺", label: "Cuba" },
-  { code: "EC", dialCode: "+593", flag: "🇪🇨", label: "Ecuador" },
-  { code: "SV", dialCode: "+503", flag: "🇸🇻", label: "El Salvador" },
-  { code: "GT", dialCode: "+502", flag: "🇬🇹", label: "Guatemala" },
-  { code: "HN", dialCode: "+504", flag: "🇭🇳", label: "Honduras" },
-  { code: "MX", dialCode: "+52", flag: "🇲🇽", label: "México" },
-  { code: "NI", dialCode: "+505", flag: "🇳🇮", label: "Nicaragua" },
-  { code: "PA", dialCode: "+507", flag: "🇵🇦", label: "Panamá" },
-  { code: "PY", dialCode: "+595", flag: "🇵🇾", label: "Paraguay" },
-  { code: "PE", dialCode: "+51", flag: "🇵🇪", label: "Perú" },
-  { code: "DO", dialCode: "+1", flag: "🇩🇴", label: "República Dominicana" },
-  { code: "UY", dialCode: "+598", flag: "🇺🇾", label: "Uruguay" },
-  { code: "VE", dialCode: "+58", flag: "🇻🇪", label: "Venezuela" },
-  { code: "US", dialCode: "+1", flag: "🇺🇸", label: "Estados Unidos" },
-  { code: "ES", dialCode: "+34", flag: "🇪🇸", label: "España" },
+  { code: "AR", dialCode: "+54", flag: "🇦🇷", label: "Argentina", example: "+54 9 11 1234-5678" },
+  { code: "BO", dialCode: "+591", flag: "🇧🇴", label: "Bolivia", example: "+591 712 34567" },
+  { code: "BR", dialCode: "+55", flag: "🇧🇷", label: "Brasil", example: "+55 11 91234-5678" },
+  { code: "CL", dialCode: "+56", flag: "🇨🇱", label: "Chile", example: "+56 9 6123 4567" },
+  { code: "CO", dialCode: "+57", flag: "🇨🇴", label: "Colombia", example: "+57 301 2345678" },
+  { code: "CR", dialCode: "+506", flag: "🇨🇷", label: "Costa Rica", example: "+506 8123 4567" },
+  { code: "CU", dialCode: "+53", flag: "🇨🇺", label: "Cuba", example: "+53 5 1234567" },
+  { code: "EC", dialCode: "+593", flag: "🇪🇨", label: "Ecuador", example: "+593 99 123 4567" },
+  { code: "SV", dialCode: "+503", flag: "🇸🇻", label: "El Salvador", example: "+503 7123 4567" },
+  { code: "GT", dialCode: "+502", flag: "🇬🇹", label: "Guatemala", example: "+502 5123 4567" },
+  { code: "HN", dialCode: "+504", flag: "🇭🇳", label: "Honduras", example: "+504 9123-4567" },
+  { code: "MX", dialCode: "+52", flag: "🇲🇽", label: "México", example: "+52 55 1234 5678" },
+  { code: "NI", dialCode: "+505", flag: "🇳🇮", label: "Nicaragua", example: "+505 8123 4567" },
+  { code: "PA", dialCode: "+507", flag: "🇵🇦", label: "Panamá", example: "+507 6123-4567" },
+  { code: "PY", dialCode: "+595", flag: "🇵🇾", label: "Paraguay", example: "+595 981 123456" },
+  { code: "PE", dialCode: "+51", flag: "🇵🇪", label: "Perú", example: "+51 912 345 678" },
+  { code: "DO", dialCode: "+1", flag: "🇩🇴", label: "República Dominicana", example: "+1 809 123 4567" },
+  { code: "UY", dialCode: "+598", flag: "🇺🇾", label: "Uruguay", example: "+598 94 123 456" },
+  { code: "VE", dialCode: "+58", flag: "🇻🇪", label: "Venezuela", example: "+58 412-1234567" },
+  { code: "US", dialCode: "+1", flag: "🇺🇸", label: "Estados Unidos", example: "+1 201 555 0123" },
+  { code: "ES", dialCode: "+34", flag: "🇪🇸", label: "España", example: "+34 612 34 56 78" },
 ];
