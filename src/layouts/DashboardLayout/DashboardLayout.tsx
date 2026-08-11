@@ -3,6 +3,7 @@ import { Outlet, useNavigate } from "react-router-dom";
 import logo from "../../shared/assets/valora-logo.png";
 import { useAuth } from "../../shared/auth/useAuth";
 import { BottomNav, type NavEntry } from "../../shared/components/BottomNav/BottomNav";
+import { CompleteProfileModal } from "../../shared/components/CompleteProfileModal/CompleteProfileModal";
 import { LegalModal, type LegalVariant } from "../../shared/components/LegalModal/LegalModal";
 import { NotificationPanel, type AppNotification } from "../../shared/components/NotificationPanel/NotificationPanel";
 import { Sidebar } from "../../shared/components/Sidebar/Sidebar";
@@ -363,6 +364,11 @@ export function DashboardLayout() {
       <LegalModal isOpen={legalOpen} onClose={() => setLegalOpen(false)} variant={legalVariant} />
       {chatbotOpen && <ChatbotWidget onClose={handleCloseChatbot} />}
       <ChatbotFAB onOpen={handleOpenChatbot} hidden={chatbotOpen} />
+      {/* Sin prop de open/close manual — se abre y cierra solo en función de
+          user.profileComplete (ver useCompleteProfile, que llama a updateUser
+          del AuthContext al resolver 200). No descartable: sin botón de
+          cerrar, sin click-afuera, sin Escape (Modal con dismissible={false}). */}
+      {!!user && !user.profileComplete && <CompleteProfileModal />}
     </div>
   );
 }
