@@ -74,11 +74,19 @@ export function GoogleButton({ onSuccess, onError }: GoogleButtonProps) {
       setup();
     } else {
       // El script en index.html carga con "async" — puede no estar listo
-      // todavía cuando este componente monta.
+      // todavía cuando este componente monta. Si nunca llega a cargar (CSP,
+      // adblock, red caída), no tiene sentido seguir sondeando para siempre
+      // mientras la persona esté parada en Login/Registro — se corta a los
+      // 10s y el botón queda deshabilitado (mismo estado que "no configurado").
+      let attempts = 0;
+      const MAX_ATTEMPTS = 100;
       pollId = setInterval(() => {
+        attempts += 1;
         if (window.google) {
           if (pollId) clearInterval(pollId);
           setup();
+        } else if (attempts >= MAX_ATTEMPTS) {
+          if (pollId) clearInterval(pollId);
         }
       }, 100);
     }

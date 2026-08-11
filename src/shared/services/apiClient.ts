@@ -28,10 +28,11 @@ export function getApiErrorMessage(err: unknown): string {
 
 // apiClient.ts es un módulo plano, no un componente — no tiene acceso directo a
 // useAuth()/useNavigate() para forzar un logout limpio cuando el JWT vence (15
-// minutos, sin refresh token del lado del backend). AuthProvider se registra acá
-// una sola vez al montar; cualquier 401 de un request autenticado dispara esto
-// en vez de dejar el error crudo del backend ("Token inválido o expirado.")
-// mostrado donde sea que esa pantalla puntual muestre errores.
+// minutos, sin refresh token del lado del backend). AuthProvider registra acá
+// su handler (y lo vuelve a registrar en cada render suyo, para cerrar siempre
+// sobre el logout()/navigate más reciente); cualquier 401 de un request
+// autenticado dispara esto en vez de dejar el error crudo del backend ("Token
+// inválido o expirado.") mostrado donde sea que esa pantalla puntual muestre errores.
 type UnauthorizedHandler = () => void;
 let unauthorizedHandler: UnauthorizedHandler | null = null;
 
