@@ -98,6 +98,14 @@ export function AuthProvider({ children }: PropsWithChildren) {
     setAuth(response);
   }
 
+  // Mismo flujo que login(): /auth/google devuelve el mismo shape de sesión
+  // (token + user + wallet), sea cuenta nueva o existente — el backend decide
+  // internamente si crea el usuario o solo lo autentica.
+  async function loginWithGoogle(idToken: string) {
+    const response = await authService.googleLogin(idToken);
+    setAuth(response);
+  }
+
   // auth no puede ser null acá en la práctica (solo se llama desde la vista
   // Usuario, montada detrás de ProtectedRoute) — igual se chequea explícito
   // en vez de asumir, mismo criterio que el resto de este archivo.
@@ -130,6 +138,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
         token: auth?.token ?? null,
         isAuthenticated: Boolean(auth?.token),
         login,
+        loginWithGoogle,
         logout,
         updateWallet,
       }}

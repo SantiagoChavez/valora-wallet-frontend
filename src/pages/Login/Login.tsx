@@ -36,7 +36,7 @@ export function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(readAndClearSessionExpiredFlag);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { login } = useAuth();
+  const { login, loginWithGoogle } = useAuth();
   const navigate = useNavigate();
 
   async function handleSubmit(event: SubmitEvent<HTMLFormElement>) {
@@ -45,6 +45,19 @@ export function Login() {
     setIsSubmitting(true);
     try {
       await login(email, password);
+      navigate("/", { replace: true });
+    } catch (err) {
+      setError(getApiErrorMessage(err));
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
+
+  async function handleGoogleSuccess(idToken: string) {
+    setError(null);
+    setIsSubmitting(true);
+    try {
+      await loginWithGoogle(idToken);
       navigate("/", { replace: true });
     } catch (err) {
       setError(getApiErrorMessage(err));
@@ -141,7 +154,7 @@ export function Login() {
               <span className={styles.dividerLine} />
             </div>
 
-            <GoogleButton />
+            <GoogleButton onSuccess={handleGoogleSuccess} onError={setError} />
           </form>
 
           <p className={styles.signupHint}>
