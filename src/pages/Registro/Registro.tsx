@@ -13,6 +13,7 @@ import { LegalModal, type LegalVariant } from "../../shared/components/LegalModa
 import { Toast } from "../../shared/components/Toast/Toast";
 import { useToast, TOAST_DURATION_MS } from "../../shared/components/Toast/useToast";
 import * as authService from "../../shared/auth/authService";
+import { useAuth } from "../../shared/auth/useAuth";
 import { getApiErrorMessage } from "../../shared/services/apiClient";
 import { PHONE_COUNTRY_CODES } from "../../shared/constants";
 import type { CountryCode } from "../../shared/types/models";
@@ -85,6 +86,7 @@ export function Registro() {
   const [legalVariant, setLegalVariant] = useState<LegalVariant>("terms");
   const [legalOpen, setLegalOpen] = useState(false);
   const { message: toast, showToast } = useToast();
+  const { loginWithGoogle } = useAuth();
   const navigate = useNavigate();
   const redirectTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const documentTypes = useDocumentTypes();
@@ -126,6 +128,21 @@ export function Registro() {
       redirectTimer.current = setTimeout(() => {
         navigate("/login", { replace: true });
       }, TOAST_DURATION_MS);
+    } catch (err) {
+      setError(getApiErrorMessage(err));
+      setIsSubmitting(false);
+    }
+  }
+
+  // A diferencia del registro por form, /auth/google ya autentica en el mismo
+  // paso (crea la cuenta si no existía) — no tiene sentido mandar a esta
+  // persona a /login después, directo entra a la app.
+  async function handleGoogleSuccess(idToken: string) {
+    setError(null);
+    setIsSubmitting(true);
+    try {
+      await loginWithGoogle(idToken);
+      navigate("/", { replace: true });
     } catch (err) {
       setError(getApiErrorMessage(err));
       setIsSubmitting(false);
@@ -399,7 +416,7 @@ export function Registro() {
               <span className={styles.dividerLine} />
             </div>
 
-            <GoogleButton />
+            <GoogleButton onSuccess={handleGoogleSuccess} onError={setError} />
           </form>
 
           <p className={styles.signupHint}>

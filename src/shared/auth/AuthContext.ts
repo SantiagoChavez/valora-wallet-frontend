@@ -7,6 +7,7 @@ export interface AuthContextValue {
   token: string | null;
   isAuthenticated: boolean;
   login: (email: string, password: string) => Promise<void>;
+  loginWithGoogle: (idToken: string) => Promise<void>;
   logout: () => void;
   // Actualiza la wallet guardada en sesión tras un cambio real (ej. PUT
   // /wallet/alias) — sin esto, el alias nuevo se vería recién después de un

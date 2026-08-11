@@ -1,5 +1,5 @@
 export type CurrencyCode = 'USD' | 'EUR' | 'ARS';
-export type TransactionType = 'BUY' | 'SELL' | 'EXCHANGE' | 'DEPOSIT';
+export type TransactionType = 'BUY' | 'SELL' | 'EXCHANGE' | 'DEPOSIT' | 'TRANSFER_OUT' | 'TRANSFER_IN';
 
 // Códigos ISO 3166-1 alpha-2 de los 19 países de LATAM que acepta el backend
 // (ver PAISES_LATAM en authSchema.ts del repo de backend) — mismo orden, mismos
