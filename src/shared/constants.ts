@@ -39,7 +39,14 @@ export interface PhoneCountryCode {
 // de residencia (que reusa esta misma lista filtrada a los 19 LATAM) — un
 // usuario puede vivir en un país y tener un celular con prefijo de otro.
 export const PHONE_COUNTRY_CODES: PhoneCountryCode[] = [
-  { code: "AR", dialCode: "+54", flag: "🇦🇷", label: "Argentina", example: "+54 9 11 1234-5678" },
+  // dialCode "+549", no "+54": los celulares argentinos necesitan el 9 extra
+  // después del +54 para que libphonenumber-js/max (lo que usa el backend
+  // real, ver phoneValidation.ts) los tipe como MOBILE en vez de FIXED_LINE
+  // — confirmado con parsePhoneNumberFromString: "+541156161313" da
+  // FIXED_LINE (el backend lo rechaza), "+5491156161313" da MOBILE (lo
+  // acepta). Efecto secundario aceptado: el selector muestra "AR (+549)" en
+  // vez de "AR (+54)".
+  { code: "AR", dialCode: "+549", flag: "🇦🇷", label: "Argentina", example: "+54 9 11 1234-5678" },
   { code: "BO", dialCode: "+591", flag: "🇧🇴", label: "Bolivia", example: "+591 712 34567" },
   { code: "BR", dialCode: "+55", flag: "🇧🇷", label: "Brasil", example: "+55 11 91234-5678" },
   { code: "CL", dialCode: "+56", flag: "🇨🇱", label: "Chile", example: "+56 9 6123 4567" },
