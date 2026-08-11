@@ -47,18 +47,21 @@ export function CompleteProfileModal() {
         <div className={styles.phoneRow}>
           <div className={styles.phoneField}>
             <label className={styles.label} htmlFor="profileDialCode">País del celular</label>
-            <select
-              id="profileDialCode"
-              className={styles.select}
-              value={phoneCountryCode}
-              onChange={(event) => setPhoneCountryCode(event.target.value)}
-            >
-              {PHONE_COUNTRY_CODES.map((entry) => (
-                <option key={entry.code} value={entry.code}>
-                  {entry.flag} {entry.label} ({entry.dialCode})
-                </option>
-              ))}
-            </select>
+            <div className={styles.selectWrap}>
+              <select
+                id="profileDialCode"
+                className={styles.select}
+                value={phoneCountryCode}
+                onChange={(event) => setPhoneCountryCode(event.target.value)}
+              >
+                {PHONE_COUNTRY_CODES.map((entry) => (
+                  <option key={entry.code} value={entry.code}>
+                    {entry.code} ({entry.dialCode})
+                  </option>
+                ))}
+              </select>
+              <span className={`msym ${styles.selectIcon}`} aria-hidden="true">expand_more</span>
+            </div>
           </div>
 
           <div className={styles.phoneInputField}>
@@ -78,18 +81,21 @@ export function CompleteProfileModal() {
 
         <div className={styles.field}>
           <label className={styles.label} htmlFor="profileCountry">País de residencia</label>
-          <select
-            id="profileCountry"
-            className={styles.select}
-            value={country}
-            onChange={(event) => setCountry(event.target.value as CountryCode)}
-          >
-            {RESIDENCE_COUNTRY_CODES.map((entry) => (
-              <option key={entry.code} value={entry.code}>
-                {entry.flag} {entry.label}
-              </option>
-            ))}
-          </select>
+          <div className={styles.selectWrap}>
+            <select
+              id="profileCountry"
+              className={styles.select}
+              value={country}
+              onChange={(event) => setCountry(event.target.value as CountryCode)}
+            >
+              {RESIDENCE_COUNTRY_CODES.map((entry) => (
+                <option key={entry.code} value={entry.code}>
+                  {entry.flag} {entry.label}
+                </option>
+              ))}
+            </select>
+            <span className={`msym ${styles.selectIcon}`} aria-hidden="true">expand_more</span>
+          </div>
         </div>
 
         <Input
