@@ -15,6 +15,8 @@ const TYPE_FILTERS: { value: TransactionType | "ALL"; label: string }[] = [
   { value: "EXCHANGE", label: "Intercambios" },
   { value: "BUY", label: "Compras" },
   { value: "SELL", label: "Ventas" },
+  { value: "TRANSFER_OUT", label: "Transferencias enviadas" },
+  { value: "TRANSFER_IN", label: "Transferencias recibidas" },
 ];
 
 export function HistoryPage() {

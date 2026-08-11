@@ -1,5 +1,5 @@
 export type CurrencyCode = 'USD' | 'EUR' | 'ARS';
-export type TransactionType = 'BUY' | 'SELL' | 'EXCHANGE' | 'DEPOSIT';
+export type TransactionType = 'BUY' | 'SELL' | 'EXCHANGE' | 'DEPOSIT' | 'TRANSFER_OUT' | 'TRANSFER_IN';
 
 export interface User {
   id: string;

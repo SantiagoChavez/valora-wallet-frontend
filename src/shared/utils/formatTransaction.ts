@@ -32,6 +32,20 @@ function buildRateNote(tx: Transaction): string | undefined {
   return `1 ${tx.sourceCurrency ?? "?"} = ${tx.exchangeRate.toLocaleString("es-AR", { maximumFractionDigits: 2 })} ${tx.targetCurrency ?? "?"}`;
 }
 
+// El backend no siempre llena los dos lados (ej. un DEPOSIT no tiene source) —
+// para tipos donde no sabemos de antemano cuál lado viene poblado (TRANSFER_*,
+// o cualquier tipo nuevo que caiga en el default), se usa el primero disponible
+// en vez de asumir uno fijo y mostrar "$0.00" si justo viene vacío.
+function pickAvailableAmount(tx: Transaction): { amount: number; currency: CurrencyCode } {
+  if (tx.targetAmount !== null && tx.targetCurrency !== null) {
+    return { amount: tx.targetAmount, currency: tx.targetCurrency };
+  }
+  if (tx.sourceAmount !== null && tx.sourceCurrency !== null) {
+    return { amount: tx.sourceAmount, currency: tx.sourceCurrency };
+  }
+  return { amount: 0, currency: "USD" };
+}
+
 // Mapea la forma "cruda" que devuelve el backend (con source/target nulleables
 // según el tipo de movimiento) a lo que necesita la fila de UI. Un solo lugar
 // para esto — lo consumen Dashboard e Historial, para no duplicar el mapeo.
@@ -84,6 +98,43 @@ export function formatTransaction(tx: Transaction): TransactionDisplay {
         glyph: "arrow_downward",
         tone: "pos",
         rateNote: buildRateNote(tx),
+      };
+    }
+    case "TRANSFER_OUT": {
+      const { amount, currency } = pickAvailableAmount(tx);
+      return {
+        title: "Transferencia enviada",
+        date,
+        amount: `-${formatAmount(amount, currency)}`,
+        currency,
+        glyph: "north_east",
+        tone: "neg",
+      };
+    }
+    case "TRANSFER_IN": {
+      const { amount, currency } = pickAvailableAmount(tx);
+      return {
+        title: "Transferencia recibida",
+        date,
+        amount: `+${formatAmount(amount, currency)}`,
+        currency,
+        glyph: "south_west",
+        tone: "pos",
+      };
+    }
+    default: {
+      // Red de seguridad: un transactionType que el frontend todavía no conoce
+      // (pasó de verdad — ver historial de este archivo) no debe tirar abajo
+      // Dashboard/Historial/notificaciones enteros. Degrada a una fila
+      // genérica en vez de un TypeError por desestructurar undefined.
+      const { amount, currency } = pickAvailableAmount(tx);
+      return {
+        title: "Movimiento",
+        date,
+        amount: formatAmount(amount, currency),
+        currency,
+        glyph: "swap_horiz",
+        tone: "gold",
       };
     }
   }
