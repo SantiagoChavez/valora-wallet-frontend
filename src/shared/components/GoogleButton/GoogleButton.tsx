@@ -62,6 +62,10 @@ export function GoogleButton({ onSuccess, onError }: GoogleButtonProps) {
           if (response.credential) {
             onSuccessRef.current(response.credential);
           } else {
+            // TODO(temporal): sacar este log una vez diagnosticado el fallo
+            // en producción — necesitamos ver qué trae realmente la respuesta
+            // cuando no viene credential (¿objeto vacío? ¿algún campo de error?).
+            console.error("[GoogleButton] respuesta sin credential:", response);
             onErrorRef.current(GENERIC_ERROR);
           }
         },
@@ -102,6 +106,8 @@ export function GoogleButton({ onSuccess, onError }: GoogleButtonProps) {
     if (realButton) {
       realButton.click();
     } else {
+      // TODO(temporal): sacar junto con el log de arriba.
+      console.error("[GoogleButton] no se encontró el botón oculto de GIS para el click proxy");
       onError(GENERIC_ERROR);
     }
   }
