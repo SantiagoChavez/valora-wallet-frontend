@@ -32,10 +32,12 @@ export function CompleteProfileModal() {
     // (único por país), así que el dialCode real se busca acá recién al
     // enviar, no se guarda directo en el estado del select.
     const dialCode = PHONE_COUNTRY_CODES.find((entry) => entry.code === phoneCountryCode)?.dialCode ?? "";
-    // Sin espacios/guiones que el usuario haya tipeado en el número local —
-    // el backend espera el string en formato E.164-like, prefijo pegado
-    // directo al número (ej. "+5511961234567", no "+55 11961234567").
-    const sanitizedLocal = phoneLocal.replace(/[\s-]/g, "");
+    // \D saca cualquier caracter no numérico que el usuario haya tipeado o
+    // pegado en el número local (espacios, guiones, paréntesis, puntos —
+    // ej. al pegar "(11) 96123.4567" copiado de contactos) — el backend
+    // espera el string en formato E.164-like, prefijo pegado directo al
+    // número (ej. "+5511961234567", no "+55 (11) 96123.4567").
+    const sanitizedLocal = phoneLocal.replace(/\D/g, "");
     submit(`${dialCode}${sanitizedLocal}`, country, du);
   }
 

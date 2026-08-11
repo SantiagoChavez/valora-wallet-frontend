@@ -110,10 +110,13 @@ export function Registro() {
     setIsSubmitting(true);
     try {
       // Mismo criterio que CompleteProfileModal.tsx (busca el dialCode real
-      // por el code elegido, en vez de guardarlo directo en el estado, y le
-      // saca espacios/guiones al número local antes de concatenar).
+      // por el code elegido, en vez de guardarlo directo en el estado). \D
+      // saca cualquier caracter no numérico del número local — no solo
+      // espacios/guiones, también paréntesis y puntos (ej. al pegar
+      // "(11) 96123.4567" copiado de contactos), que si no se quedan sucios
+      // y probablemente disparan un 400 del backend.
       const dialCode = PHONE_COUNTRY_CODES.find((entry) => entry.code === phoneCountryCode)?.dialCode ?? "";
-      const sanitizedPhone = phone.replace(/[\s-]/g, "");
+      const sanitizedPhone = phone.replace(/\D/g, "");
       await authService.register(
         email,
         password,
