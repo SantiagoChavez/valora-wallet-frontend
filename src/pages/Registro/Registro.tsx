@@ -19,6 +19,7 @@ import { getApiErrorMessage } from "../../shared/services/apiClient";
 import { PHONE_COUNTRY_CODES, RESIDENCE_COUNTRY_CODES } from "../../shared/constants";
 import type { CountryCode } from "../../shared/types/models";
 import { useDocumentTypes } from "../../shared/hooks/useDocumentTypes";
+import { resolveE164Phone } from "../../shared/utils/phone";
 import styles from "./Registro.module.css";
 
 const MIN_AGE_YEARS = 18;
@@ -101,21 +102,13 @@ export function Registro() {
 
     setIsSubmitting(true);
     try {
-      // Mismo criterio que CompleteProfileModal.tsx (busca el dialCode real
-      // por el code elegido, en vez de guardarlo directo en el estado). \D
-      // saca cualquier caracter no numérico del número local — no solo
-      // espacios/guiones, también paréntesis y puntos (ej. al pegar
-      // "(11) 96123.4567" copiado de contactos), que si no se quedan sucios
-      // y probablemente disparan un 400 del backend.
-      const dialCode = PHONE_COUNTRY_CODES.find((entry) => entry.code === phoneCountryCode)?.dialCode ?? "";
-      const sanitizedPhone = phone.replace(/\D/g, "");
       await authService.register(
         email,
         password,
         firstName,
         lastName,
         toBackendDate(dateOfBirth),
-        `${dialCode}${sanitizedPhone}`,
+        resolveE164Phone(phoneCountryCode, phone),
         du,
         country,
       );
