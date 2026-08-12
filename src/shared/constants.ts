@@ -68,3 +68,12 @@ export const PHONE_COUNTRY_CODES: PhoneCountryCode[] = [
   { code: "US", dialCode: "+1", flag: "🇺🇸", label: "Estados Unidos", example: "+1 201 555 0123" },
   { code: "ES", dialCode: "+34", flag: "🇪🇸", label: "España", example: "+34 612 34 56 78" },
 ];
+
+// Los 19 países LATAM que acepta country (residencia) son un subconjunto de
+// PHONE_COUNTRY_CODES (esa lista suma US/ES, que no son de residencia válida)
+// — se reusa la misma lista filtrada en vez de duplicar un segundo mapa de
+// nombres de país. Centralizado acá (antes duplicado en CompleteProfileModal.tsx
+// y Registro.tsx) con Usuario.tsx como tercer consumidor real.
+export const RESIDENCE_COUNTRY_CODES = PHONE_COUNTRY_CODES.filter(
+  (entry) => entry.code !== "US" && entry.code !== "ES",
+);

@@ -126,34 +126,15 @@
   composes: field from "../../shared/components/AuthShared/AuthShared.module.css";
 }
 
-/* Selectores de país de residencia / prefijo de celular — mismo patrón visual
-   que CompleteProfileModal.module.css (duplicado a propósito por ahora, no
-   extraído a compartido todavía, ver nota de "pendiente" en el PR). Gap de
-   .phoneRow en --spacing-md (no --spacing-sm como el modal) para que quede
-   consistente con .nameRow de este mismo archivo, que ya usa ese espaciado
-   para su propia fila de dos columnas. Breakpoint de wrap en 639px (no 859px
-   como el modal) porque acá coincide con el breakpoint mobile ya establecido
-   en este archivo (ver .brandPanel/.formPanel arriba), no con el ancho propio
-   del modal (min(400px, 85vw)), que es un contenedor distinto. */
-.phoneRow {
-  display: flex;
-  gap: var(--spacing-md);
-  align-items: flex-end;
-}
-
-.phoneField {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-xs);
-  flex: 0 0 auto;
-  width: 40%;
-}
-
-.phoneInputField {
-  flex: 1;
-  min-width: 0;
-}
-
+/* Selector de país de residencia — no se movió a PhoneNumberField
+   (shared/components), que solo cubre el selector de prefijo de celular.
+   .phoneRow/.phoneField/.phoneInputField ya no existen en este archivo (se
+   movieron ahí junto con ese selector) — lo que sigue abajo (.selectLabel/
+   .selectWrap/.select/.select.select/.selectIcon) es del select de
+   residencia, que lo sigue usando, sin relación con esas otras clases.
+   Duplicado con el bloque equivalente de CompleteProfileModal.module.css
+   (ya lo estaba desde antes de esta tarea, ver b6d89a0) — sigue pendiente,
+   ver la nota del hallazgo #2 (Gemini) en PhoneNumberField.module.css. */
 .selectLabel {
   composes: labelLg from "../../shared/components/Input/Input.module.css";
 }
@@ -185,20 +166,6 @@
   color: var(--text-secondary);
   opacity: 0.7;
   pointer-events: none;
-}
-
-@media (max-width: 639px) {
-  .phoneRow {
-    flex-wrap: wrap;
-  }
-
-  .phoneField {
-    width: 100%;
-  }
-
-  .phoneInputField {
-    width: 100%;
-  }
 }
 
 .dateInput {
