@@ -7,6 +7,7 @@ import { completeProfile } from "../../shared/auth/authService";
 import { useAuth } from "../../shared/auth/useAuth";
 import { getApiErrorMessage } from "../../shared/services/apiClient";
 import type { CountryCode } from "../../shared/types/models";
+import { resolveE164Phone } from "../../shared/utils/phone";
 import styles from "./EditPhoneModal.module.css";
 
 interface EditPhoneModalProps {
@@ -62,13 +63,16 @@ export function EditPhoneModal({ isOpen, onClose }: EditPhoneModalProps) {
     setError(null);
     setIsSubmitting(true);
     try {
-      const dialCode = PHONE_COUNTRY_CODES.find((entry) => entry.code === phoneCountryCode)?.dialCode ?? "";
-      const sanitizedLocal = phoneLocal.replace(/\D/g, "");
       // PATCH /auth/me no tiene versión parcial — completeProfileSchema (backend)
       // exige phone+country+du juntos. country/du van con el valor actual del
       // usuario, sin exponerlos como editables acá (este modal solo edita
       // celular) — mismo contrato que ya usa CompleteProfileModal.
-      const updated = await completeProfile(`${dialCode}${sanitizedLocal}`, user.country, user.du ?? "", token);
+      const updated = await completeProfile(
+        resolveE164Phone(phoneCountryCode, phoneLocal),
+        user.country,
+        user.du ?? "",
+        token,
+      );
       updateUser(updated);
       onClose();
     } catch (err) {

@@ -7,6 +7,7 @@ import { PHONE_COUNTRY_CODES, RESIDENCE_COUNTRY_CODES } from "../../constants";
 import type { CountryCode } from "../../types/models";
 import { useCompleteProfile } from "./useCompleteProfile";
 import { useDocumentTypes } from "../../hooks/useDocumentTypes";
+import { resolveE164Phone } from "../../utils/phone";
 import styles from "./CompleteProfileModal.module.css";
 
 const DEFAULT_PHONE_COUNTRY_CODE = PHONE_COUNTRY_CODES[0].code;
@@ -23,17 +24,7 @@ export function CompleteProfileModal() {
 
   function handleSubmit(event: SubmitEvent<HTMLFormElement>) {
     event.preventDefault();
-    // DO/US comparten dialCode ("+1") — el <select> value es entry.code
-    // (único por país), así que el dialCode real se busca acá recién al
-    // enviar, no se guarda directo en el estado del select.
-    const dialCode = PHONE_COUNTRY_CODES.find((entry) => entry.code === phoneCountryCode)?.dialCode ?? "";
-    // \D saca cualquier caracter no numérico que el usuario haya tipeado o
-    // pegado en el número local (espacios, guiones, paréntesis, puntos —
-    // ej. al pegar "(11) 96123.4567" copiado de contactos) — el backend
-    // espera el string en formato E.164-like, prefijo pegado directo al
-    // número (ej. "+5511961234567", no "+55 (11) 96123.4567").
-    const sanitizedLocal = phoneLocal.replace(/\D/g, "");
-    submit(`${dialCode}${sanitizedLocal}`, country, du);
+    submit(resolveE164Phone(phoneCountryCode, phoneLocal), country, du);
   }
 
   return (
