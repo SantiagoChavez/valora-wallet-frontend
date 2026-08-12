@@ -331,7 +331,7 @@ export function Dashboard() {
             <p className={styles.txEmptyState}>Todavía no hiciste ninguna operación.</p>
           )}
           {!isLoading && !error && transactions && transactions.length > 0 && (
-            <ul className={styles.txList}>
+            <ul className={styles.txList} role="list">
               {transactions.map((tx) => <TransactionRow key={tx.id} transaction={tx} />)}
             </ul>
           )}

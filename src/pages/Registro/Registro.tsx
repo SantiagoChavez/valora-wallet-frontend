@@ -149,7 +149,7 @@ export function Registro() {
           headline="Empezá en minutos."
           subtext="Creá tu cuenta y gestioná múltiples monedas desde una sola plataforma hecha para freelancers de LATAM."
         >
-          <ul className={styles.brandChecklist}>
+          <ul className={styles.brandChecklist} role="list">
             <li className={styles.brandChecklistItem}>
               <span className={`msym ${styles.brandCheckIcon}`} aria-hidden="true">check</span>
               Sin comisiones de apertura ni mantenimiento
