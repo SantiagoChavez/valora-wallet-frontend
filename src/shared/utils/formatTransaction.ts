@@ -27,9 +27,29 @@ function formatDate(iso: string): string {
   return new Date(iso).toLocaleDateString("es-AR", { day: "numeric", month: "short" });
 }
 
+// Con 2 decimales fijos, una tasa menor a 0.01 (ej. 1 ARS = 0.00067 USD)
+// redondea a "0" pelado — no aporta nada. Para valores chicos se muestran más
+// decimales, así se sigue viendo un número real.
+function formatRate(value: number): string {
+  const maximumFractionDigits = Math.abs(value) < 1 ? 6 : 2;
+  return value.toLocaleString("es-AR", { maximumFractionDigits });
+}
+
 function buildRateNote(tx: Transaction): string | undefined {
   if (!tx.exchangeRate) return undefined;
-  return `1 ${tx.sourceCurrency ?? "?"} = ${tx.exchangeRate.toLocaleString("es-AR", { maximumFractionDigits: 2 })} ${tx.targetCurrency ?? "?"}`;
+  return `1 ${tx.sourceCurrency ?? "?"} = ${formatRate(tx.exchangeRate)} ${tx.targetCurrency ?? "?"}`;
+}
+
+// El exchangeRate que guarda el backend para BUY va en la misma dirección que
+// EXCHANGE/SELL (target por unidad de source) — con ARS de origen y USD de
+// destino eso da un número chico y poco intuitivo ("1 ARS = 0.00067 USD").
+// Para "comprar" tiene más sentido mostrar el precio de la moneda que se
+// compró en la moneda con la que se pagó ("1 USD = 1496,62 ARS"), mismo
+// criterio que ya se aplicó al invertir el layout del modal de Comprar.
+function buildBuyRateNote(tx: Transaction): string | undefined {
+  if (!tx.exchangeRate) return undefined;
+  const inverseRate = 1 / tx.exchangeRate;
+  return `1 ${tx.targetCurrency ?? "?"} = ${formatRate(inverseRate)} ${tx.sourceCurrency ?? "?"}`;
 }
 
 // El backend no siempre llena los dos lados (ej. un DEPOSIT no tiene source) —
@@ -85,7 +105,7 @@ export function formatTransaction(tx: Transaction): TransactionDisplay {
         currency,
         glyph: "arrow_upward",
         tone: "neg",
-        rateNote: buildRateNote(tx),
+        rateNote: buildBuyRateNote(tx),
       };
     }
     case "SELL": {
