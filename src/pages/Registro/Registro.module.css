@@ -126,34 +126,10 @@
   composes: field from "../../shared/components/AuthShared/AuthShared.module.css";
 }
 
-/* Selectores de país de residencia / prefijo de celular — mismo patrón visual
-   que CompleteProfileModal.module.css (duplicado a propósito por ahora, no
-   extraído a compartido todavía, ver nota de "pendiente" en el PR). Gap de
-   .phoneRow en --spacing-md (no --spacing-sm como el modal) para que quede
-   consistente con .nameRow de este mismo archivo, que ya usa ese espaciado
-   para su propia fila de dos columnas. Breakpoint de wrap en 639px (no 859px
-   como el modal) porque acá coincide con el breakpoint mobile ya establecido
-   en este archivo (ver .brandPanel/.formPanel arriba), no con el ancho propio
-   del modal (min(400px, 85vw)), que es un contenedor distinto. */
-.phoneRow {
-  display: flex;
-  gap: var(--spacing-md);
-  align-items: flex-end;
-}
-
-.phoneField {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-xs);
-  flex: 0 0 auto;
-  width: 40%;
-}
-
-.phoneInputField {
-  flex: 1;
-  min-width: 0;
-}
-
+/* Selector de país de residencia — el de prefijo de celular se extrajo a
+   PhoneNumberField (shared/components), que trae su propio .phoneRow/
+   .phoneField/.phoneInputField/.select*. Estas clases se quedan acá porque el
+   select de residencia (que no se movió) las sigue usando. */
 .selectLabel {
   composes: labelLg from "../../shared/components/Input/Input.module.css";
 }
@@ -185,20 +161,6 @@
   color: var(--text-secondary);
   opacity: 0.7;
   pointer-events: none;
-}
-
-@media (max-width: 639px) {
-  .phoneRow {
-    flex-wrap: wrap;
-  }
-
-  .phoneField {
-    width: 100%;
-  }
-
-  .phoneInputField {
-    width: 100%;
-  }
 }
 
 .dateInput {

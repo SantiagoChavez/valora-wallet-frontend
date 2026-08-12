@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { Button } from "../../shared/components/Button/Button";
 import { GoogleButton } from "../../shared/components/GoogleButton/GoogleButton";
 import { Input } from "../../shared/components/Input/Input";
+import { PhoneNumberField } from "../../shared/components/PhoneNumberField/PhoneNumberField";
 import { AuthMobileGlow, AuthBrandGlow } from "../../shared/components/AuthBlobs/AuthBlobs";
 import { AuthBrandHeader } from "../../shared/components/AuthBrandHeader/AuthBrandHeader";
 import { AuthMobileHeader } from "../../shared/components/AuthMobileHeader/AuthMobileHeader";
@@ -252,41 +253,24 @@ export function Registro() {
               </div>
             </div>
 
-            <div className={styles.phoneRow}>
-              <div className={styles.phoneField}>
-                <label className={styles.selectLabel} htmlFor="phoneCountryCode">Prefijo</label>
-                <div className={styles.selectWrap}>
-                  <select
-                    id="phoneCountryCode"
-                    className={styles.select}
-                    value={phoneCountryCode}
-                    onChange={(event) => setPhoneCountryCode(event.target.value)}
-                  >
-                    {PHONE_COUNTRY_CODES.map((entry) => (
-                      <option key={entry.code} value={entry.code}>
-                        {entry.code} ({entry.dialCode})
-                      </option>
-                    ))}
-                  </select>
-                  <span className={`msym ${styles.selectIcon}`} aria-hidden="true">expand_more</span>
-                </div>
-              </div>
-
-              <div className={styles.phoneInputField}>
-                <Input
-                  id="phone"
-                  label="Celular"
-                  type="tel"
-                  size="lg"
-                  placeholder={phonePlaceholder}
-                  value={phone}
-                  onChange={(event) => setPhone(event.target.value)}
-                  autoComplete="tel-national"
-                  icon="call"
-                  required
-                />
-              </div>
-            </div>
+            <PhoneNumberField
+              dialCodeSelectId="phoneCountryCode"
+              localInputId="phone"
+              dialCodeLabel="Prefijo"
+              labelClassName={styles.selectLabel}
+              // var(--spacing-md), no el default var(--spacing-sm) del componente:
+              // consistente con .nameRow de este mismo archivo (misma fila de dos
+              // columnas, mismo espaciado) — comportamiento preexistente a esta
+              // extracción, no una decisión nueva.
+              gap="var(--spacing-md)"
+              countryCode={phoneCountryCode}
+              onCountryCodeChange={setPhoneCountryCode}
+              local={phone}
+              onLocalChange={setPhone}
+              placeholder={phonePlaceholder}
+              icon="call"
+              required
+            />
 
             {/* Retomado tras el desbloqueo del backend del 10/08 — reemplaza
                 la intención de 55281b9 (Analía, mismo día 02:04, revertido en

@@ -28,6 +28,13 @@ interface PhoneNumberFieldProps {
   // extracción. Default: el propio .label del componente (comportamiento
   // idéntico al que ya tenía CompleteProfileModal).
   labelClassName?: string;
+  // Gap entre el selector de prefijo y el input de número local. Default
+  // var(--spacing-sm), igual que el .phoneRow original de CompleteProfileModal
+  // (comportamiento sin cambios ahí). Registro.tsx pasa var(--spacing-md) acá
+  // a propósito, para quedar consistente con su .nameRow (misma fila de dos
+  // columnas, mismo espaciado) — antes de esta extracción esa diferencia vivía
+  // hardcodeada en su propio .phoneRow.
+  gap?: string;
 }
 
 // Selector de prefijo de celular + input de número local — extraído de
@@ -48,9 +55,10 @@ export function PhoneNumberField({
   required,
   icon,
   labelClassName,
+  gap,
 }: PhoneNumberFieldProps) {
   return (
-    <div className={styles.phoneRow}>
+    <div className={styles.phoneRow} style={gap ? { gap } : undefined}>
       <div className={styles.phoneField}>
         <label className={labelClassName ?? styles.label} htmlFor={dialCodeSelectId}>
           {dialCodeLabel}
