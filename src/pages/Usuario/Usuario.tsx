@@ -2,7 +2,10 @@ import { useState } from "react";
 import { useAuth } from "../../shared/auth/useAuth";
 import { Button } from "../../shared/components/Button/Button";
 import { Card } from "../../shared/components/Card/Card";
+import { CopyIconButton } from "../../shared/components/CopyIconButton/CopyIconButton";
 import { Input } from "../../shared/components/Input/Input";
+import { Toast } from "../../shared/components/Toast/Toast";
+import { useToast } from "../../shared/components/Toast/useToast";
 import { RESIDENCE_COUNTRY_CODES } from "../../shared/constants";
 import { useDocumentTypes } from "../../shared/hooks/useDocumentTypes";
 import { ApiError } from "../../shared/services/apiClient";
@@ -20,6 +23,7 @@ const ACCOUNT_STATUS_LABEL = "Activa";
 export function Usuario() {
   const { user, wallet, token, updateWallet } = useAuth();
   const [isPhoneModalOpen, setIsPhoneModalOpen] = useState(false);
+  const { message: toast, showToast } = useToast();
 
   const {
     value: alias,
@@ -143,25 +147,47 @@ export function Usuario() {
           ) : (
             <div className={styles.valueRow}>
               <span className={styles.value}>{alias || "Sin registrar"}</span>
-              <button type="button" className={styles.editButton} onClick={startEditingAlias}>
-                Editar
-              </button>
+              <div className={styles.valueActions}>
+                <button type="button" className={styles.editButton} onClick={startEditingAlias}>
+                  Editar
+                </button>
+                {alias && (
+                  <CopyIconButton
+                    value={alias}
+                    label="Copiar alias"
+                    onCopy={() => showToast("Copiaste el alias.")}
+                  />
+                )}
+              </div>
             </div>
           )}
         </div>
 
         <div className={styles.field}>
           <span className={styles.label}>CVU</span>
-          <span className={styles.value}>{wallet?.cvu ?? "Sin datos"}</span>
+          <div className={styles.valueRow}>
+            <span className={styles.value}>{wallet?.cvu ?? "Sin datos"}</span>
+            {wallet?.cvu && (
+              <CopyIconButton
+                value={wallet.cvu}
+                label="Copiar CVU"
+                onCopy={() => showToast("Copiaste el CVU.")}
+              />
+            )}
+          </div>
         </div>
 
         <div className={styles.field}>
           <span className={styles.label}>Estado</span>
-          <span className={styles.value}>{ACCOUNT_STATUS_LABEL}</span>
+          <div className={styles.statusRow}>
+            <span className={styles.statusDot} aria-hidden="true" />
+            <span className={styles.value}>{ACCOUNT_STATUS_LABEL}</span>
+          </div>
         </div>
       </Card>
 
       <EditPhoneModal isOpen={isPhoneModalOpen} onClose={() => setIsPhoneModalOpen(false)} />
+      <Toast message={toast} />
     </div>
   );
 }

@@ -3,7 +3,7 @@ import { Button } from "../Button/Button";
 import { Input } from "../Input/Input";
 import { Modal } from "../Modal/Modal";
 import { getApiErrorMessage } from "../../services/apiClient";
-import { buy, sell } from "../../services/transactionService";
+import { buy, sell, type AmountSide } from "../../services/transactionService";
 import type { Balance, CurrencyCode, Transaction } from "../../types/models";
 import styles from "./ConversionModal.module.css";
 
@@ -12,17 +12,20 @@ const CURRENCY_OPTIONS: CurrencyCode[] = ["USD", "EUR", "ARS"];
 // Comprar y Vender son, para el backend, la misma operación de conversión que
 // Intercambio — solo cambia la etiqueta que le pone a la transacción (ver
 // executeConversion en transactionService.ts del repo backend). La diferencia
-// de UX es de qué lado arranca cada una: Comprar parte de pesos hacia una
-// moneda extranjera, Vender al revés — pero el usuario puede cambiar las
-// monedas antes de confirmar, el backend no fuerza ningún par en particular.
+// de UX es de qué lado se tipea el monto: en Comprar tiene más sentido pedir
+// "cuánto querés comprar" (moneda destino) que "cuánto vas a pagar" — al
+// revés que Vender, donde lo natural es partir de cuánto entregás (moneda
+// origen). amountSide le dice al backend cuál de los dos lados es el que
+// mandamos — "target" en Comprar, "source" (default) en Vender.
 const MODE_CONFIG = {
   BUY: {
     title: "Comprar moneda",
-    subtitle: "Pagás con una moneda y recibís otra al instante.",
-    fromLabel: "Pagás con",
-    toLabel: "Comprás",
+    subtitle: "Elegís cuánto querés comprar y con qué moneda pagás.",
+    primaryLabel: "Comprás",
+    secondaryLabel: "Pagás con",
     defaultFrom: "ARS" as CurrencyCode,
     defaultTo: "USD" as CurrencyCode,
+    amountSide: "target" as AmountSide,
     confirmLabel: "Confirmar compra",
     confirmingLabel: "Comprando...",
     action: buy,
@@ -30,10 +33,11 @@ const MODE_CONFIG = {
   SELL: {
     title: "Vender moneda",
     subtitle: "Entregás una moneda y recibís otra al instante.",
-    fromLabel: "Vendés",
-    toLabel: "Recibís",
+    primaryLabel: "Vendés",
+    secondaryLabel: "Recibís",
     defaultFrom: "USD" as CurrencyCode,
     defaultTo: "ARS" as CurrencyCode,
+    amountSide: "source" as AmountSide,
     confirmLabel: "Confirmar venta",
     confirmingLabel: "Vendiendo...",
     action: sell,
@@ -51,6 +55,7 @@ interface ConversionModalProps {
 
 export function ConversionModal({ mode, isOpen, onClose, token, balances, onSuccess }: ConversionModalProps) {
   const config = MODE_CONFIG[mode];
+  const isBuy = mode === "BUY";
   const [fromCurrency, setFromCurrency] = useState<CurrencyCode>(config.defaultFrom);
   const [toCurrency, setToCurrency] = useState<CurrencyCode>(config.defaultTo);
   const [amount, setAmount] = useState("");
@@ -71,6 +76,14 @@ export function ConversionModal({ mode, isOpen, onClose, token, balances, onSucc
     return balances?.find((bal) => bal.currencyCode === code)?.amount ?? 0;
   }
 
+  // El campo con el monto siempre es el primario: en Comprar es toCurrency
+  // (cuánto querés recibir), en Vender es fromCurrency (cuánto vas a entregar)
+  // — el otro selector queda como secundario, sin input de monto al lado.
+  const primaryCurrency = isBuy ? toCurrency : fromCurrency;
+  const setPrimaryCurrency = isBuy ? setToCurrency : setFromCurrency;
+  const secondaryCurrency = isBuy ? fromCurrency : toCurrency;
+  const setSecondaryCurrency = isBuy ? setFromCurrency : setToCurrency;
+
   async function handleSubmit(event: SubmitEvent<HTMLFormElement>) {
     event.preventDefault();
     setError(null);
@@ -87,7 +100,7 @@ export function ConversionModal({ mode, isOpen, onClose, token, balances, onSucc
 
     setIsSubmitting(true);
     try {
-      const transaction = await config.action(token, fromCurrency, toCurrency, parsedAmount);
+      const transaction = await config.action(token, fromCurrency, toCurrency, parsedAmount, config.amountSide);
       onSuccess(transaction);
     } catch (err) {
       setError(getApiErrorMessage(err));
@@ -104,39 +117,50 @@ export function ConversionModal({ mode, isOpen, onClose, token, balances, onSucc
 
         <div className={styles.currencyRow}>
           <div className={styles.field}>
-            <label className={styles.label} htmlFor="conversionFromCurrency">{config.fromLabel}</label>
+            <label className={styles.label} htmlFor="conversionPrimaryCurrency">{config.primaryLabel}</label>
             <select
-              id="conversionFromCurrency"
+              id="conversionPrimaryCurrency"
               className={styles.select}
-              value={fromCurrency}
-              onChange={(event) => setFromCurrency(event.target.value as CurrencyCode)}
+              value={primaryCurrency}
+              onChange={(event) => setPrimaryCurrency(event.target.value as CurrencyCode)}
             >
               {CURRENCY_OPTIONS.map((code) => (
                 <option key={code} value={code}>{code}</option>
               ))}
             </select>
-            <span className={styles.balanceHint}>
-              Disponible: {balanceFor(fromCurrency).toLocaleString("es-AR", { maximumFractionDigits: 2 })} {fromCurrency}
-            </span>
+            {/* Vender parte de fromCurrency — el saldo que limita la operación
+                va bajo el selector primario acá, no en el secundario. */}
+            {!isBuy && (
+              <span className={styles.balanceHint}>
+                Disponible: {balanceFor(fromCurrency).toLocaleString("es-AR", { maximumFractionDigits: 2 })} {fromCurrency}
+              </span>
+            )}
           </div>
 
           <div className={styles.field}>
-            <label className={styles.label} htmlFor="conversionToCurrency">{config.toLabel}</label>
+            <label className={styles.label} htmlFor="conversionSecondaryCurrency">{config.secondaryLabel}</label>
             <select
-              id="conversionToCurrency"
+              id="conversionSecondaryCurrency"
               className={styles.select}
-              value={toCurrency}
-              onChange={(event) => setToCurrency(event.target.value as CurrencyCode)}
+              value={secondaryCurrency}
+              onChange={(event) => setSecondaryCurrency(event.target.value as CurrencyCode)}
             >
               {CURRENCY_OPTIONS.map((code) => (
                 <option key={code} value={code}>{code}</option>
               ))}
             </select>
+            {/* Comprar parte de toCurrency como primario — el saldo que limita
+                (fromCurrency) va acá, bajo el selector secundario. */}
+            {isBuy && (
+              <span className={styles.balanceHint}>
+                Disponible: {balanceFor(fromCurrency).toLocaleString("es-AR", { maximumFractionDigits: 2 })} {fromCurrency}
+              </span>
+            )}
           </div>
         </div>
 
         <Input
-          label={`Monto en ${fromCurrency}`}
+          label={`Monto en ${primaryCurrency}`}
           type="number"
           inputMode="decimal"
           min="0"
@@ -147,8 +171,8 @@ export function ConversionModal({ mode, isOpen, onClose, token, balances, onSucc
           required
         />
 
-        {/* No hay endpoint de cotización previa (ver ExchangeForm) — la tasa
-            real se calcula recién al confirmar, del lado del backend. */}
+        {/* No hay cotización previa antes de confirmar (ver ExchangeForm) — la
+            tasa real se calcula recién del lado del backend al confirmar. */}
         <p className={styles.rateNote}>La tasa se calcula al confirmar, no hay cotización previa disponible todavía.</p>
 
         {error && <p className={styles.error} role="alert">{error}</p>}
