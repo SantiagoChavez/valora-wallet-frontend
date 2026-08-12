@@ -197,6 +197,7 @@ export function Dashboard() {
 
   return (
     <div className={styles.page}>
+      <h1 className={styles.srOnly}>Inicio</h1>
       <section className={styles.balanceSection}>
         <div className={styles.balanceCard}>
           <div className={styles.balanceCardTop}>

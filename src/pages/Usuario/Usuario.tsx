@@ -65,6 +65,7 @@ export function Usuario() {
 
   return (
     <div className={styles.page}>
+      <h1 className={styles.srOnly}>Usuario</h1>
       <Card className={styles.card}>
         <div className={styles.avatar}>{avatarInitial}</div>
 
