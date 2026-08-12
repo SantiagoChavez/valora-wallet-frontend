@@ -70,6 +70,30 @@
   gap: var(--spacing-sm);
 }
 
+.valueActions {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.statusRow {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+}
+
+/* Puramente decorativo — no hay concepto de cuenta suspendida/inactiva en el
+   backend todavía (ver ACCOUNT_STATUS_LABEL en Usuario.tsx), así que siempre
+   es verde. El día que exista un estado real, este color pasa a depender de
+   ese dato en vez de estar fijo acá. */
+.statusDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: var(--success);
+  flex-shrink: 0;
+}
+
 .editForm {
   display: flex;
   flex-direction: column;
