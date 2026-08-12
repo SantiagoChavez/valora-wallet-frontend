@@ -3,17 +3,11 @@ import { Button } from "../Button/Button";
 import { Input } from "../Input/Input";
 import { Modal } from "../Modal/Modal";
 import { PhoneNumberField } from "../PhoneNumberField/PhoneNumberField";
-import { PHONE_COUNTRY_CODES } from "../../constants";
+import { PHONE_COUNTRY_CODES, RESIDENCE_COUNTRY_CODES } from "../../constants";
 import type { CountryCode } from "../../types/models";
 import { useCompleteProfile } from "./useCompleteProfile";
 import { useDocumentTypes } from "../../hooks/useDocumentTypes";
 import styles from "./CompleteProfileModal.module.css";
-
-// Los 19 países LATAM que acepta country (residencia) son un subconjunto de
-// PHONE_COUNTRY_CODES (esa lista suma US/ES, que no son de residencia válida
-// acá) — se reusa la misma lista filtrada en vez de duplicar un segundo mapa
-// de nombres de país.
-const RESIDENCE_COUNTRY_CODES = PHONE_COUNTRY_CODES.filter((entry) => entry.code !== "US" && entry.code !== "ES");
 
 const DEFAULT_PHONE_COUNTRY_CODE = PHONE_COUNTRY_CODES[0].code;
 const DEFAULT_RESIDENCE_COUNTRY = RESIDENCE_COUNTRY_CODES[0].code as CountryCode;

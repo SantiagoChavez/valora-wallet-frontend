@@ -15,17 +15,10 @@ import { useToast, TOAST_DURATION_MS } from "../../shared/components/Toast/useTo
 import * as authService from "../../shared/auth/authService";
 import { useAuth } from "../../shared/auth/useAuth";
 import { getApiErrorMessage } from "../../shared/services/apiClient";
-import { PHONE_COUNTRY_CODES } from "../../shared/constants";
+import { PHONE_COUNTRY_CODES, RESIDENCE_COUNTRY_CODES } from "../../shared/constants";
 import type { CountryCode } from "../../shared/types/models";
 import { useDocumentTypes } from "../../shared/hooks/useDocumentTypes";
 import styles from "./Registro.module.css";
-
-// Mismo criterio que CompleteProfileModal.tsx (RESIDENCE_COUNTRY_CODES):
-// los 19 países LATAM que acepta el backend para country/du/phone son un
-// subconjunto de PHONE_COUNTRY_CODES (esa lista suma US/ES). Duplicado acá a
-// propósito en vez de importar la constante del modal — no está exportada, y
-// es una sola línea derivada, no justifica cruzar a otro componente por eso.
-const RESIDENCE_COUNTRY_CODES = PHONE_COUNTRY_CODES.filter((entry) => entry.code !== "US" && entry.code !== "ES");
 
 const MIN_AGE_YEARS = 18;
 
