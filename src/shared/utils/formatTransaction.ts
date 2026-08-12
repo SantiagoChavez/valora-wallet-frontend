@@ -27,12 +27,8 @@ function formatDate(iso: string): string {
   return new Date(iso).toLocaleDateString("es-AR", { day: "numeric", month: "short" });
 }
 
-// Con 2 decimales fijos, una tasa menor a 0.01 (ej. 1 ARS = 0.00067 USD)
-// redondea a "0" pelado — no aporta nada. Para valores chicos se muestran más
-// decimales, así se sigue viendo un número real.
 function formatRate(value: number): string {
-  const maximumFractionDigits = Math.abs(value) < 1 ? 6 : 2;
-  return value.toLocaleString("es-AR", { maximumFractionDigits });
+  return value.toLocaleString("es-AR", { maximumFractionDigits: 2 });
 }
 
 function buildRateNote(tx: Transaction): string | undefined {
