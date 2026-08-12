@@ -17,9 +17,7 @@ import { useAuth } from "../../shared/auth/useAuth";
 import { getApiErrorMessage } from "../../shared/services/apiClient";
 import { PHONE_COUNTRY_CODES } from "../../shared/constants";
 import type { CountryCode } from "../../shared/types/models";
-// Import cruzado a propósito, sin mover el hook todavía — ver nota de
-// "pendiente" en el PR (candidato a shared/hooks/, no ejecutado en este push).
-import { useDocumentTypes } from "../../shared/components/CompleteProfileModal/useDocumentTypes";
+import { useDocumentTypes } from "../../shared/hooks/useDocumentTypes";
 import styles from "./Registro.module.css";
 
 // Mismo criterio que CompleteProfileModal.tsx (RESIDENCE_COUNTRY_CODES):

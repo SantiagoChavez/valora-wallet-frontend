@@ -6,7 +6,7 @@ import { PhoneNumberField } from "../PhoneNumberField/PhoneNumberField";
 import { PHONE_COUNTRY_CODES } from "../../constants";
 import type { CountryCode } from "../../types/models";
 import { useCompleteProfile } from "./useCompleteProfile";
-import { useDocumentTypes } from "./useDocumentTypes";
+import { useDocumentTypes } from "../../hooks/useDocumentTypes";
 import styles from "./CompleteProfileModal.module.css";
 
 // Los 19 países LATAM que acepta country (residencia) son un subconjunto de
