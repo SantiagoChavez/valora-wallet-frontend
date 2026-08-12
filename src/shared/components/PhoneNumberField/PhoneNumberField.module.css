@@ -1,0 +1,75 @@
+.phoneRow {
+  display: flex;
+  gap: var(--spacing-sm);
+  align-items: flex-end;
+}
+
+.phoneField {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+  flex: 0 0 auto;
+  width: 40%;
+}
+
+.phoneInputField {
+  flex: 1;
+  min-width: 0;
+}
+
+.label {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+.select {
+  composes: select from "../../styles/formControl.module.css";
+}
+
+/* Copiado de CompleteProfileModal.module.css (su único origen hasta esta
+   extracción) — mismo criterio documentado ahí: alineado a mano con Input
+   size="lg", .select.select duplicado a propósito para ganar especificidad
+   sobre la regla compartida de formControl.module.css sin depender del orden
+   de aparición en el CSS final (no determinista, confirmado contra el build
+   de producción real). Nota: el select de "País de residencia" en
+   CompleteProfileModal.module.css usa un bloque equivalente, no extraído acá
+   — queda una duplicación parcial documentada en ContextoPI2.md (hallazgo #2
+   de la review de Gemini, parcialmente resuelto, no cerrado del todo). */
+.select.select {
+  height: 56px;
+  padding: 0 44px 0 var(--spacing-lg);
+  font-size: var(--font-size-lg);
+  border-radius: var(--radius-lg);
+  background-color: var(--bg-elevated);
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+}
+
+.selectWrap {
+  position: relative;
+}
+
+.selectIcon {
+  position: absolute;
+  right: var(--spacing-md);
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-secondary);
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+@media (max-width: 859px) {
+  .phoneRow {
+    flex-wrap: wrap;
+  }
+
+  .phoneField {
+    width: 100%;
+  }
+
+  .phoneInputField {
+    width: 100%;
+  }
+}

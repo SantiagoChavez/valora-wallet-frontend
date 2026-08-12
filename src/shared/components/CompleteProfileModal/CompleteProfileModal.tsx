@@ -2,6 +2,7 @@ import { useState, type SubmitEvent } from "react";
 import { Button } from "../Button/Button";
 import { Input } from "../Input/Input";
 import { Modal } from "../Modal/Modal";
+import { PhoneNumberField } from "../PhoneNumberField/PhoneNumberField";
 import { PHONE_COUNTRY_CODES } from "../../constants";
 import type { CountryCode } from "../../types/models";
 import { useCompleteProfile } from "./useCompleteProfile";
@@ -68,40 +69,15 @@ export function CompleteProfileModal() {
           </div>
         </div>
 
-        <div className={styles.phoneRow}>
-          <div className={styles.phoneField}>
-            <label className={styles.label} htmlFor="profileDialCode">País del celular</label>
-            <div className={styles.selectWrap}>
-              <select
-                id="profileDialCode"
-                className={styles.select}
-                value={phoneCountryCode}
-                onChange={(event) => setPhoneCountryCode(event.target.value)}
-              >
-                {PHONE_COUNTRY_CODES.map((entry) => (
-                  <option key={entry.code} value={entry.code}>
-                    {entry.code} ({entry.dialCode})
-                  </option>
-                ))}
-              </select>
-              <span className={`msym ${styles.selectIcon}`} aria-hidden="true">expand_more</span>
-            </div>
-          </div>
-
-          <div className={styles.phoneInputField}>
-            <Input
-              id="profilePhoneLocal"
-              label="Celular"
-              type="tel"
-              size="lg"
-              placeholder="11 96123-4567"
-              value={phoneLocal}
-              onChange={(event) => setPhoneLocal(event.target.value)}
-              autoComplete="tel-national"
-              required
-            />
-          </div>
-        </div>
+        <PhoneNumberField
+          dialCodeSelectId="profileDialCode"
+          localInputId="profilePhoneLocal"
+          countryCode={phoneCountryCode}
+          onCountryCodeChange={setPhoneCountryCode}
+          local={phoneLocal}
+          onLocalChange={setPhoneLocal}
+          required
+        />
 
         <Input
           id="profileDu"
