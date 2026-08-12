@@ -3,8 +3,9 @@ import { Button } from "../../shared/components/Button/Button";
 import { Card } from "../../shared/components/Card/Card";
 import { Input } from "../../shared/components/Input/Input";
 import { RESIDENCE_COUNTRY_CODES } from "../../shared/constants";
+import { useDocumentTypes } from "../../shared/hooks/useDocumentTypes";
 import { ApiError } from "../../shared/services/apiClient";
-import { updateDu, updatePhone } from "../../shared/services/userService";
+import { updatePhone } from "../../shared/services/userService";
 import { updateAlias } from "../../shared/services/walletService";
 import { useEditableField } from "./useEditableField";
 import styles from "./Usuario.module.css";
@@ -30,21 +31,6 @@ export function Usuario() {
   } = useEditableField(
     user?.phone ?? "",
     (draft) => updatePhone(draft).then((result) => result.phone),
-  );
-
-  const {
-    value: du,
-    isEditing: isEditingDu,
-    draft: duDraft,
-    setDraft: setDuDraft,
-    isSubmitting: isSubmittingDu,
-    error: duError,
-    startEditing: startEditingDu,
-    cancelEditing: cancelEditingDu,
-    save: saveDu,
-  } = useEditableField(
-    user?.du ?? "",
-    (draft) => updateDu(draft).then((result) => result.du),
   );
 
   const {
@@ -77,6 +63,14 @@ export function Usuario() {
     },
   );
 
+  const documentTypes = useDocumentTypes();
+  // Mismo lookup y mismo operador que CompleteProfileModal.tsx/Registro.tsx
+  // (documentTypes?.[country] ?? "Documento") — acá country sale de user en
+  // vez de un <select> propio. ?? en vez de || a propósito: solo cae al
+  // fallback si el catálogo no resolvió (null/undefined), no si alguna vez
+  // devolviera "" para algún país.
+  const documentLabel = user ? documentTypes?.[user.country] ?? "Documento" : "Documento";
+
   const avatarInitial = user?.firstName ? user.firstName.charAt(0).toUpperCase() : "?";
   const residenceCountryLabel =
     RESIDENCE_COUNTRY_CODES.find((entry) => entry.code === user?.country)?.label ?? user?.country ?? "Sin datos";
@@ -107,43 +101,8 @@ export function Usuario() {
         </div>
 
         <div className={styles.field}>
-          <label className={styles.label} htmlFor="du">Documento</label>
-          {isEditingDu ? (
-            <div className={styles.editForm}>
-              <Input
-                id="du"
-                type="text"
-                value={duDraft}
-                onChange={(event) => setDuDraft(event.target.value)}
-                autoComplete="off"
-              />
-              <div className={styles.editActions}>
-                <Button type="button" onClick={saveDu} disabled={isSubmittingDu}>
-                  {isSubmittingDu ? "Guardando..." : "Guardar"}
-                </Button>
-                <button
-                  type="button"
-                  className={styles.cancelButton}
-                  onClick={cancelEditingDu}
-                  disabled={isSubmittingDu}
-                >
-                  Cancelar
-                </button>
-              </div>
-              {duError && (
-                <p className={styles.error} role="alert">
-                  {duError}
-                </p>
-              )}
-            </div>
-          ) : (
-            <div className={styles.valueRow}>
-              <span className={styles.value}>{du || "Sin registrar"}</span>
-              <button type="button" className={styles.editButton} onClick={startEditingDu}>
-                Editar
-              </button>
-            </div>
-          )}
+          <span className={styles.label}>{documentLabel}</span>
+          <span className={styles.value}>{user?.du || "Sin registrar"}</span>
         </div>
 
         <div className={styles.field}>
