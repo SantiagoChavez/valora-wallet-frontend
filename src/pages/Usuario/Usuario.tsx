@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useAuth } from "../../shared/auth/useAuth";
 import { Button } from "../../shared/components/Button/Button";
 import { Card } from "../../shared/components/Card/Card";
@@ -5,8 +6,8 @@ import { Input } from "../../shared/components/Input/Input";
 import { RESIDENCE_COUNTRY_CODES } from "../../shared/constants";
 import { useDocumentTypes } from "../../shared/hooks/useDocumentTypes";
 import { ApiError } from "../../shared/services/apiClient";
-import { updatePhone } from "../../shared/services/userService";
 import { updateAlias } from "../../shared/services/walletService";
+import { EditPhoneModal } from "./EditPhoneModal";
 import { useEditableField } from "./useEditableField";
 import styles from "./Usuario.module.css";
 
@@ -18,20 +19,7 @@ const ACCOUNT_STATUS_LABEL = "Activa";
 
 export function Usuario() {
   const { user, wallet, token, updateWallet } = useAuth();
-  const {
-    value: phone,
-    isEditing: isEditingPhone,
-    draft: phoneDraft,
-    setDraft: setPhoneDraft,
-    isSubmitting: isSubmittingPhone,
-    error: phoneError,
-    startEditing: startEditingPhone,
-    cancelEditing: cancelEditingPhone,
-    save: savePhone,
-  } = useEditableField(
-    user?.phone ?? "",
-    (draft) => updatePhone(draft).then((result) => result.phone),
-  );
+  const [isPhoneModalOpen, setIsPhoneModalOpen] = useState(false);
 
   const {
     value: alias,
@@ -111,43 +99,13 @@ export function Usuario() {
         </div>
 
         <div className={styles.field}>
-          <label className={styles.label} htmlFor="phone">Nro. de celular</label>
-          {isEditingPhone ? (
-            <div className={styles.editForm}>
-              <Input
-                id="phone"
-                type="tel"
-                value={phoneDraft}
-                onChange={(event) => setPhoneDraft(event.target.value)}
-                autoComplete="tel"
-              />
-              <div className={styles.editActions}>
-                <Button type="button" onClick={savePhone} disabled={isSubmittingPhone}>
-                  {isSubmittingPhone ? "Guardando..." : "Guardar"}
-                </Button>
-                <button
-                  type="button"
-                  className={styles.cancelButton}
-                  onClick={cancelEditingPhone}
-                  disabled={isSubmittingPhone}
-                >
-                  Cancelar
-                </button>
-              </div>
-              {phoneError && (
-                <p className={styles.error} role="alert">
-                  {phoneError}
-                </p>
-              )}
-            </div>
-          ) : (
-            <div className={styles.valueRow}>
-              <span className={styles.value}>{phone || "Sin registrar"}</span>
-              <button type="button" className={styles.editButton} onClick={startEditingPhone}>
-                Editar
-              </button>
-            </div>
-          )}
+          <span className={styles.label}>Nro. de celular</span>
+          <div className={styles.valueRow}>
+            <span className={styles.value}>{user?.phone || "Sin registrar"}</span>
+            <button type="button" className={styles.editButton} onClick={() => setIsPhoneModalOpen(true)}>
+              Editar
+            </button>
+          </div>
         </div>
       </Card>
 
@@ -202,6 +160,8 @@ export function Usuario() {
           <span className={styles.value}>{ACCOUNT_STATUS_LABEL}</span>
         </div>
       </Card>
+
+      <EditPhoneModal isOpen={isPhoneModalOpen} onClose={() => setIsPhoneModalOpen(false)} />
     </div>
   );
 }
