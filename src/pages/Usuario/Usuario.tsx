@@ -145,10 +145,10 @@ export function Usuario() {
             <div className={styles.valueRow}>
               <span className={styles.value}>{alias || "Sin registrar"}</span>
               <div className={styles.valueActions}>
-                {alias && <CopyIconButton value={alias} label="Copiar alias" />}
                 <button type="button" className={styles.editButton} onClick={startEditingAlias}>
                   Editar
                 </button>
+                {alias && <CopyIconButton value={alias} label="Copiar alias" />}
               </div>
             </div>
           )}
