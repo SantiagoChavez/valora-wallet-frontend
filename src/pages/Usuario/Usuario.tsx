@@ -2,6 +2,7 @@ import { useAuth } from "../../shared/auth/useAuth";
 import { Button } from "../../shared/components/Button/Button";
 import { Card } from "../../shared/components/Card/Card";
 import { Input } from "../../shared/components/Input/Input";
+import { RESIDENCE_COUNTRY_CODES } from "../../shared/constants";
 import { ApiError } from "../../shared/services/apiClient";
 import { updateDu, updatePhone } from "../../shared/services/userService";
 import { updateAlias } from "../../shared/services/walletService";
@@ -77,6 +78,8 @@ export function Usuario() {
   );
 
   const avatarInitial = user?.firstName ? user.firstName.charAt(0).toUpperCase() : "?";
+  const residenceCountryLabel =
+    RESIDENCE_COUNTRY_CODES.find((entry) => entry.code === user?.country)?.label ?? user?.country ?? "Sin datos";
 
   return (
     <div className={styles.page}>
@@ -96,6 +99,11 @@ export function Usuario() {
         <div className={styles.field}>
           <span className={styles.label}>Apellido</span>
           <span className={styles.value}>{user?.lastName || "Sin datos"}</span>
+        </div>
+
+        <div className={styles.field}>
+          <span className={styles.label}>Fecha de nacimiento</span>
+          <span className={styles.value}>{user?.dateOfBirth || "Sin registrar"}</span>
         </div>
 
         <div className={styles.field}>
@@ -136,6 +144,11 @@ export function Usuario() {
               </button>
             </div>
           )}
+        </div>
+
+        <div className={styles.field}>
+          <span className={styles.label}>País de residencia</span>
+          <span className={styles.value}>{residenceCountryLabel}</span>
         </div>
 
         <div className={styles.field}>
