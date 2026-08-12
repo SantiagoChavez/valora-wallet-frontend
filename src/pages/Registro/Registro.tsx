@@ -263,6 +263,13 @@ export function Registro() {
               // columnas, mismo espaciado) — comportamiento preexistente a esta
               // extracción, no una decisión nueva.
               gap="var(--spacing-md)"
+              // 639, no el default 859: antes de esta extracción el .phoneRow
+              // propio de este archivo wrappeaba a 639px (el breakpoint mobile
+              // general de esta pantalla), no a 859px (el del modal) —
+              // preservado acá, no una decisión nueva (hallazgo de la review
+              // de Copilot: sin esto, apilaba entre 640-859px donde antes iba
+              // en fila).
+              wrapBreakpoint={639}
               countryCode={phoneCountryCode}
               onCountryCodeChange={setPhoneCountryCode}
               local={phone}

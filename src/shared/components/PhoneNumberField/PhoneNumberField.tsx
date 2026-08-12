@@ -8,7 +8,7 @@ interface PhoneNumberFieldProps {
   // El `code` elegido (ej. "AR"), no el dialCode con "+" — mismo criterio que
   // ya usaba CompleteProfileModal: el dialCode real se busca recién al armar
   // el submit (ver CompleteProfileModal.tsx / EditPhoneModal.tsx), porque
-  // DO/US comparten dialCode ("+1") y `code` es lo único único por país.
+  // DO/US comparten dialCode ("+1") y `code` es lo único que es único por país.
   countryCode: string;
   onCountryCodeChange: (code: string) => void;
   local: string;
@@ -35,13 +35,25 @@ interface PhoneNumberFieldProps {
   // columnas, mismo espaciado) — antes de esta extracción esa diferencia vivía
   // hardcodeada en su propio .phoneRow.
   gap?: string;
+  // Ancho debajo del cual el selector de prefijo y el input de celular pasan
+  // de fila a apilados. Default 859 (comportamiento original de
+  // CompleteProfileModal/EditPhoneModal, sin cambios). Pese al tipo, no es un
+  // número libre: `@media` no admite un valor dinámico vía CSS custom
+  // property, así que solo hay soporte real para los dos valores que hoy
+  // necesita algún consumidor (ver .wrapAt639 en PhoneNumberField.module.css).
+  // Registro.tsx pasa 639 — antes de esta extracción su .phoneRow propio
+  // wrappeaba ahí, no a 859px (hallazgo de la review de Copilot sobre el PR:
+  // sin esto, Registro apilaba entre 640-859px donde antes iba en fila).
+  // Sumar un tercer valor real requiere su propia clase modificadora en el
+  // CSS, no alcanza con ampliar este tipo.
+  wrapBreakpoint?: 639 | 859;
 }
 
 // Selector de prefijo de celular + input de número local — extraído de
-// CompleteProfileModal (su único origen hasta ahora) para reusarlo en
-// EditPhoneModal (Usuario.tsx) sin duplicar el bloque. La sanitización
-// (\D) y el armado del string final (dialCode + local) quedan en cada
-// consumidor, no acá — este componente solo maneja la UI controlada.
+// CompleteProfileModal (su origen histórico) para reusarlo también en
+// EditPhoneModal (Usuario.tsx) y Registro.tsx, sin duplicar el bloque. La
+// sanitización (\D) y el armado del string final (dialCode + local) quedan
+// en cada consumidor, no acá — este componente solo maneja la UI controlada.
 export function PhoneNumberField({
   dialCodeSelectId,
   localInputId,
@@ -56,9 +68,13 @@ export function PhoneNumberField({
   icon,
   labelClassName,
   gap,
+  wrapBreakpoint = 859,
 }: PhoneNumberFieldProps) {
+  const phoneRowClassName =
+    wrapBreakpoint === 639 ? `${styles.phoneRow} ${styles.wrapAt639}` : styles.phoneRow;
+
   return (
-    <div className={styles.phoneRow} style={gap ? { gap } : undefined}>
+    <div className={phoneRowClassName} style={gap ? { gap } : undefined}>
       <div className={styles.phoneField}>
         <label className={labelClassName ?? styles.label} htmlFor={dialCodeSelectId}>
           {dialCodeLabel}
