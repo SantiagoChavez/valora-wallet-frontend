@@ -12,7 +12,7 @@ import { TransactionRow } from "../../shared/components/TransactionRow/Transacti
 import { TransferModal } from "../../shared/components/TransferModal/TransferModal";
 import { getApiErrorMessage } from "../../shared/services/apiClient";
 import { getBalances } from "../../shared/services/balanceService";
-import { deposit, getTransactions } from "../../shared/services/transactionService";
+import { deposit, getTransactions, type TransferDestination } from "../../shared/services/transactionService";
 import type { Balance, CurrencyCode, Transaction } from "../../shared/types/models";
 import type { DashboardOutletContext } from "../../layouts/DashboardLayout/DashboardLayout";
 import styles from "./Dashboard.module.css";
@@ -137,7 +137,7 @@ export function Dashboard() {
     onTransactionCreated();
   }
 
-  function handleTransferSuccess(transaction: Transaction, destination: { firstName: string; lastName: string }) {
+  function handleTransferSuccess(transaction: Transaction, destination: TransferDestination) {
     setIsTransferOpen(false);
     const sentAmount = transaction.sourceAmount?.toLocaleString("es-AR", { maximumFractionDigits: 2 }) ?? "0";
     showToast(`Transferiste ${sentAmount} ${transaction.sourceCurrency ?? ""} a ${destination.firstName} ${destination.lastName}.`);

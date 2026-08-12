@@ -52,12 +52,20 @@ export function TransferModal({ isOpen, onClose, token, balances, onSuccess }: T
 
   async function handleResolve() {
     if (!identifier.trim()) return;
+    const trimmedIdentifier = identifier.trim();
     setResolveError(null);
     setIsResolving(true);
     try {
-      const result = await resolveTransferDestination(token, identifier.trim());
+      const result = await resolveTransferDestination(token, trimmedIdentifier);
+      // El backend fuerza un piso de 300ms en esta respuesta a propósito
+      // (anti-enumeración) — si el identificador cambió (o el modal se cerró y
+      // reabrió) mientras viajaba, esta respuesta ya quedó vieja: aplicarla
+      // igual mostraría un destinatario distinto al que en realidad se
+      // transferiría con el identificador actual. Se descarta en silencio.
+      if (identifier.trim() !== trimmedIdentifier) return;
       setDestination(result);
     } catch (err) {
+      if (identifier.trim() !== trimmedIdentifier) return;
       setDestination(null);
       setResolveError(getApiErrorMessage(err));
     } finally {
@@ -104,6 +112,7 @@ export function TransferModal({ isOpen, onClose, token, balances, onSuccess }: T
               value={identifier}
               onChange={(event) => handleIdentifierChange(event.target.value)}
               placeholder="alias.valora, CVU o email"
+              disabled={isResolving}
               required
             />
             <Button
