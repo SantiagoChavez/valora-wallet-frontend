@@ -9,6 +9,7 @@ import { Modal } from "../../shared/components/Modal/Modal";
 import { Toast } from "../../shared/components/Toast/Toast";
 import { useToast } from "../../shared/components/Toast/useToast";
 import { TransactionRow } from "../../shared/components/TransactionRow/TransactionRow";
+import { TransferModal } from "../../shared/components/TransferModal/TransferModal";
 import { getApiErrorMessage } from "../../shared/services/apiClient";
 import { getBalances } from "../../shared/services/balanceService";
 import { deposit, getTransactions } from "../../shared/services/transactionService";
@@ -67,6 +68,8 @@ export function Dashboard() {
   // DashboardLayout, evita que los dos puedan estar abiertos a la vez.
   const [conversionMode, setConversionMode] = useState<"BUY" | "SELL">("BUY");
   const [isConversionOpen, setIsConversionOpen] = useState(false);
+
+  const [isTransferOpen, setIsTransferOpen] = useState(false);
 
   // Contador de generación, no boolean: con un solo cancelledRef reseteado a
   // false al arrancar cada corrida, un request de una corrida ANTERIOR que
@@ -130,6 +133,14 @@ export function Dashboard() {
     const verb = conversionMode === "BUY" ? "Compraste" : "Vendiste";
     const receivedAmount = transaction.targetAmount?.toLocaleString("es-AR", { maximumFractionDigits: 2 }) ?? "0";
     showToast(`${verb} ${receivedAmount} ${transaction.targetCurrency ?? ""}.`);
+    loadDashboardData();
+    onTransactionCreated();
+  }
+
+  function handleTransferSuccess(transaction: Transaction, destination: { firstName: string; lastName: string }) {
+    setIsTransferOpen(false);
+    const sentAmount = transaction.sourceAmount?.toLocaleString("es-AR", { maximumFractionDigits: 2 }) ?? "0";
+    showToast(`Transferiste ${sentAmount} ${transaction.sourceCurrency ?? ""} a ${destination.firstName} ${destination.lastName}.`);
     loadDashboardData();
     onTransactionCreated();
   }
@@ -294,10 +305,7 @@ export function Dashboard() {
               <span className="msym" style={{ fontSize: 18 }} aria-hidden="true">arrow_downward</span>
               Depositar
             </button>
-            {/* Sin backend todavía: no hay endpoint de transferencia ni alias/CVU
-                en el modelo de usuario — mismo criterio que Comprar/Vender, botón
-                real que no promete algo que no existe. */}
-            <button type="button" className={styles.sellButton} onClick={() => showToast("Transferencia iniciada — necesitás el alias o CVU del destinatario.")}>
+            <button type="button" className={styles.sellButton} onClick={() => setIsTransferOpen(true)}>
               <span className="msym" style={{ fontSize: 18 }} aria-hidden="true">send</span>
               Transferir
             </button>
@@ -349,6 +357,14 @@ export function Dashboard() {
         token={token as string}
         balances={balances}
         onSuccess={handleConversionSuccess}
+      />
+
+      <TransferModal
+        isOpen={isTransferOpen}
+        onClose={() => setIsTransferOpen(false)}
+        token={token as string}
+        balances={balances}
+        onSuccess={handleTransferSuccess}
       />
 
       <Modal isOpen={isDepositOpen} onClose={() => setIsDepositOpen(false)} ariaLabel="Depositar fondos">

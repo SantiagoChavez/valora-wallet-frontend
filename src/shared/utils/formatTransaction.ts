@@ -102,8 +102,9 @@ export function formatTransaction(tx: Transaction): TransactionDisplay {
     }
     case "TRANSFER_OUT": {
       const { amount, currency } = pickAvailableAmount(tx);
+      const counterparty = [tx.counterpartyName, tx.counterpartyLastName].filter(Boolean).join(" ");
       return {
-        title: "Transferencia enviada",
+        title: counterparty ? `Transferencia enviada a ${counterparty}` : "Transferencia enviada",
         date,
         amount: `-${formatAmount(amount, currency)}`,
         currency,
@@ -113,8 +114,9 @@ export function formatTransaction(tx: Transaction): TransactionDisplay {
     }
     case "TRANSFER_IN": {
       const { amount, currency } = pickAvailableAmount(tx);
+      const counterparty = [tx.counterpartyName, tx.counterpartyLastName].filter(Boolean).join(" ");
       return {
-        title: "Transferencia recibida",
+        title: counterparty ? `Transferencia recibida de ${counterparty}` : "Transferencia recibida",
         date,
         amount: `+${formatAmount(amount, currency)}`,
         currency,

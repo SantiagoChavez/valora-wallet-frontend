@@ -56,4 +56,12 @@ export interface Transaction {
   exchangeRate: number | null;
   resultingBalance: number;
   createdAt: string;
+  // Solo poblado en TRANSFER_IN/TRANSFER_OUT (ver mapTransactionToCamelCase en
+  // transactionController.ts del backend) — quién es la otra parte de la
+  // transferencia. null en cualquier otro tipo de movimiento.
+  counterpartyId: string | null;
+  counterpartyName: string | null;
+  counterpartyLastName: string | null;
+  counterpartyEmail: string | null;
+  counterpartyWallet: string | null;
 }

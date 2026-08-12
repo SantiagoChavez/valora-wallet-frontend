@@ -91,3 +91,42 @@ export function deposit(token: string, currency: CurrencyCode, amount: number): 
     body: JSON.stringify({ currency, amount }),
   }).then((res) => res.data);
 }
+
+export interface TransferDestination {
+  firstName: string;
+  lastName: string;
+  alias: string | null;
+  cvu: string | null;
+  email: string;
+  document: string | null;
+}
+
+interface ResolveTransferApiResponse {
+  success: boolean;
+  data: TransferDestination;
+}
+
+// Le pega al backend por cada alias/CVU/email que se tipea para mostrar a
+// quién le vas a transferir antes de confirmar — ver TransferModal. El campo
+// se llama "identifier" acá (no "destination", como en el POST real de abajo)
+// porque son dos schemas de Zod distintos del lado del backend.
+export function resolveTransferDestination(token: string, identifier: string): Promise<TransferDestination> {
+  return apiFetch<ResolveTransferApiResponse>("/transactions/transfer/resolve", {
+    method: "POST",
+    token,
+    body: JSON.stringify({ identifier }),
+  }).then((res) => res.data);
+}
+
+export function transfer(
+  token: string,
+  currency: CurrencyCode,
+  amount: number,
+  destination: string,
+): Promise<Transaction> {
+  return apiFetch<TransactionApiResponse>("/transactions/transfer", {
+    method: "POST",
+    token,
+    body: JSON.stringify({ currency, amount, destination }),
+  }).then((res) => res.data);
+}
