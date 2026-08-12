@@ -40,20 +40,26 @@ export function getTransactions(
   }).then((res) => ({ transactions: res.data, pagination: res.pagination }));
 }
 
+export type AmountSide = "source" | "target";
+
 // /exchange, /buy y /sell toman exactamente el mismo body — el backend los
 // procesa con la misma lógica de conversión, solo cambia la etiqueta que le
-// pone a la transacción (ver executeConversion en transactionService.ts del back).
+// pone a la transacción (ver executeConversion en transactionService.ts del
+// back). amountSide es opcional en el schema del backend (default "source",
+// retrocompatible) — solo Comprar lo manda como "target", así "amount"
+// representa cuánto se quiere recibir en vez de cuánto se paga.
 function postConversion(
   endpoint: "exchange" | "buy" | "sell",
   token: string,
   fromCurrency: CurrencyCode,
   toCurrency: CurrencyCode,
   amount: number,
+  amountSide?: AmountSide,
 ): Promise<Transaction> {
   return apiFetch<TransactionApiResponse>(`/transactions/${endpoint}`, {
     method: "POST",
     token,
-    body: JSON.stringify({ fromCurrency, toCurrency, amount }),
+    body: JSON.stringify({ fromCurrency, toCurrency, amount, amountSide }),
   }).then((res) => res.data);
 }
 
@@ -71,8 +77,9 @@ export function buy(
   fromCurrency: CurrencyCode,
   toCurrency: CurrencyCode,
   amount: number,
+  amountSide?: AmountSide,
 ): Promise<Transaction> {
-  return postConversion("buy", token, fromCurrency, toCurrency, amount);
+  return postConversion("buy", token, fromCurrency, toCurrency, amount, amountSide);
 }
 
 export function sell(
@@ -80,8 +87,9 @@ export function sell(
   fromCurrency: CurrencyCode,
   toCurrency: CurrencyCode,
   amount: number,
+  amountSide?: AmountSide,
 ): Promise<Transaction> {
-  return postConversion("sell", token, fromCurrency, toCurrency, amount);
+  return postConversion("sell", token, fromCurrency, toCurrency, amount, amountSide);
 }
 
 export function deposit(token: string, currency: CurrencyCode, amount: number): Promise<Transaction> {
