@@ -4,6 +4,8 @@ import { Button } from "../../shared/components/Button/Button";
 import { Card } from "../../shared/components/Card/Card";
 import { CopyIconButton } from "../../shared/components/CopyIconButton/CopyIconButton";
 import { Input } from "../../shared/components/Input/Input";
+import { Toast } from "../../shared/components/Toast/Toast";
+import { useToast } from "../../shared/components/Toast/useToast";
 import { RESIDENCE_COUNTRY_CODES } from "../../shared/constants";
 import { useDocumentTypes } from "../../shared/hooks/useDocumentTypes";
 import { ApiError } from "../../shared/services/apiClient";
@@ -21,6 +23,7 @@ const ACCOUNT_STATUS_LABEL = "Activa";
 export function Usuario() {
   const { user, wallet, token, updateWallet } = useAuth();
   const [isPhoneModalOpen, setIsPhoneModalOpen] = useState(false);
+  const { message: toast, showToast } = useToast();
 
   const {
     value: alias,
@@ -148,7 +151,13 @@ export function Usuario() {
                 <button type="button" className={styles.editButton} onClick={startEditingAlias}>
                   Editar
                 </button>
-                {alias && <CopyIconButton value={alias} label="Copiar alias" />}
+                {alias && (
+                  <CopyIconButton
+                    value={alias}
+                    label="Copiar alias"
+                    onCopy={() => showToast("Copiaste el alias.")}
+                  />
+                )}
               </div>
             </div>
           )}
@@ -158,7 +167,13 @@ export function Usuario() {
           <span className={styles.label}>CVU</span>
           <div className={styles.valueRow}>
             <span className={styles.value}>{wallet?.cvu ?? "Sin datos"}</span>
-            {wallet?.cvu && <CopyIconButton value={wallet.cvu} label="Copiar CVU" />}
+            {wallet?.cvu && (
+              <CopyIconButton
+                value={wallet.cvu}
+                label="Copiar CVU"
+                onCopy={() => showToast("Copiaste el CVU.")}
+              />
+            )}
           </div>
         </div>
 
@@ -172,6 +187,7 @@ export function Usuario() {
       </Card>
 
       <EditPhoneModal isOpen={isPhoneModalOpen} onClose={() => setIsPhoneModalOpen(false)} />
+      <Toast message={toast} />
     </div>
   );
 }

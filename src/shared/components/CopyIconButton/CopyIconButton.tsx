@@ -7,13 +7,17 @@ interface CopyIconButtonProps {
   value: string;
   /** Texto del tooltip y del aria-label en estado normal (ej. "Copiar alias"). */
   label: string;
+  /** Se llama después de copiar con éxito — mismo criterio que CardDisplay:
+   *  quien usa el botón decide cómo avisarlo (su propio showToast), en vez de
+   *  que este componente monte su propia instancia de Toast. */
+  onCopy?: () => void;
 }
 
 // Mismo patrón que el botón de copiar de CardDisplay.tsx (ícono + tooltip en
 // hover + check temporal al copiar) — extraído acá porque Usuario.tsx lo
 // necesita dos veces (alias y CVU) sobre un valor de texto simple, sin la
 // lógica de tarjeta (revelado, dígitos generados) que trae CardDisplay.
-export function CopyIconButton({ value, label }: CopyIconButtonProps) {
+export function CopyIconButton({ value, label, onCopy }: CopyIconButtonProps) {
   const [isCopied, setIsCopied] = useState(false);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
@@ -23,6 +27,7 @@ export function CopyIconButton({ value, label }: CopyIconButtonProps) {
     try {
       await navigator.clipboard.writeText(value);
       setIsCopied(true);
+      onCopy?.();
       clearTimeout(timeoutRef.current);
       timeoutRef.current = setTimeout(() => setIsCopied(false), COPY_CONFIRMATION_MS);
     } catch {
