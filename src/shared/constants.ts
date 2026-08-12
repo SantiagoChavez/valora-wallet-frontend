@@ -39,7 +39,14 @@ export interface PhoneCountryCode {
 // de residencia (que reusa esta misma lista filtrada a los 19 LATAM) — un
 // usuario puede vivir en un país y tener un celular con prefijo de otro.
 export const PHONE_COUNTRY_CODES: PhoneCountryCode[] = [
-  { code: "AR", dialCode: "+54", flag: "🇦🇷", label: "Argentina", example: "+54 9 11 1234-5678" },
+  // dialCode "+549", no "+54": los celulares argentinos necesitan el 9 extra
+  // después del +54 para que libphonenumber-js/max (lo que usa el backend
+  // real, ver phoneValidation.ts) los tipe como MOBILE en vez de FIXED_LINE
+  // — confirmado con parsePhoneNumberFromString: "+541156161313" da
+  // FIXED_LINE (el backend lo rechaza), "+5491156161313" da MOBILE (lo
+  // acepta). Efecto secundario aceptado: el selector muestra "AR (+549)" en
+  // vez de "AR (+54)".
+  { code: "AR", dialCode: "+549", flag: "🇦🇷", label: "Argentina", example: "+54 9 11 1234-5678" },
   { code: "BO", dialCode: "+591", flag: "🇧🇴", label: "Bolivia", example: "+591 712 34567" },
   { code: "BR", dialCode: "+55", flag: "🇧🇷", label: "Brasil", example: "+55 11 91234-5678" },
   { code: "CL", dialCode: "+56", flag: "🇨🇱", label: "Chile", example: "+56 9 6123 4567" },
@@ -61,3 +68,12 @@ export const PHONE_COUNTRY_CODES: PhoneCountryCode[] = [
   { code: "US", dialCode: "+1", flag: "🇺🇸", label: "Estados Unidos", example: "+1 201 555 0123" },
   { code: "ES", dialCode: "+34", flag: "🇪🇸", label: "España", example: "+34 612 34 56 78" },
 ];
+
+// Los 19 países LATAM que acepta country (residencia) son un subconjunto de
+// PHONE_COUNTRY_CODES (esa lista suma US/ES, que no son de residencia válida)
+// — se reusa la misma lista filtrada en vez de duplicar un segundo mapa de
+// nombres de país. Centralizado acá (antes duplicado en CompleteProfileModal.tsx
+// y Registro.tsx) con Usuario.tsx como tercer consumidor real.
+export const RESIDENCE_COUNTRY_CODES = PHONE_COUNTRY_CODES.filter(
+  (entry) => entry.code !== "US" && entry.code !== "ES",
+);

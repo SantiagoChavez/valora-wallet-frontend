@@ -2,17 +2,13 @@ import { useState, type SubmitEvent } from "react";
 import { Button } from "../Button/Button";
 import { Input } from "../Input/Input";
 import { Modal } from "../Modal/Modal";
-import { PHONE_COUNTRY_CODES } from "../../constants";
+import { PhoneNumberField } from "../PhoneNumberField/PhoneNumberField";
+import { PHONE_COUNTRY_CODES, RESIDENCE_COUNTRY_CODES } from "../../constants";
 import type { CountryCode } from "../../types/models";
 import { useCompleteProfile } from "./useCompleteProfile";
-import { useDocumentTypes } from "./useDocumentTypes";
+import { useDocumentTypes } from "../../hooks/useDocumentTypes";
+import { resolveE164Phone } from "../../utils/phone";
 import styles from "./CompleteProfileModal.module.css";
-
-// Los 19 países LATAM que acepta country (residencia) son un subconjunto de
-// PHONE_COUNTRY_CODES (esa lista suma US/ES, que no son de residencia válida
-// acá) — se reusa la misma lista filtrada en vez de duplicar un segundo mapa
-// de nombres de país.
-const RESIDENCE_COUNTRY_CODES = PHONE_COUNTRY_CODES.filter((entry) => entry.code !== "US" && entry.code !== "ES");
 
 const DEFAULT_PHONE_COUNTRY_CODE = PHONE_COUNTRY_CODES[0].code;
 const DEFAULT_RESIDENCE_COUNTRY = RESIDENCE_COUNTRY_CODES[0].code as CountryCode;
@@ -28,17 +24,7 @@ export function CompleteProfileModal() {
 
   function handleSubmit(event: SubmitEvent<HTMLFormElement>) {
     event.preventDefault();
-    // DO/US comparten dialCode ("+1") — el <select> value es entry.code
-    // (único por país), así que el dialCode real se busca acá recién al
-    // enviar, no se guarda directo en el estado del select.
-    const dialCode = PHONE_COUNTRY_CODES.find((entry) => entry.code === phoneCountryCode)?.dialCode ?? "";
-    // \D saca cualquier caracter no numérico que el usuario haya tipeado o
-    // pegado en el número local (espacios, guiones, paréntesis, puntos —
-    // ej. al pegar "(11) 96123.4567" copiado de contactos) — el backend
-    // espera el string en formato E.164-like, prefijo pegado directo al
-    // número (ej. "+5511961234567", no "+55 (11) 96123.4567").
-    const sanitizedLocal = phoneLocal.replace(/\D/g, "");
-    submit(`${dialCode}${sanitizedLocal}`, country, du);
+    submit(resolveE164Phone(phoneCountryCode, phoneLocal), country, du);
   }
 
   return (
@@ -68,40 +54,15 @@ export function CompleteProfileModal() {
           </div>
         </div>
 
-        <div className={styles.phoneRow}>
-          <div className={styles.phoneField}>
-            <label className={styles.label} htmlFor="profileDialCode">País del celular</label>
-            <div className={styles.selectWrap}>
-              <select
-                id="profileDialCode"
-                className={styles.select}
-                value={phoneCountryCode}
-                onChange={(event) => setPhoneCountryCode(event.target.value)}
-              >
-                {PHONE_COUNTRY_CODES.map((entry) => (
-                  <option key={entry.code} value={entry.code}>
-                    {entry.code} ({entry.dialCode})
-                  </option>
-                ))}
-              </select>
-              <span className={`msym ${styles.selectIcon}`} aria-hidden="true">expand_more</span>
-            </div>
-          </div>
-
-          <div className={styles.phoneInputField}>
-            <Input
-              id="profilePhoneLocal"
-              label="Celular"
-              type="tel"
-              size="lg"
-              placeholder="11 96123-4567"
-              value={phoneLocal}
-              onChange={(event) => setPhoneLocal(event.target.value)}
-              autoComplete="tel-national"
-              required
-            />
-          </div>
-        </div>
+        <PhoneNumberField
+          dialCodeSelectId="profileDialCode"
+          localInputId="profilePhoneLocal"
+          countryCode={phoneCountryCode}
+          onCountryCodeChange={setPhoneCountryCode}
+          local={phoneLocal}
+          onLocalChange={setPhoneLocal}
+          required
+        />
 
         <Input
           id="profileDu"
