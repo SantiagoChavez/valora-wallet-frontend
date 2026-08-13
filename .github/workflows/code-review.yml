@@ -29,6 +29,10 @@ jobs:
             exit 0
           fi
 
+          # 🚨 NUEVO: Obtener la lista de archivos modificados y darle formato de lista Markdown
+          FILES_LIST=$(gh pr diff "$PR_NUMBER" --name-only | awk '{print "- `" $0 "`"}')
+
+          # 2. Se prepara el payload (Con max_tokens en 8192 para evitar que se corte)
           jq -n --arg diff "$DIFF" '{
             "model": "claude-sonnet-5",
             "max_tokens": 8192,
@@ -37,7 +41,7 @@ jobs:
             ]
           }' > payload.json
 
-          # Se ejecuta curl guardando la respuesta en response.json
+          # 3. Se ejecuta curl (Tiempo máximo ampliado a 120s para darle tiempo a Claude de pensar)
           HTTP_STATUS=$(curl -s -o response.json -w "%{http_code}" \
             --max-time 120 \
             https://api.anthropic.com/v1/messages \
@@ -45,12 +49,35 @@ jobs:
             -H "anthropic-version: 2023-06-01" \
             -H "content-type: application/json" \
             -d @payload.json)
-
-          # 2. Se lee desde el archivo response.json (en lugar de la variable vacía $RESPONSE)
-          # claude-sonnet-5 corre con thinking adaptativo prendido por default (no se
-          # manda el parámetro "thinking"), así que el bloque de thinking aparece primero
-          # en content[] y el de texto después — content[0].text daba null. Se junta
-          # todo bloque de tipo "text" en vez de asumir la posición 0.
-          COMMENT=$(cat response.json | jq -r 'if .error then "⚠️ Error de Claude: \(.error.message)" else ([.content[]? | select(.type=="text") | .text] | join("\n")) end')
-
-          gh pr comment $PR_NUMBER -b "$COMMENT"
+            
+          # 4. Imprimir respuesta para debug en logs
+          echo "--- RESPUESTA DE LA API ---"
+          cat response.json
+          echo "---------------------------"
+          
+          # 5. Extraer el texto de la respuesta (se junta todo bloque de tipo "text"
+          # en vez de asumir la posición 0, ya que el bloque de thinking aparece primero
+          # en content[] y el de texto después).
+          COMMENT=$(cat response.json | jq -r '
+            if type != "object" then 
+              "⚠️ Error crítico: La API no devolvió JSON."
+            elif .type == "error" then 
+              "⚠️ Error de Claude: \(.error.message)" 
+            elif .content != null then 
+              ([.content[]? | select(.type=="text") | .text] | join("\n")) // "⚠️ Error: Claude consumió todos los tokens analizando y no pudo escribir la respuesta final."
+            else 
+              "⚠️ Error desconocido. Revisa los logs de GitHub Actions." 
+            end
+          ')
+          
+          # 🚨 NUEVO: Construir el comentario final concatenando la lista de archivos con el análisis
+          FINAL_COMMENT="### 📁 Archivos revisados en este PR:
+          $FILES_LIST
+          
+          ---
+          
+          ### 🤖 Análisis de Claude:
+          $COMMENT"
+          
+          # 6. Publicar el comentario
+          gh pr comment $PR_NUMBER -b "$FINAL_COMMENT"
