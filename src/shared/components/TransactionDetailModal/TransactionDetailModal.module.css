@@ -1,0 +1,110 @@
+.wrapper {
+  width: min(400px, 85vw);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-lg);
+}
+
+.header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--spacing-md);
+}
+
+.title {
+  margin: 0;
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-primary);
+}
+
+.eyebrow {
+  display: block;
+  margin-top: 2px;
+  font-size: var(--font-size-2xs);
+  font-weight: var(--font-weight-medium);
+  letter-spacing: var(--tracking-wide);
+  color: var(--text-tertiary);
+}
+
+.closeButton {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--bg-inset);
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.closeButton:hover {
+  background: var(--border);
+  color: var(--text-primary);
+}
+
+.amountRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-sm);
+}
+
+.amount {
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+.statusPill {
+  flex-shrink: 0;
+  padding: 4px 10px;
+  border-radius: var(--radius-pill);
+  font-size: var(--font-size-2xs);
+  font-weight: var(--font-weight-semibold);
+  color: var(--success);
+  background: color-mix(in srgb, var(--success) 15%, transparent);
+  border: 1px solid color-mix(in srgb, var(--success) 25%, transparent);
+}
+
+.detailList {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.detailRow {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--spacing-md);
+  padding: var(--spacing-sm) 0;
+  border-top: 1px solid var(--border);
+}
+
+.detailLabel {
+  margin: 0;
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+  flex-shrink: 0;
+}
+
+.detailValue {
+  margin: 0;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--text-primary);
+  text-align: right;
+  word-break: break-word;
+}
+
+.detailValueMono {
+  font-family: monospace;
+  font-size: var(--font-size-xs);
+}

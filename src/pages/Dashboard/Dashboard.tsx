@@ -8,6 +8,7 @@ import { Input } from "../../shared/components/Input/Input";
 import { Modal } from "../../shared/components/Modal/Modal";
 import { Toast } from "../../shared/components/Toast/Toast";
 import { useToast } from "../../shared/components/Toast/useToast";
+import { TransactionDetailModal } from "../../shared/components/TransactionDetailModal/TransactionDetailModal";
 import { TransactionRow } from "../../shared/components/TransactionRow/TransactionRow";
 import { TransferModal } from "../../shared/components/TransferModal/TransferModal";
 import { getApiErrorMessage } from "../../shared/services/apiClient";
@@ -65,6 +66,14 @@ export function Dashboard() {
   const [isConversionOpen, setIsConversionOpen] = useState(false);
 
   const [isTransferOpen, setIsTransferOpen] = useState(false);
+
+  const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
+  const [isDetailOpen, setIsDetailOpen] = useState(false);
+
+  function openDetail(transaction: Transaction) {
+    setSelectedTransaction(transaction);
+    setIsDetailOpen(true);
+  }
 
   // Contador de generación, no boolean: con un solo cancelledRef reseteado a
   // false al arrancar cada corrida, un request de una corrida ANTERIOR que
@@ -365,7 +374,9 @@ export function Dashboard() {
           )}
           {!isLoading && !error && transactions && transactions.length > 0 && (
             <ul className={styles.txList} role="list">
-              {transactions.map((tx) => <TransactionRow key={tx.id} transaction={tx} />)}
+              {transactions.map((tx) => (
+                <TransactionRow key={tx.id} transaction={tx} onSelect={openDetail} />
+              ))}
             </ul>
           )}
         </div>
@@ -433,6 +444,12 @@ export function Dashboard() {
           </Button>
         </form>
       </Modal>
+
+      <TransactionDetailModal
+        isOpen={isDetailOpen}
+        onClose={() => setIsDetailOpen(false)}
+        transaction={selectedTransaction}
+      />
     </div>
   );
 }
