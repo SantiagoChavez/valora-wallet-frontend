@@ -1,10 +1,14 @@
-/* Contenedor del botón nativo de Google (GoogleButton.tsx renderiza acá con
-   renderButton()) — centrado porque GIS acepta como máximo 400px de ancho,
-   así que en formularios más anchos que eso queda con margen a los lados en
-   vez de pegado a la izquierda. */
-.container {
+/* wrapper mide el ancho completo del formulario y centra — container (el
+   hijo, adentro) es el que recibe el ref que le pasamos a Google, con un
+   ancho fijo en px seteado desde GoogleButton.tsx (no relativo/100%), para
+   que no le quede margen propio dentro del cual Google pueda renderizar
+   algo que no controlamos (ver comentario en GoogleButton.tsx, setup()). */
+.wrapper {
   display: flex;
   justify-content: center;
+}
+
+.container {
   /* El "G" cuadrado que renderiza Google no siempre resuelve bien las puntas
      redondeadas por su cuenta (varía entre entornos) — se recorta acá con
      nuestro propio radio en vez de depender de shape:"pill" del lado de
@@ -14,7 +18,10 @@
      (screenshot 13/08) — Google posiciona esa placa con su propio
      padding interno, que no controlamos, y 12px no alcanzaba a comerlo del
      todo. Si hace falta que combine exacto con el resto, es un ajuste
-     visual para Analía, no de estructura. */
+     visual para Analía, no de estructura. Se mantiene como red de
+     contención por si queda algún desajuste de sub-píxel, aunque el ancho
+     fijo (ver GoogleButton.tsx) ya debería evitar que haga falta recortar
+     nada en la práctica. */
   border-radius: 16px;
   overflow: hidden;
 }
