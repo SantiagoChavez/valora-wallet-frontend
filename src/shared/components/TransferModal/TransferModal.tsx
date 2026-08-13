@@ -5,9 +5,10 @@ import { Modal } from "../Modal/Modal";
 import { getApiErrorMessage } from "../../services/apiClient";
 import { resolveTransferDestination, transfer, type TransferDestination } from "../../services/transactionService";
 import type { Balance, CurrencyCode, Transaction } from "../../types/models";
+import { CURRENCY_OPTIONS } from "../../constants";
+import { balanceFor } from "../../utils/balances";
+import { INVALID_AMOUNT_MESSAGE, parsePositiveAmount } from "../../utils/amount";
 import styles from "./TransferModal.module.css";
-
-const CURRENCY_OPTIONS: CurrencyCode[] = ["USD", "EUR", "ARS"];
 
 interface TransferModalProps {
   isOpen: boolean;
@@ -46,10 +47,6 @@ export function TransferModal({ isOpen, onClose, token, balances, onSuccess }: T
     setConcepto("");
     setSubmitError(null);
   }, [isOpen]);
-
-  function balanceFor(code: CurrencyCode): number {
-    return balances?.find((bal) => bal.currencyCode === code)?.amount ?? 0;
-  }
 
   // Cambiar el identificador después de haber verificado a alguien invalida esa
   // verificación — si no, quedaría mostrando el nombre de una persona distinta
@@ -96,9 +93,9 @@ export function TransferModal({ isOpen, onClose, token, balances, onSuccess }: T
       setSubmitError("Verificá al destinatario antes de confirmar.");
       return;
     }
-    const parsedAmount = Number(amount);
-    if (!Number.isFinite(parsedAmount) || parsedAmount <= 0) {
-      setSubmitError("Ingresá un monto válido, mayor a cero.");
+    const parsedAmount = parsePositiveAmount(amount);
+    if (parsedAmount === null) {
+      setSubmitError(INVALID_AMOUNT_MESSAGE);
       return;
     }
 
@@ -175,7 +172,7 @@ export function TransferModal({ isOpen, onClose, token, balances, onSuccess }: T
                 ))}
               </select>
               <span className={styles.balanceHint}>
-                Disponible: {balanceFor(currency).toLocaleString("es-AR", { maximumFractionDigits: 2 })} {currency}
+                Disponible: {balanceFor(balances, currency).toLocaleString("es-AR", { maximumFractionDigits: 2 })} {currency}
               </span>
             </div>
 
