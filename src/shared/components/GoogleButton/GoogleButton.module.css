@@ -7,6 +7,18 @@
   justify-content: center;
 }
 
+/* Descendiente, no hijo directo (div[role="button"] puede no colgar
+   directo de .container según cómo termine anidando GIS su markup, y no
+   pude inspeccionar el DOM real para confirmarlo) — reemplaza el anillo de
+   foco azul default del navegador por el acento de marca. !important porque
+   es un widget de terceros: si Google fija outline vía style inline, gana
+   por especificidad salvo que lo forcemos acá. No elimina el foco, solo le
+   cambia el color — mantiene accesibilidad de foco visible. */
+.container [role="button"]:focus-visible {
+  outline: 2px solid var(--accent) !important;
+  outline-offset: 2px !important;
+}
+
 .unavailable {
   margin: 0;
   padding: var(--spacing-md) 0;

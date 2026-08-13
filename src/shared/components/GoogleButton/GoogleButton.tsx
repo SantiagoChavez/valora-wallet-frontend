@@ -116,6 +116,7 @@ export function GoogleButton({ onSuccess, onError }: GoogleButtonProps) {
         theme: "filled_black",
         size: "large",
         text: "continue_with",
+        shape: "pill",
         width: String(width),
       });
     }
