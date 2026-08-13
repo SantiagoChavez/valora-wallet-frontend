@@ -194,7 +194,7 @@ export function Registro() {
             />
 
             <div className={styles.field}>
-              <label className={styles.selectLabel} htmlFor="country">País de residencia</label>
+              <label className={styles.selectLabel} htmlFor="country">Nacionalidad</label>
               <div className={styles.selectWrap}>
                 <select
                   id="country"
