@@ -27,6 +27,11 @@ export interface User {
   // true solo si phone y du están cargados — gatilla el modal de "completar
   // perfil" en DashboardLayout cuando es false (ver CompleteProfileModal).
   profileComplete: boolean;
+  // Controla únicamente los emails transaccionales (depósito/compra/venta/
+  // intercambio/transferencia) — verificado contra userModel.ts y
+  // authController.ts del backend. No afecta el email de recuperación de
+  // contraseña, y no es un toggle de notificaciones push/genérico.
+  emailNotificationsEnabled: boolean;
 }
 
 export interface Wallet {

@@ -59,11 +59,9 @@ interface CompleteProfileApiResponse {
 // ya concatenado adentro del string (ej. "+5511961234567") — PATCH /auth/me no
 // tiene un campo de prefijo separado del lado del backend. dateOfBirth va en
 // DD/MM/YYYY, mismo formato que /auth/register (ver toBackendDate en
-// shared/utils/date.ts) — al momento de este cambio, completeProfileSchema
-// (backend) todavía no valida ni persiste este campo: Zod lo descarta en
-// silencio (modo "strip" default, sin .strict()/.passthrough()), así que
-// mandarlo hoy no rompe el submit, solo no tiene efecto hasta que el backend
-// lo soporte.
+// shared/utils/date.ts) — completeProfileSchema (backend) ya valida y
+// persiste este campo (verificado contra dev del backend, 14/08): si no
+// viene, conserva la fecha existente vía COALESCE en updateUserProfile.
 export function completeProfile(
   phone: string,
   country: CountryCode,
@@ -76,6 +74,37 @@ export function completeProfile(
     token,
     body: JSON.stringify({ phone, country, du, dateOfBirth }),
   }).then((res) => res.data.user);
+}
+
+// Activa/desactiva los emails transaccionales (depósito/compra/venta/
+// intercambio/transferencia) de la cuenta autenticada — no afecta el email de
+// recuperación de contraseña. Mismo shape de respuesta envuelta que
+// completeProfile.
+export function updateEmailNotifications(enabled: boolean, token: string): Promise<User> {
+  return apiFetch<CompleteProfileApiResponse>("/auth/me/notifications", {
+    method: "PATCH",
+    token,
+    body: JSON.stringify({ enabled }),
+  }).then((res) => res.data.user);
+}
+
+interface DeleteAccountApiResponse {
+  success: boolean;
+  message: string;
+}
+
+// Elimina permanentemente la cuenta autenticada — DELETE /auth/me. password
+// es opcional: el backend la exige solo si la cuenta tiene password_hash
+// (deleteAccountSchema/deleteAccountController) — las cuentas de Google no
+// tienen una que confirmar, y el frontend no tiene forma de saber de
+// antemano cuál es cuál (el backend nunca expone ese dato). Si hace falta y
+// no se mandó, el 400 del backend llega tal cual vía getApiErrorMessage.
+export function deleteAccount(password: string | undefined, token: string): Promise<void> {
+  return apiFetch<DeleteAccountApiResponse>("/auth/me", {
+    method: "DELETE",
+    token,
+    body: JSON.stringify({ password }),
+  }).then(() => undefined);
 }
 
 export function googleLogin(idToken: string): Promise<AuthResponse> {
