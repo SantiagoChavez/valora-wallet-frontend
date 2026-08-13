@@ -88,6 +88,25 @@ export function updateEmailNotifications(enabled: boolean, token: string): Promi
   }).then((res) => res.data.user);
 }
 
+interface DeleteAccountApiResponse {
+  success: boolean;
+  message: string;
+}
+
+// Elimina permanentemente la cuenta autenticada — DELETE /auth/me. password
+// es opcional: el backend la exige solo si la cuenta tiene password_hash
+// (deleteAccountSchema/deleteAccountController) — las cuentas de Google no
+// tienen una que confirmar, y el frontend no tiene forma de saber de
+// antemano cuál es cuál (el backend nunca expone ese dato). Si hace falta y
+// no se mandó, el 400 del backend llega tal cual vía getApiErrorMessage.
+export function deleteAccount(password: string | undefined, token: string): Promise<void> {
+  return apiFetch<DeleteAccountApiResponse>("/auth/me", {
+    method: "DELETE",
+    token,
+    body: JSON.stringify({ password }),
+  }).then(() => undefined);
+}
+
 export function googleLogin(idToken: string): Promise<AuthResponse> {
   return apiFetch<AuthApiResponse>("/auth/google", {
     method: "POST",
