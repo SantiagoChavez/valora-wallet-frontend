@@ -3,6 +3,7 @@ import { Button } from "../Button/Button";
 import { Modal } from "../Modal/Modal";
 import { formatTransaction } from "../../utils/formatTransaction";
 import type { Transaction, TransactionType } from "../../types/models";
+import logo from "../../assets/valora-logo.png";
 import styles from "./TransactionDetailModal.module.css";
 
 interface TransactionDetailModalProps {
@@ -105,6 +106,18 @@ export function TransactionDetailModal({ isOpen, onClose, transaction }: Transac
         {/* Todo lo que va en el PNG descargado vive acá adentro — el header de
             arriba (con el botón de cerrar) queda afuera a propósito. */}
         <div ref={receiptRef} className={styles.receipt}>
+          <div className={styles.brandHeader}>
+            <div className={styles.brandBrand}>
+              <img src={logo} alt="Valora Wallet" className={styles.brandLogo} />
+              <span className={styles.brandWordmark}>
+                Valora<span className={styles.wordmarkMuted}> Wallet</span>
+              </span>
+            </div>
+            <span className={styles.receiptSubtitle}>
+              Comprobante de {typeLabel.toLowerCase()}
+            </span>
+          </div>
+
           <div className={styles.amountRow}>
             <span className={styles.amount}>{display.amount} {display.currency}</span>
             {/* No hay transacciones "pendientes" ni "fallidas" en el modelo
