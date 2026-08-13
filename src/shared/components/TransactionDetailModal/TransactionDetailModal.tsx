@@ -135,9 +135,12 @@ export function TransactionDetailModal({ isOpen, onClose, transaction }: Transac
               <DetailRow icon="alternate_email" label="Alias" value={transaction.counterpartyAlias} />
             )}
             <DetailRow icon="calendar_today" label="Fecha" value={formatShortDateTime(transaction.createdAt)} />
-            <DetailRow icon="description" label="Descripción" value={display.title} />
-            {isTransfer && transaction.concepto && (
+            {transaction.concepto ? (
               <DetailRow icon="chat_bubble" label="Concepto" value={transaction.concepto} />
+            ) : (
+              !isTransfer && (
+                <DetailRow icon="description" label="Descripción" value={display.title} />
+              )
             )}
             <DetailRow icon="payments" label="Moneda" value={display.currency} />
             <DetailRow icon="confirmation_number" label="ID de operación" value={transaction.id} mono />
