@@ -51,7 +51,7 @@ export function CompleteProfileModal() {
         />
 
         <div className={styles.field}>
-          <label className={styles.label} htmlFor="profileCountry">País de residencia</label>
+          <label className={styles.label} htmlFor="profileCountry">Nacionalidad</label>
           <div className={styles.selectWrap}>
             <select
               id="profileCountry"

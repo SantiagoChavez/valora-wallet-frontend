@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "../../shared/auth/useAuth";
 import { Card } from "../../shared/components/Card/Card";
+import { TransactionDetailModal } from "../../shared/components/TransactionDetailModal/TransactionDetailModal";
 import { getApiErrorMessage } from "../../shared/services/apiClient";
 import { getTransactions, type TransactionsPagination } from "../../shared/services/transactionService";
 import type { Transaction, TransactionType } from "../../shared/types/models";
@@ -27,6 +28,13 @@ export function HistoryPage() {
   const [page, setPage] = useState(1);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
+  const [isDetailOpen, setIsDetailOpen] = useState(false);
+
+  function openDetail(transaction: Transaction) {
+    setSelectedTransaction(transaction);
+    setIsDetailOpen(true);
+  }
 
   // Cambiar el filtro siempre vuelve a la página 1 — una página vieja puede no
   // existir más para el nuevo filtro (menos resultados que antes).
@@ -87,7 +95,9 @@ export function HistoryPage() {
       <Card className={styles.card}>
         {isLoading && <p className={styles.stateMessage}>Cargando...</p>}
         {!isLoading && error && <p className={styles.stateMessage}>{error}</p>}
-        {!isLoading && !error && <TransactionHistory transactions={transactions} />}
+        {!isLoading && !error && (
+          <TransactionHistory transactions={transactions} onSelectTransaction={openDetail} />
+        )}
       </Card>
 
       {!isLoading && !error && totalPages > 1 && (
@@ -111,6 +121,12 @@ export function HistoryPage() {
           </button>
         </div>
       )}
+
+      <TransactionDetailModal
+        isOpen={isDetailOpen}
+        onClose={() => setIsDetailOpen(false)}
+        transaction={selectedTransaction}
+      />
     </div>
   );
 }

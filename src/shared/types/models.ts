@@ -63,5 +63,16 @@ export interface Transaction {
   counterpartyName: string | null;
   counterpartyLastName: string | null;
   counterpartyEmail: string | null;
+  // UUID de la wallet de la contraparte — no es presentable en UI (para eso
+  // está counterpartyAlias). Se mantiene por si algún flujo futuro necesita
+  // el ID real (ej. "responder" una transferencia).
   counterpartyWallet: string | null;
+  // Alias legible de la contraparte (ver PR de "counterparty_alias" en el
+  // backend) — puede seguir siendo null en transacciones viejas insertadas
+  // antes de esa columna, o hasta que el backend lo despliegue.
+  counterpartyAlias: string | null;
+  // Nota opcional que se puede adjuntar a una transferencia (máx 140
+  // caracteres del lado del backend) — null si no se cargó ninguna, o en
+  // cualquier tipo de movimiento que no sea una transferencia.
+  concepto: string | null;
 }
