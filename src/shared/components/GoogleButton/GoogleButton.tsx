@@ -48,6 +48,17 @@ export function GoogleButton({ onSuccess, onError }: GoogleButtonProps) {
   onSuccessRef.current = onSuccess;
   onErrorRef.current = onError;
 
+  // StrictMode (main.tsx) monta cada componente dos veces en desarrollo
+  // (monta → limpia → vuelve a montar) para detectar efectos no idempotentes
+  // — sin esta guarda, la segunda invocación repetía initialize()+
+  // renderButton() sobre el mismo hiddenButtonRef.current, dejando dos
+  // botones apilados en el mismo div y disparando el warning de Google
+  // "initialize() is called multiple times". No cubre el caso real de
+  // producción (instancias distintas de este componente en /login y
+  // /registro, cada una con su propio hiddenButtonRef) — ver la guarda a
+  // nivel módulo más abajo para eso.
+  const hasSetupRef = useRef(false);
+
   useEffect(() => {
     if (!CLIENT_ID) return;
 
@@ -55,7 +66,8 @@ export function GoogleButton({ onSuccess, onError }: GoogleButtonProps) {
     let pollId: ReturnType<typeof setInterval> | undefined;
 
     function setup() {
-      if (cancelled || !window.google || !hiddenButtonRef.current || !CLIENT_ID) return;
+      if (cancelled || hasSetupRef.current || !window.google || !hiddenButtonRef.current || !CLIENT_ID) return;
+      hasSetupRef.current = true;
       window.google.accounts.id.initialize({
         client_id: CLIENT_ID,
         callback: (response) => {
