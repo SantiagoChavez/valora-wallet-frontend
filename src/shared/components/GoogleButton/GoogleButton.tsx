@@ -29,6 +29,34 @@ interface GoogleButtonProps {
 
 const GENERIC_ERROR = "No se pudo iniciar sesión con Google. Intentá de nuevo.";
 
+// google.accounts.id.initialize() es un singleton global: la última llamada
+// pisa la configuración de cualquier llamada anterior en la misma carga de
+// página (documentado por Google — cada llamada extra emite el warning
+// "initialize() is called multiple times"). /login y /registro son rutas
+// hermanas bajo GuestRoute (App.tsx) — React Router navega entre ellas sin
+// recargar la página (Login.tsx/Registro.tsx se linkean con <Link>, no
+// <a href>), así que window.google persiste entre esa navegación y cada una
+// monta su propia instancia de GoogleButton. Sin esta guarda a nivel módulo,
+// ir de /login a /registro (o viceversa) sin refrescar dispara una segunda
+// llamada real a initialize() — no simulada por StrictMode, confirmado en
+// producción (reporte de Analía, 12/08). Nunca hay dos instancias de
+// GoogleButton montadas a la vez (son rutas hermanas mutuamente excluyentes,
+// sin Suspense/lazy en App.tsx que pueda solaparlas), así que "una sola vez
+// por carga de página" es seguro acá.
+let hasInitializedGoogleClient = false;
+
+// El callback que registra initialize() también es global y solo se registra
+// una vez (con la guarda de arriba) — si cerrara sobre los props de la
+// instancia que llamó initialize() primero, un login exitoso en /registro
+// después de haber pasado por /login ejecutaría el onSuccess/onError de
+// Login, no el de Registro. Esta indirección hace que el callback lea
+// siempre el handler de la instancia actualmente montada, sin importar cuál
+// llamó initialize() en su momento.
+const activeHandlers: { onSuccess: (idToken: string) => void; onError: (message: string) => void } = {
+  onSuccess: () => {},
+  onError: () => {},
+};
+
 // El Identity Services de Google (index.html) no expone una forma soportada
 // de disparar el flujo de ID token desde un botón propio — solo desde su
 // propio botón renderizado. Se renderiza ese botón real pero invisible
@@ -38,25 +66,23 @@ export function GoogleButton({ onSuccess, onError }: GoogleButtonProps) {
   const hiddenButtonRef = useRef<HTMLDivElement>(null);
   const [isReady, setIsReady] = useState(false);
 
-  // El setup de GIS (initialize + renderButton) debe correr una sola vez, no
-  // en cada render — pero el callback que registra necesita las props más
-  // recientes (Login/Registro pasan funciones inline, distintas en cada
-  // render). Mismo patrón que setUnauthorizedHandler en apiClient.ts: refs
-  // actualizados en cada render, leídos desde un efecto sin dependencias.
-  const onSuccessRef = useRef(onSuccess);
-  const onErrorRef = useRef(onError);
-  onSuccessRef.current = onSuccess;
-  onErrorRef.current = onError;
+  // activeHandlers (módulo) se actualiza en cada render de la instancia
+  // actualmente montada, no solo al inicializar — así el callback global
+  // de initialize() siempre ejecuta la lógica de la página en pantalla.
+  useEffect(() => {
+    activeHandlers.onSuccess = onSuccess;
+    activeHandlers.onError = onError;
+  }, [onSuccess, onError]);
 
   // StrictMode (main.tsx) monta cada componente dos veces en desarrollo
   // (monta → limpia → vuelve a montar) para detectar efectos no idempotentes
-  // — sin esta guarda, la segunda invocación repetía initialize()+
-  // renderButton() sobre el mismo hiddenButtonRef.current, dejando dos
-  // botones apilados en el mismo div y disparando el warning de Google
-  // "initialize() is called multiple times". No cubre el caso real de
-  // producción (instancias distintas de este componente en /login y
-  // /registro, cada una con su propio hiddenButtonRef) — ver la guarda a
-  // nivel módulo más abajo para eso.
+  // — sin esta guarda, la segunda invocación repetía renderButton() sobre el
+  // mismo hiddenButtonRef.current, dejando dos botones apilados en el mismo
+  // div. Es por instancia (no a nivel módulo, a diferencia de
+  // hasInitializedGoogleClient) porque renderButton() sí necesita correr una
+  // vez por cada instancia real de GoogleButton (cada una tiene su propio
+  // hiddenButtonRef) — solo initialize() debe correr una sola vez por
+  // página.
   const hasSetupRef = useRef(false);
 
   useEffect(() => {
@@ -68,16 +94,19 @@ export function GoogleButton({ onSuccess, onError }: GoogleButtonProps) {
     function setup() {
       if (cancelled || hasSetupRef.current || !window.google || !hiddenButtonRef.current || !CLIENT_ID) return;
       hasSetupRef.current = true;
-      window.google.accounts.id.initialize({
-        client_id: CLIENT_ID,
-        callback: (response) => {
-          if (response.credential) {
-            onSuccessRef.current(response.credential);
-          } else {
-            onErrorRef.current(GENERIC_ERROR);
-          }
-        },
-      });
+      if (!hasInitializedGoogleClient) {
+        hasInitializedGoogleClient = true;
+        window.google.accounts.id.initialize({
+          client_id: CLIENT_ID,
+          callback: (response) => {
+            if (response.credential) {
+              activeHandlers.onSuccess(response.credential);
+            } else {
+              activeHandlers.onError(GENERIC_ERROR);
+            }
+          },
+        });
+      }
       window.google.accounts.id.renderButton(hiddenButtonRef.current, { type: "standard" });
       setIsReady(true);
     }
