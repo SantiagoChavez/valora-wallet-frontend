@@ -39,7 +39,7 @@ Screaming Architecture: se organiza por dominio, no por tipo técnico.
 ```
 src/
   shared/
-    components/       # Button, Card, Input, Modal, NotificationModal — reutilizables, sin lógica de negocio
+    components/       # Button, Card, Input, Modal — reutilizables, sin lógica de negocio
     styles/
       variables.css    # design tokens: paleta de colores, tipografía, espaciados
   layouts/
