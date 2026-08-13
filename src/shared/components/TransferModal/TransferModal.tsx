@@ -24,6 +24,7 @@ export function TransferModal({ isOpen, onClose, token, balances, onSuccess }: T
   const [resolveError, setResolveError] = useState<string | null>(null);
   const [currency, setCurrency] = useState<CurrencyCode>("ARS");
   const [amount, setAmount] = useState("");
+  const [concepto, setConcepto] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
@@ -34,6 +35,7 @@ export function TransferModal({ isOpen, onClose, token, balances, onSuccess }: T
     setResolveError(null);
     setCurrency("ARS");
     setAmount("");
+    setConcepto("");
     setSubmitError(null);
   }, [isOpen]);
 
@@ -89,7 +91,13 @@ export function TransferModal({ isOpen, onClose, token, balances, onSuccess }: T
 
     setIsSubmitting(true);
     try {
-      const transaction = await transfer(token, currency, parsedAmount, identifier.trim());
+      const transaction = await transfer(
+        token,
+        currency,
+        parsedAmount,
+        identifier.trim(),
+        concepto.trim() || undefined
+      );
       onSuccess(transaction, destination);
     } catch (err) {
       setSubmitError(getApiErrorMessage(err));
@@ -168,6 +176,15 @@ export function TransferModal({ isOpen, onClose, token, balances, onSuccess }: T
               value={amount}
               onChange={(event) => setAmount(event.target.value)}
               required
+            />
+
+            <Input
+              label="Concepto (opcional)"
+              type="text"
+              placeholder="Ej. Alquiler, cena, regalo..."
+              maxLength={140}
+              value={concepto}
+              onChange={(event) => setConcepto(event.target.value)}
             />
           </>
         )}

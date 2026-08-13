@@ -161,10 +161,11 @@ export function transfer(
   currency: CurrencyCode,
   amount: number,
   destination: string,
+  concepto?: string,
 ): Promise<Transaction> {
   return apiFetch<TransactionApiResponse>("/transactions/transfer", {
     method: "POST",
     token,
-    body: JSON.stringify({ currency, amount, destination }),
+    body: JSON.stringify({ currency, amount, destination, concepto }),
   }).then((res) => res.data);
 }
