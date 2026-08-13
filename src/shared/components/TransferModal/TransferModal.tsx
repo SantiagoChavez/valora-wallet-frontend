@@ -1,13 +1,14 @@
-import { useEffect, useState, type SubmitEvent } from "react";
+import { useEffect, useRef, useState, type SubmitEvent } from "react";
 import { Button } from "../Button/Button";
 import { Input } from "../Input/Input";
 import { Modal } from "../Modal/Modal";
 import { getApiErrorMessage } from "../../services/apiClient";
 import { resolveTransferDestination, transfer, type TransferDestination } from "../../services/transactionService";
 import type { Balance, CurrencyCode, Transaction } from "../../types/models";
+import { CURRENCY_OPTIONS } from "../../constants";
+import { balanceFor } from "../../utils/balances";
+import { INVALID_AMOUNT_MESSAGE, parsePositiveAmount } from "../../utils/amount";
 import styles from "./TransferModal.module.css";
-
-const CURRENCY_OPTIONS: CurrencyCode[] = ["USD", "EUR", "ARS"];
 
 interface TransferModalProps {
   isOpen: boolean;
@@ -28,6 +29,14 @@ export function TransferModal({ isOpen, onClose, token, balances, onSuccess }: T
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
+  // Espejo del identificador en vivo, para que handleResolve pueda comparar
+  // la respuesta contra el valor ACTUAL del input en vez de contra sí mismo
+  // (ver el comentario en handleResolve más abajo).
+  const identifierRef = useRef(identifier);
+  useEffect(() => {
+    identifierRef.current = identifier;
+  }, [identifier]);
+
   useEffect(() => {
     if (!isOpen) return;
     setIdentifier("");
@@ -38,10 +47,6 @@ export function TransferModal({ isOpen, onClose, token, balances, onSuccess }: T
     setConcepto("");
     setSubmitError(null);
   }, [isOpen]);
-
-  function balanceFor(code: CurrencyCode): number {
-    return balances?.find((bal) => bal.currencyCode === code)?.amount ?? 0;
-  }
 
   // Cambiar el identificador después de haber verificado a alguien invalida esa
   // verificación — si no, quedaría mostrando el nombre de una persona distinta
@@ -64,10 +69,15 @@ export function TransferModal({ isOpen, onClose, token, balances, onSuccess }: T
       // reabrió) mientras viajaba, esta respuesta ya quedó vieja: aplicarla
       // igual mostraría un destinatario distinto al que en realidad se
       // transferiría con el identificador actual. Se descarta en silencio.
-      if (identifier.trim() !== trimmedIdentifier) return;
+      // Comparar contra identifierRef (no contra `identifier` del closure) es
+      // lo que hace que esta guardia funcione de verdad: `identifier` acá
+      // adentro es el valor capturado al arrancar handleResolve, siempre
+      // igual a trimmedIdentifier — comparar closure contra closure nunca
+      // detecta un cambio. identifierRef.current sí se actualiza en vivo.
+      if (identifierRef.current.trim() !== trimmedIdentifier) return;
       setDestination(result);
     } catch (err) {
-      if (identifier.trim() !== trimmedIdentifier) return;
+      if (identifierRef.current.trim() !== trimmedIdentifier) return;
       setDestination(null);
       setResolveError(getApiErrorMessage(err));
     } finally {
@@ -83,9 +93,9 @@ export function TransferModal({ isOpen, onClose, token, balances, onSuccess }: T
       setSubmitError("Verificá al destinatario antes de confirmar.");
       return;
     }
-    const parsedAmount = Number(amount);
-    if (!Number.isFinite(parsedAmount) || parsedAmount <= 0) {
-      setSubmitError("Ingresá un monto válido, mayor a cero.");
+    const parsedAmount = parsePositiveAmount(amount);
+    if (parsedAmount === null) {
+      setSubmitError(INVALID_AMOUNT_MESSAGE);
       return;
     }
 
@@ -162,7 +172,7 @@ export function TransferModal({ isOpen, onClose, token, balances, onSuccess }: T
                 ))}
               </select>
               <span className={styles.balanceHint}>
-                Disponible: {balanceFor(currency).toLocaleString("es-AR", { maximumFractionDigits: 2 })} {currency}
+                Disponible: {balanceFor(balances, currency).toLocaleString("es-AR", { maximumFractionDigits: 2 })} {currency}
               </span>
             </div>
 

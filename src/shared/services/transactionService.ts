@@ -64,11 +64,13 @@ export function getQuote(
   toCurrency: CurrencyCode,
   amount: number,
   amountSide?: AmountSide,
+  signal?: AbortSignal,
 ): Promise<Quote> {
   return apiFetch<QuoteApiResponse>("/transactions/quote", {
     method: "POST",
     token,
     body: JSON.stringify({ fromCurrency, toCurrency, amount, amountSide }),
+    signal,
   }).then((res) => res.data);
 }
 

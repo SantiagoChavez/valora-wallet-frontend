@@ -8,6 +8,10 @@ const CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID as string | undefined;
 // (~420px en Login/Registro, vía wrapperRef) y se recorta acá si hace falta.
 const MAX_BUTTON_WIDTH = 400;
 
+// Tiempo de gracia para que GIS inyecte el iframe del botón real después de
+// renderButton() antes de asumir que no va a aparecer (ad-blocker/CSP).
+const RENDER_CHECK_DELAY_MS = 2000;
+
 interface GoogleCredentialResponse {
   credential?: string;
 }
@@ -93,6 +97,7 @@ export function GoogleButton({ onSuccess, onError }: GoogleButtonProps) {
 
     let cancelled = false;
     let pollId: ReturnType<typeof setInterval> | undefined;
+    let renderCheckId: ReturnType<typeof setTimeout> | undefined;
 
     async function setup() {
       if (
@@ -155,6 +160,7 @@ export function GoogleButton({ onSuccess, onError }: GoogleButtonProps) {
       // punto de recibir un ancho fijo acá abajo, así que ya no sirve como
       // referencia de "cuánto espacio hay disponible" (mediría lo que le
       // acabamos de fijar, no el espacio real del formulario).
+      const container = containerRef.current;
       const width = Math.min(wrapperRef.current.offsetWidth, MAX_BUTTON_WIDTH);
       // Google alterna, sin que lo controlemos, entre renderizar un
       // <div role="button"> normal (que sí respeta el "width" de las
@@ -166,13 +172,30 @@ export function GoogleButton({ onSuccess, onError }: GoogleButtonProps) {
       // no estilable) que se ve blanco. Fijar el ancho real de containerRef
       // al mismo número que le pedimos a Google elimina ese margen sea
       // cual sea la variante que use esta vez.
-      containerRef.current.style.width = `${width}px`;
-      window.google.accounts.id.renderButton(containerRef.current, {
-        theme: "filled_black",
-        size: "large",
-        text: "continue_with",
-        width: String(width),
-      });
+      container.style.width = `${width}px`;
+      try {
+        window.google.accounts.id.renderButton(container, {
+          theme: "filled_black",
+          size: "large",
+          text: "continue_with",
+          width: String(width),
+        });
+      } catch {
+        activeHandlers.onError(GENERIC_ERROR);
+        return;
+      }
+      // renderButton() inyecta el iframe del botón de forma asíncrona — chequeo
+      // demorado (no inmediato) para darle tiempo real a aparecer antes de
+      // decidir que falló. Si un ad-blocker/CSP bloqueó el iframe, el
+      // contenedor queda vacío para siempre y sin esto nadie se entera: no hay
+      // ningún click que pueda disparar el callback de error de Google, porque
+      // no hay ningún botón ahí para clickear.
+      renderCheckId = setTimeout(() => {
+        if (cancelled) return;
+        if (container.childElementCount === 0) {
+          activeHandlers.onError(GENERIC_ERROR);
+        }
+      }, RENDER_CHECK_DELAY_MS);
     }
 
     if (window.google) {
@@ -199,6 +222,7 @@ export function GoogleButton({ onSuccess, onError }: GoogleButtonProps) {
     return () => {
       cancelled = true;
       if (pollId) clearInterval(pollId);
+      if (renderCheckId) clearTimeout(renderCheckId);
     };
   }, []);
 
