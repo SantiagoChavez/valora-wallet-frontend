@@ -5,9 +5,10 @@ import { Modal } from "../Modal/Modal";
 import { getApiErrorMessage } from "../../services/apiClient";
 import { buy, sell, type AmountSide } from "../../services/transactionService";
 import type { Balance, CurrencyCode, Transaction } from "../../types/models";
+import { CURRENCY_OPTIONS, RATE_NOT_AVAILABLE_NOTE } from "../../constants";
+import { balanceFor } from "../../utils/balances";
+import { INVALID_AMOUNT_MESSAGE, parsePositiveAmount } from "../../utils/amount";
 import styles from "./ConversionModal.module.css";
-
-const CURRENCY_OPTIONS: CurrencyCode[] = ["USD", "EUR", "ARS"];
 
 // Comprar y Vender son, para el backend, la misma operación de conversión que
 // Intercambio — solo cambia la etiqueta que le pone a la transacción (ver
@@ -72,10 +73,6 @@ export function ConversionModal({ mode, isOpen, onClose, token, balances, onSucc
     setError(null);
   }, [isOpen, config.defaultFrom, config.defaultTo]);
 
-  function balanceFor(code: CurrencyCode): number {
-    return balances?.find((bal) => bal.currencyCode === code)?.amount ?? 0;
-  }
-
   // El campo con el monto siempre es el primario: en Comprar es toCurrency
   // (cuánto querés recibir), en Vender es fromCurrency (cuánto vas a entregar)
   // — el otro selector queda como secundario, sin input de monto al lado.
@@ -92,9 +89,9 @@ export function ConversionModal({ mode, isOpen, onClose, token, balances, onSucc
       setError("Elegí dos monedas distintas.");
       return;
     }
-    const parsedAmount = Number(amount);
-    if (!Number.isFinite(parsedAmount) || parsedAmount <= 0) {
-      setError("Ingresá un monto válido, mayor a cero.");
+    const parsedAmount = parsePositiveAmount(amount);
+    if (parsedAmount === null) {
+      setError(INVALID_AMOUNT_MESSAGE);
       return;
     }
 
@@ -132,7 +129,7 @@ export function ConversionModal({ mode, isOpen, onClose, token, balances, onSucc
                 va bajo el selector primario acá, no en el secundario. */}
             {!isBuy && (
               <span className={styles.balanceHint}>
-                Disponible: {balanceFor(fromCurrency).toLocaleString("es-AR", { maximumFractionDigits: 2 })} {fromCurrency}
+                Disponible: {balanceFor(balances, fromCurrency).toLocaleString("es-AR", { maximumFractionDigits: 2 })} {fromCurrency}
               </span>
             )}
           </div>
@@ -153,7 +150,7 @@ export function ConversionModal({ mode, isOpen, onClose, token, balances, onSucc
                 (fromCurrency) va acá, bajo el selector secundario. */}
             {isBuy && (
               <span className={styles.balanceHint}>
-                Disponible: {balanceFor(fromCurrency).toLocaleString("es-AR", { maximumFractionDigits: 2 })} {fromCurrency}
+                Disponible: {balanceFor(balances, fromCurrency).toLocaleString("es-AR", { maximumFractionDigits: 2 })} {fromCurrency}
               </span>
             )}
           </div>
@@ -171,9 +168,7 @@ export function ConversionModal({ mode, isOpen, onClose, token, balances, onSucc
           required
         />
 
-        {/* No hay cotización previa antes de confirmar (ver ExchangeForm) — la
-            tasa real se calcula recién del lado del backend al confirmar. */}
-        <p className={styles.rateNote}>La tasa se calcula al confirmar, no hay cotización previa disponible todavía.</p>
+        <p className={styles.rateNote}>{RATE_NOT_AVAILABLE_NOTE}</p>
 
         {error && <p className={styles.error} role="alert">{error}</p>}
 

@@ -9,6 +9,10 @@
   gap: var(--spacing-lg);
 }
 
+.srOnly {
+  composes: srOnly from "../../shared/styles/visuallyHidden.module.css";
+}
+
 @media (min-width: 1024px) {
   .page {
     flex-direction: row;

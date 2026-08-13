@@ -14,10 +14,11 @@ import { getApiErrorMessage } from "../../shared/services/apiClient";
 import { getBalances } from "../../shared/services/balanceService";
 import { deposit, getTransactions, type TransferDestination } from "../../shared/services/transactionService";
 import type { Balance, CurrencyCode, Transaction } from "../../shared/types/models";
+import { CURRENCY_OPTIONS } from "../../shared/constants";
+import { balanceFor } from "../../shared/utils/balances";
+import { INVALID_AMOUNT_MESSAGE, parsePositiveAmount } from "../../shared/utils/amount";
 import type { DashboardOutletContext } from "../../layouts/DashboardLayout/DashboardLayout";
 import styles from "./Dashboard.module.css";
-
-const CURRENCY_OPTIONS: CurrencyCode[] = ["USD", "EUR", "ARS"];
 
 const CURRENCY_META: Record<CurrencyCode, { label: string; flagChar: string }> = {
   USD: { label: "Dólares", flagChar: "US" },
@@ -149,9 +150,9 @@ export function Dashboard() {
     event.preventDefault();
     setDepositError(null);
 
-    const parsedAmount = Number(depositAmount);
-    if (!Number.isFinite(parsedAmount) || parsedAmount <= 0) {
-      setDepositError("Ingresá un monto válido, mayor a cero.");
+    const parsedAmount = parsePositiveAmount(depositAmount);
+    if (parsedAmount === null) {
+      setDepositError(INVALID_AMOUNT_MESSAGE);
       return;
     }
 
@@ -196,11 +197,7 @@ export function Dashboard() {
     setHidden((prev) => ({ ...prev, [code]: !prev[code] }));
   }
 
-  function balanceFor(code: CurrencyCode): number {
-    return balances?.find((bal) => bal.currencyCode === code)?.amount ?? 0;
-  }
-
-  const totalUsd = CURRENCY_OPTIONS.reduce((sum, code) => sum + balanceFor(code) / APPROX_RATES[code], 0);
+  const totalUsd = CURRENCY_OPTIONS.reduce((sum, code) => sum + balanceFor(balances, code) / APPROX_RATES[code], 0);
   const totalConverted = Math.round(totalUsd * APPROX_RATES[totalCurrency]);
   const totalDisplayValue = totalHidden
     ? "••••••"
@@ -208,6 +205,7 @@ export function Dashboard() {
 
   return (
     <div className={styles.page}>
+      <h1 className={styles.srOnly}>Inicio</h1>
       <section className={styles.balanceSection}>
         <div className={styles.balanceCard}>
           <div className={styles.balanceCardTop}>
@@ -285,7 +283,7 @@ export function Dashboard() {
                     </button>
                   </div>
                   <span className={styles.currencyCardValue}>
-                    {isHidden ? "••••••" : `${code} ${balanceFor(code).toLocaleString("es-AR", { maximumFractionDigits: 2 })}`}
+                    {isHidden ? "••••••" : `${code} ${balanceFor(balances, code).toLocaleString("es-AR", { maximumFractionDigits: 2 })}`}
                   </span>
                 </div>
               );
@@ -338,7 +336,7 @@ export function Dashboard() {
             <p className={styles.txEmptyState}>Todavía no hiciste ninguna operación.</p>
           )}
           {!isLoading && !error && transactions && transactions.length > 0 && (
-            <ul className={styles.txList}>
+            <ul className={styles.txList} role="list">
               {transactions.map((tx) => <TransactionRow key={tx.id} transaction={tx} />)}
             </ul>
           )}
