@@ -1,30 +1,16 @@
-.googleButton {
-  composes: actionButton from "../AuthShared/AuthShared.module.css";
+/* Contenedor del botón nativo de Google (GoogleButton.tsx renderiza acá con
+   renderButton()) — centrado porque GIS acepta como máximo 400px de ancho,
+   así que en formularios más anchos que eso queda con margen a los lados en
+   vez de pegado a la izquierda. */
+.container {
   display: flex;
-  align-items: center;
   justify-content: center;
-  gap: 10px;
 }
 
-/* Button compartido: variant="secondary" solo cambia border-color en hover, así que
-   alcanza con revertir esa propiedad puntual mientras el botón está aria-disabled */
-.googleButton[aria-disabled="true"] {
-  cursor: not-allowed;
-}
-
-.googleButton[aria-disabled="true"]:hover {
-  border-color: var(--border);
-}
-
-/* Botón real de Google Identity Services, renderizado pero no visible — se le
-   hace click por código desde .googleButton (ver GoogleButton.tsx). No usa
-   display:none: GIS necesita el elemento medible/en el layout para renderizar
-   e interactuar con él. */
-.hiddenGoogleButton {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-  opacity: 0;
-  pointer-events: none;
+.unavailable {
+  margin: 0;
+  padding: var(--spacing-md) 0;
+  text-align: center;
+  color: var(--text-tertiary);
+  font-size: var(--font-size-sm);
 }
