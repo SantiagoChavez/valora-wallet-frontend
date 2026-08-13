@@ -5,18 +5,29 @@
 .container {
   display: flex;
   justify-content: center;
+  /* El "G" cuadrado que renderiza Google no siempre resuelve bien las puntas
+     redondeadas por su cuenta (varía entre entornos) — se recorta acá con
+     nuestro propio radio en vez de depender de shape:"pill" del lado de
+     Google (sacado de renderButton() en GoogleButton.tsx). Mismo radio que
+     el resto de los botones de la app. */
+  border-radius: 12px;
+  overflow: hidden;
 }
 
 /* Descendiente, no hijo directo (div[role="button"] puede no colgar
    directo de .container según cómo termine anidando GIS su markup, y no
    pude inspeccionar el DOM real para confirmarlo) — reemplaza el anillo de
-   foco azul default del navegador por el acento de marca. !important porque
-   es un widget de terceros: si Google fija outline vía style inline, gana
-   por especificidad salvo que lo forcemos acá. No elimina el foco, solo le
-   cambia el color — mantiene accesibilidad de foco visible. */
+   foco azul default del navegador por el acento de marca. box-shadow inset,
+   no outline: el overflow:hidden de .container recorta cualquier cosa
+   pintada fuera de sus límites, y un outline se pinta afuera del borde del
+   botón (quedaría cortado) — el inset lo pinta adentro, en el mismo espacio
+   que ya ocupa el botón, así que sobrevive al recorte. !important porque es
+   un widget de terceros: si Google fija outline vía style inline, gana por
+   especificidad salvo que lo forcemos acá. No elimina el foco, solo cambia
+   cómo se pinta — mantiene accesibilidad de foco visible. */
 .container [role="button"]:focus-visible {
-  outline: 2px solid var(--accent) !important;
-  outline-offset: 2px !important;
+  outline: none !important;
+  box-shadow: inset 0 0 0 2px var(--accent) !important;
 }
 
 .unavailable {
