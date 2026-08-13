@@ -59,7 +59,22 @@ Sigue estos pasos para correr el entorno de desarrollo localmente:
 - `npm run preview`: Sirve el build de producción localmente para pruebas.
 - `npm run lint`: Ejecuta el linter (oxlint) para detectar errores de sintaxis y estilo.
 
----
+```
+src/
+  shared/
+    components/       # Button, Card, Input, Modal — reutilizables, sin lógica de negocio
+    styles/
+      variables.css    # design tokens: paleta de colores, tipografía, espaciados
+  layouts/
+    DashboardLayout/   # header con espacio para usuario logueado (avatar/email, dropdown de logout)
+  pages/
+    Dashboard/
+    Login/
+  features/
+    transactions/       # compra/venta/intercambio
+    history/             # historial de transacciones
+    chatbot/              # asistente Gemini
+```
 
 ## 📂 Estructura del Proyecto (Screaming Architecture)
 
