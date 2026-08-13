@@ -42,6 +42,36 @@ export function getTransactions(
 
 export type AmountSide = "source" | "target";
 
+export interface Quote {
+  exchangeRate: number;
+  sourceAmount: number;
+  targetAmount: number;
+}
+
+interface QuoteApiResponse {
+  success: boolean;
+  data: Quote;
+}
+
+// De solo lectura, no crea ninguna transacción — misma tasa real que usan
+// /buy, /sell y /exchange (ver getExchangeQuote en transactionService.ts del
+// backend). El backend rechaza fromCurrency === toCurrency y amount <= 0
+// (SAME_CURRENCY / INVALID_AMOUNT) — el caller tiene que evitar esos casos
+// antes de llamar, acá no se resuelve solo.
+export function getQuote(
+  token: string,
+  fromCurrency: CurrencyCode,
+  toCurrency: CurrencyCode,
+  amount: number,
+  amountSide?: AmountSide,
+): Promise<Quote> {
+  return apiFetch<QuoteApiResponse>("/transactions/quote", {
+    method: "POST",
+    token,
+    body: JSON.stringify({ fromCurrency, toCurrency, amount, amountSide }),
+  }).then((res) => res.data);
+}
+
 // /exchange, /buy y /sell toman exactamente el mismo body — el backend los
 // procesa con la misma lógica de conversión, solo cambia la etiqueta que le
 // pone a la transacción (ver executeConversion en transactionService.ts del
@@ -131,10 +161,11 @@ export function transfer(
   currency: CurrencyCode,
   amount: number,
   destination: string,
+  concepto?: string,
 ): Promise<Transaction> {
   return apiFetch<TransactionApiResponse>("/transactions/transfer", {
     method: "POST",
     token,
-    body: JSON.stringify({ currency, amount, destination }),
+    body: JSON.stringify({ currency, amount, destination, concepto }),
   }).then((res) => res.data);
 }

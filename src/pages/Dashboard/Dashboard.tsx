@@ -8,11 +8,12 @@ import { Input } from "../../shared/components/Input/Input";
 import { Modal } from "../../shared/components/Modal/Modal";
 import { Toast } from "../../shared/components/Toast/Toast";
 import { useToast } from "../../shared/components/Toast/useToast";
+import { TransactionDetailModal } from "../../shared/components/TransactionDetailModal/TransactionDetailModal";
 import { TransactionRow } from "../../shared/components/TransactionRow/TransactionRow";
 import { TransferModal } from "../../shared/components/TransferModal/TransferModal";
 import { getApiErrorMessage } from "../../shared/services/apiClient";
 import { getBalances } from "../../shared/services/balanceService";
-import { deposit, getTransactions, type TransferDestination } from "../../shared/services/transactionService";
+import { deposit, getQuote, getTransactions, type TransferDestination } from "../../shared/services/transactionService";
 import type { Balance, CurrencyCode, Transaction } from "../../shared/types/models";
 import { CURRENCY_OPTIONS } from "../../shared/constants";
 import { balanceFor } from "../../shared/utils/balances";
@@ -25,12 +26,6 @@ const CURRENCY_META: Record<CurrencyCode, { label: string; flagChar: string }> =
   EUR: { label: "Euros", flagChar: "EU" },
   ARS: { label: "Pesos AR", flagChar: "AR" },
 };
-
-// No hay endpoint de cotización pública todavía (el backend solo calcula la tasa
-// real al confirmar un /transactions/exchange) — esto es una aproximación de
-// cliente únicamente para poder mostrar "Balance total" convertido a otra
-// moneda. No es la tasa que se aplica en una operación real.
-const APPROX_RATES: Record<CurrencyCode, number> = { USD: 1, EUR: 0.92, ARS: 1350 };
 
 const LATEST_TRANSACTIONS_LIMIT = 5;
 
@@ -71,6 +66,14 @@ export function Dashboard() {
   const [isConversionOpen, setIsConversionOpen] = useState(false);
 
   const [isTransferOpen, setIsTransferOpen] = useState(false);
+
+  const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
+  const [isDetailOpen, setIsDetailOpen] = useState(false);
+
+  function openDetail(transaction: Transaction) {
+    setSelectedTransaction(transaction);
+    setIsDetailOpen(true);
+  }
 
   // Contador de generación, no boolean: con un solo cancelledRef reseteado a
   // false al arrancar cada corrida, un request de una corrida ANTERIOR que
@@ -197,11 +200,45 @@ export function Dashboard() {
     setHidden((prev) => ({ ...prev, [code]: !prev[code] }));
   }
 
-  const totalUsd = CURRENCY_OPTIONS.reduce((sum, code) => sum + balanceFor(balances, code) / APPROX_RATES[code], 0);
-  const totalConverted = Math.round(totalUsd * APPROX_RATES[totalCurrency]);
+  // null mientras no hay una cifra real que mostrar (todavía no cargaron los
+  // balances, o falló alguna cotización) — nunca se inventa un total parcial.
+  const [totalConverted, setTotalConverted] = useState<number | null>(null);
+  // Mismo criterio que requestIdRef de arriba — evita que una cotización
+  // vieja (de la moneda anterior en el selector) pise el total con datos que
+  // ya no corresponden si las respuestas llegan desordenadas.
+  const totalRequestIdRef = useRef(0);
+
+  useEffect(() => {
+    if (!token || !balances) return;
+    const requestId = ++totalRequestIdRef.current;
+
+    // Antes esto era una tabla de tasas aproximada del lado del cliente — ahora
+    // que existe /transactions/quote con la tasa real, se pide una cotización
+    // por cada moneda con saldo (misma moneda que la elegida en el selector no
+    // pide nada, es 1 a 1: el backend rechaza fromCurrency === toCurrency).
+    const contributions = balances.map(async (bal) => {
+      if (bal.amount <= 0 || bal.currencyCode === totalCurrency) return bal.amount;
+      const quote = await getQuote(token, bal.currencyCode, totalCurrency, bal.amount, "source");
+      return quote.targetAmount;
+    });
+
+    Promise.all(contributions)
+      .then((amounts) => {
+        if (totalRequestIdRef.current !== requestId) return;
+        setTotalConverted(amounts.reduce((sum, value) => sum + value, 0));
+      })
+      .catch(() => {
+        if (totalRequestIdRef.current !== requestId) return;
+        // Tasa real no disponible para alguna moneda — mejor mostrar que no
+        // está disponible que un total parcial o con una tasa inventada.
+        setTotalConverted(null);
+      });
+  }, [token, balances, totalCurrency]);
   const totalDisplayValue = totalHidden
     ? "••••••"
-    : `${totalCurrency} ${totalConverted.toLocaleString("es-AR", { maximumFractionDigits: 2 })}`;
+    : totalConverted === null
+      ? "Calculando…"
+      : `${totalCurrency} ${totalConverted.toLocaleString("es-AR", { maximumFractionDigits: 2 })}`;
 
   return (
     <div className={styles.page}>
@@ -337,7 +374,9 @@ export function Dashboard() {
           )}
           {!isLoading && !error && transactions && transactions.length > 0 && (
             <ul className={styles.txList} role="list">
-              {transactions.map((tx) => <TransactionRow key={tx.id} transaction={tx} />)}
+              {transactions.map((tx) => (
+                <TransactionRow key={tx.id} transaction={tx} onSelect={openDetail} />
+              ))}
             </ul>
           )}
         </div>
@@ -405,6 +444,12 @@ export function Dashboard() {
           </Button>
         </form>
       </Modal>
+
+      <TransactionDetailModal
+        isOpen={isDetailOpen}
+        onClose={() => setIsDetailOpen(false)}
+        transaction={selectedTransaction}
+      />
     </div>
   );
 }
