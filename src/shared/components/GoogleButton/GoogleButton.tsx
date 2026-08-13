@@ -88,9 +88,33 @@ export function GoogleButton({ onSuccess, onError }: GoogleButtonProps) {
     let cancelled = false;
     let pollId: ReturnType<typeof setInterval> | undefined;
 
-    function setup() {
+    async function setup() {
       if (cancelled || hasSetupRef.current || !window.google || !containerRef.current || !CLIENT_ID) return;
+      // Reclamamos la guarda ANTES del await, no después: si no, dos
+      // invocaciones de este efecto muy próximas en el tiempo (StrictMode)
+      // podrían pasar juntas el chequeo de arriba mientras las dos esperan
+      // document.fonts.ready, y terminar llamando initialize()/renderButton()
+      // dos veces igual.
       hasSetupRef.current = true;
+
+      // Medir el ancho del contenedor antes de que el layout se haya
+      // asentado del todo (ej. una fuente web todavía cargando, cambiando
+      // altura/scroll de la página) puede dar un ancho que ya no es el
+      // final — renderButton() usa ese ancho tal cual, así que si termina
+      // siendo mayor al margen real disponible, el <div> con
+      // overflow:hidden del contenedor le recorta la esquina, dejando un
+      // filo visible del ícono. document.fonts.ready espera a que terminen
+      // de cargar antes de medir. Si la Font Loading API no existe en el
+      // navegador (Safari viejo) o falla, seguimos sin bloquear.
+      try {
+        await document.fonts?.ready;
+      } catch {
+        // seguimos igual si la espera de fuentes falla
+      }
+      // Repetimos el chequeo (menos hasSetupRef, que ya reclamamos arriba):
+      // el componente pudo desmontarse mientras esperábamos las fuentes.
+      if (cancelled || !window.google || !containerRef.current || !CLIENT_ID) return;
+
       if (!hasInitializedGoogleClient) {
         hasInitializedGoogleClient = true;
         window.google.accounts.id.initialize({
