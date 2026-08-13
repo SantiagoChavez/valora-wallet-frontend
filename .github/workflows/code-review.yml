@@ -29,19 +29,20 @@ jobs:
             exit 0
           fi
 
-          # 🚨 NUEVO: Obtener la lista de archivos modificados y darle formato de lista Markdown
+          # 2. Obtener la lista de archivos modificados y darle formato de lista Markdown
           FILES_LIST=$(gh pr diff "$PR_NUMBER" --name-only | awk '{print "- `" $0 "`"}')
 
-          # 2. Se prepara el payload (Con max_tokens en 8192 para evitar que se corte)
+          # 3. Se prepara el payload (Con max_tokens en 8192 y System Prompt estricto)
           jq -n --arg diff "$DIFF" '{
             "model": "claude-sonnet-5",
-            "max_tokens": 8192,
+            "max_tokens": 163840,
+            "system": "Eres un Tech Lead y Senior Developer extremadamente estricto, detallista y directo. Tu objetivo es encontrar bugs, vulnerabilidades, problemas de rendimiento, mala arquitectura y código espagueti. NO seas complaciente ni felicites al usuario. Por CADA error o mejora que encuentres, DEBES explicar el porqué y proporcionar el bloque de código exacto con la corrección lista para copiar y pegar.",
             "messages": [
-              {"role": "user", "content": "Actúa como un Senior Developer. Haz un code review exhaustivo de este git diff. Identifica bugs, errores lógicos y dame el código corregido:\n\n\($diff)"}
+              {"role": "user", "content": "Analiza este git diff línea por línea. Identifica todo lo que se puede mejorar o corregir en este código:\n\n\($diff)"}
             ]
           }' > payload.json
 
-          # 3. Se ejecuta curl (Tiempo máximo ampliado a 90s para darle tiempo a Claude de pensar)
+          # 4. Se ejecuta curl (Tiempo máximo ampliado a 90s para darle tiempo a Claude de pensar)
           HTTP_STATUS=$(curl -s -o response.json -w "%{http_code}" \
             --max-time 90 \
             https://api.anthropic.com/v1/messages \
@@ -50,12 +51,12 @@ jobs:
             -H "content-type: application/json" \
             -d @payload.json)
             
-          # 4. Imprimir respuesta para debug en logs
+          # 5. Imprimir respuesta para debug en logs
           echo "--- RESPUESTA DE LA API ---"
           cat response.json
           echo "---------------------------"
           
-          # 5. Extraer el texto de la respuesta (ignorando los tokens de pensamiento)
+          # 6. Extraer el texto de la respuesta (ignorando los tokens de pensamiento)
           COMMENT=$(cat response.json | jq -r '
             if type != "object" then 
               "⚠️ Error crítico: La API no devolvió JSON."
@@ -68,7 +69,7 @@ jobs:
             end
           ')
           
-          # 🚨 NUEVO: Construir el comentario final concatenando la lista de archivos con el análisis
+          # 7. Construir el comentario final concatenando la lista de archivos con el análisis
           FINAL_COMMENT="### 📁 Archivos revisados en este PR:
           $FILES_LIST
           
@@ -77,5 +78,5 @@ jobs:
           ### 🤖 Análisis de Claude:
           $COMMENT"
           
-          # 6. Publicar el comentario
+          # 8. Publicar el comentario
           gh pr comment $PR_NUMBER -b "$FINAL_COMMENT"

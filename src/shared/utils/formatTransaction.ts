@@ -27,9 +27,39 @@ function formatDate(iso: string): string {
   return new Date(iso).toLocaleDateString("es-AR", { day: "numeric", month: "short" });
 }
 
+function formatRate(value: number): string {
+  return value.toLocaleString("es-AR", { maximumFractionDigits: 2 });
+}
+
 function buildRateNote(tx: Transaction): string | undefined {
   if (!tx.exchangeRate) return undefined;
-  return `1 ${tx.sourceCurrency ?? "?"} = ${tx.exchangeRate.toLocaleString("es-AR", { maximumFractionDigits: 2 })} ${tx.targetCurrency ?? "?"}`;
+  return `1 ${tx.sourceCurrency ?? "?"} = ${formatRate(tx.exchangeRate)} ${tx.targetCurrency ?? "?"}`;
+}
+
+// El exchangeRate que guarda el backend para BUY va en la misma dirección que
+// EXCHANGE/SELL (target por unidad de source) — con ARS de origen y USD de
+// destino eso da un número chico y poco intuitivo ("1 ARS = 0.00067 USD").
+// Para "comprar" tiene más sentido mostrar el precio de la moneda que se
+// compró en la moneda con la que se pagó ("1 USD = 1496,62 ARS"), mismo
+// criterio que ya se aplicó al invertir el layout del modal de Comprar.
+function buildBuyRateNote(tx: Transaction): string | undefined {
+  if (!tx.exchangeRate) return undefined;
+  const inverseRate = 1 / tx.exchangeRate;
+  return `1 ${tx.targetCurrency ?? "?"} = ${formatRate(inverseRate)} ${tx.sourceCurrency ?? "?"}`;
+}
+
+// El backend no siempre llena los dos lados (ej. un DEPOSIT no tiene source) —
+// para tipos donde no sabemos de antemano cuál lado viene poblado (TRANSFER_*,
+// o cualquier tipo nuevo que caiga en el default), se usa el primero disponible
+// en vez de asumir uno fijo y mostrar "$0.00" si justo viene vacío.
+function pickAvailableAmount(tx: Transaction): { amount: number; currency: CurrencyCode } {
+  if (tx.targetAmount !== null && tx.targetCurrency !== null) {
+    return { amount: tx.targetAmount, currency: tx.targetCurrency };
+  }
+  if (tx.sourceAmount !== null && tx.sourceCurrency !== null) {
+    return { amount: tx.sourceAmount, currency: tx.sourceCurrency };
+  }
+  return { amount: 0, currency: "USD" };
 }
 
 // Mapea la forma "cruda" que devuelve el backend (con source/target nulleables
@@ -71,7 +101,7 @@ export function formatTransaction(tx: Transaction): TransactionDisplay {
         currency,
         glyph: "arrow_upward",
         tone: "neg",
-        rateNote: buildRateNote(tx),
+        rateNote: buildBuyRateNote(tx),
       };
     }
     case "SELL": {
@@ -84,6 +114,45 @@ export function formatTransaction(tx: Transaction): TransactionDisplay {
         glyph: "arrow_downward",
         tone: "pos",
         rateNote: buildRateNote(tx),
+      };
+    }
+    case "TRANSFER_OUT": {
+      const { amount, currency } = pickAvailableAmount(tx);
+      const counterparty = [tx.counterpartyName, tx.counterpartyLastName].filter(Boolean).join(" ");
+      return {
+        title: counterparty ? `Transferencia enviada a ${counterparty}` : "Transferencia enviada",
+        date,
+        amount: `-${formatAmount(amount, currency)}`,
+        currency,
+        glyph: "north_east",
+        tone: "neg",
+      };
+    }
+    case "TRANSFER_IN": {
+      const { amount, currency } = pickAvailableAmount(tx);
+      const counterparty = [tx.counterpartyName, tx.counterpartyLastName].filter(Boolean).join(" ");
+      return {
+        title: counterparty ? `Transferencia recibida de ${counterparty}` : "Transferencia recibida",
+        date,
+        amount: `+${formatAmount(amount, currency)}`,
+        currency,
+        glyph: "south_west",
+        tone: "pos",
+      };
+    }
+    default: {
+      // Red de seguridad: un transactionType que el frontend todavía no conoce
+      // (pasó de verdad — ver historial de este archivo) no debe tirar abajo
+      // Dashboard/Historial/notificaciones enteros. Degrada a una fila
+      // genérica en vez de un TypeError por desestructurar undefined.
+      const { amount, currency } = pickAvailableAmount(tx);
+      return {
+        title: "Movimiento",
+        date,
+        amount: formatAmount(amount, currency),
+        currency,
+        glyph: "swap_horiz",
+        tone: "gold",
       };
     }
   }

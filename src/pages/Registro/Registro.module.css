@@ -126,6 +126,48 @@
   composes: field from "../../shared/components/AuthShared/AuthShared.module.css";
 }
 
+/* Selector de país de residencia — no se movió a PhoneNumberField
+   (shared/components), que solo cubre el selector de prefijo de celular.
+   .phoneRow/.phoneField/.phoneInputField ya no existen en este archivo (se
+   movieron ahí junto con ese selector) — lo que sigue abajo (.selectLabel/
+   .selectWrap/.select/.select.select/.selectIcon) es del select de
+   residencia, que lo sigue usando, sin relación con esas otras clases.
+   Duplicado con el bloque equivalente de CompleteProfileModal.module.css
+   (ya lo estaba desde antes de esta tarea, ver b6d89a0) — sigue pendiente,
+   ver la nota del hallazgo #2 (Gemini) en PhoneNumberField.module.css. */
+.selectLabel {
+  composes: labelLg from "../../shared/components/Input/Input.module.css";
+}
+
+.selectWrap {
+  position: relative;
+}
+
+.select {
+  composes: select from "../../shared/styles/formControl.module.css";
+}
+
+.select.select {
+  height: 56px;
+  padding: 0 44px 0 var(--spacing-lg);
+  font-size: var(--font-size-lg);
+  border-radius: var(--radius-lg);
+  background-color: var(--bg-elevated);
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+}
+
+.selectIcon {
+  position: absolute;
+  right: var(--spacing-md);
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-secondary);
+  opacity: 0.7;
+  pointer-events: none;
+}
+
 .dateInput {
   /* Igual que color-scheme:dark en body (index.css): no hay toggle real
      todavía (nada setea data-theme en tiempo de ejecución), así que un
