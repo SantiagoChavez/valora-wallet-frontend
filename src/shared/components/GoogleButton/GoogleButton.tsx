@@ -4,8 +4,8 @@ import styles from "./GoogleButton.module.css";
 const CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID as string | undefined;
 
 // Tope duro documentado por Google para renderButton() — no acepta "100%" ni
-// un ancho mayor, así que el contenedor mide su propio ancho disponible (el
-// del formulario, ~420px en Login/Registro) y lo recorta acá si hace falta.
+// un ancho mayor, así que se mide el ancho disponible del formulario
+// (~420px en Login/Registro, vía wrapperRef) y se recorta acá si hace falta.
 const MAX_BUTTON_WIDTH = 400;
 
 interface GoogleCredentialResponse {
@@ -62,6 +62,12 @@ const activeHandlers: { onSuccess: (idToken: string) => void; onError: (message:
 };
 
 export function GoogleButton({ onSuccess, onError }: GoogleButtonProps) {
+  // wrapperRef mide el espacio disponible (ancho completo del formulario) y
+  // centra — containerRef es donde Google renderiza de verdad, con un ancho
+  // fijo en px (no relativo) para que no le quede margen propio a lo que
+  // Google dibuje adentro. Ver el comentario en setup() sobre por qué hacen
+  // falta los dos.
+  const wrapperRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
   // activeHandlers (módulo) se actualiza en cada render de la instancia
@@ -89,7 +95,16 @@ export function GoogleButton({ onSuccess, onError }: GoogleButtonProps) {
     let pollId: ReturnType<typeof setInterval> | undefined;
 
     async function setup() {
-      if (cancelled || hasSetupRef.current || !window.google || !containerRef.current || !CLIENT_ID) return;
+      if (
+        cancelled ||
+        hasSetupRef.current ||
+        !window.google ||
+        !containerRef.current ||
+        !wrapperRef.current ||
+        !CLIENT_ID
+      ) {
+        return;
+      }
       // Reclamamos la guarda ANTES del await, no después: si no, dos
       // invocaciones de este efecto muy próximas en el tiempo (StrictMode)
       // podrían pasar juntas el chequeo de arriba mientras las dos esperan
@@ -113,7 +128,7 @@ export function GoogleButton({ onSuccess, onError }: GoogleButtonProps) {
       }
       // Repetimos el chequeo (menos hasSetupRef, que ya reclamamos arriba):
       // el componente pudo desmontarse mientras esperábamos las fuentes.
-      if (cancelled || !window.google || !containerRef.current || !CLIENT_ID) return;
+      if (cancelled || !window.google || !containerRef.current || !wrapperRef.current || !CLIENT_ID) return;
 
       if (!hasInitializedGoogleClient) {
         hasInitializedGoogleClient = true;
@@ -135,7 +150,23 @@ export function GoogleButton({ onSuccess, onError }: GoogleButtonProps) {
       // (confirmado en consola de Vercel: "Failed to open popup window...
       // Maybe blocked by the browser" + beacons popupNotOpened, 13/08). Acá
       // el click es real, sobre el elemento real.
-      const width = Math.min(containerRef.current.offsetWidth, MAX_BUTTON_WIDTH);
+      //
+      // Medimos desde wrapperRef, no containerRef: containerRef está a
+      // punto de recibir un ancho fijo acá abajo, así que ya no sirve como
+      // referencia de "cuánto espacio hay disponible" (mediría lo que le
+      // acabamos de fijar, no el espacio real del formulario).
+      const width = Math.min(wrapperRef.current.offsetWidth, MAX_BUTTON_WIDTH);
+      // Google alterna, sin que lo controlemos, entre renderizar un
+      // <div role="button"> normal (que sí respeta el "width" de las
+      // opciones como su propio ancho) y un <iframe> (confirmado en
+      // producción, 14/08) — ese iframe ocupa el 100% de containerRef sin
+      // importar el "width" de las opciones, que ahí adentro solo gobierna
+      // lo que Google dibuja DENTRO del iframe. Si containerRef mide más
+      // que ese ancho, queda un margen del lado de Google (cross-origin,
+      // no estilable) que se ve blanco. Fijar el ancho real de containerRef
+      // al mismo número que le pedimos a Google elimina ese margen sea
+      // cual sea la variante que use esta vez.
+      containerRef.current.style.width = `${width}px`;
       window.google.accounts.id.renderButton(containerRef.current, {
         theme: "filled_black",
         size: "large",
@@ -175,5 +206,9 @@ export function GoogleButton({ onSuccess, onError }: GoogleButtonProps) {
     return <p className={styles.unavailable}>Continuar con Google no está disponible.</p>;
   }
 
-  return <div ref={containerRef} className={styles.container} />;
+  return (
+    <div ref={wrapperRef} className={styles.wrapper}>
+      <div ref={containerRef} className={styles.container} />
+    </div>
+  );
 }
