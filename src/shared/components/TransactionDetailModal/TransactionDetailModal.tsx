@@ -1,3 +1,5 @@
+import { useRef, useState } from "react";
+import { Button } from "../Button/Button";
 import { Modal } from "../Modal/Modal";
 import { formatTransaction } from "../../utils/formatTransaction";
 import type { Transaction, TransactionType } from "../../types/models";
@@ -21,21 +23,8 @@ const TYPE_LABEL: Record<TransactionType, string> = {
   TRANSFER_IN: "Transferencia",
 };
 
-function formatLongDate(iso: string): string {
-  return new Date(iso).toLocaleDateString("es-AR", {
-    weekday: "long",
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-  });
-}
-
-function formatTime(iso: string): string {
-  return new Date(iso).toLocaleTimeString("es-AR", { hour: "numeric", minute: "2-digit" });
-}
-
-// Fecha corta + hora en una sola línea (ej. "12/08/2026 · 21:04") — distinto
-// del par Fecha/Hora del detalle genérico, para la vista de transferencia.
+// Fecha corta + hora en una sola línea (ej. "12/08/2026 · 21:04") — un solo
+// formato de fecha para los 6 tipos de transacción, no uno distinto por tipo.
 function formatShortDateTime(iso: string): string {
   const date = new Date(iso);
   const datePart = date.toLocaleDateString("es-AR", { day: "2-digit", month: "2-digit", year: "numeric" });
@@ -52,15 +41,18 @@ interface DetailRowProps {
 
 function DetailRow({ icon, label, value, mono }: DetailRowProps) {
   return (
-    <div className={styles.transferRow}>
-      <span className={`msym ${styles.transferRowIcon}`} aria-hidden="true">{icon}</span>
-      <span className={styles.transferRowLabel}>{label}</span>
-      <span className={`${styles.transferRowValue} ${mono ? styles.transferRowValueMono : ""}`}>{value}</span>
+    <div className={styles.detailRow}>
+      <span className={`msym ${styles.detailRowIcon}`} aria-hidden="true">{icon}</span>
+      <span className={styles.detailRowLabel}>{label}</span>
+      <span className={`${styles.detailRowValue} ${mono ? styles.detailRowValueMono : ""}`}>{value}</span>
     </div>
   );
 }
 
 export function TransactionDetailModal({ isOpen, onClose, transaction }: TransactionDetailModalProps) {
+  const receiptRef = useRef<HTMLDivElement>(null);
+  const [isDownloading, setIsDownloading] = useState(false);
+
   // El Modal en sí sigue montado durante la animación de cierre (ver
   // Modal.tsx) — esto solo cubre el primer render, antes de seleccionar
   // ninguna transacción.
@@ -68,39 +60,34 @@ export function TransactionDetailModal({ isOpen, onClose, transaction }: Transac
 
   const display = formatTransaction(transaction);
   const isTransfer = transaction.transactionType === "TRANSFER_OUT" || transaction.transactionType === "TRANSFER_IN";
-
-  if (isTransfer) {
-    const counterparty = [transaction.counterpartyName, transaction.counterpartyLastName].filter(Boolean).join(" ");
-    const counterpartyLabel = transaction.transactionType === "TRANSFER_OUT" ? "Destinatario" : "Remitente";
-    const amountLabel = transaction.transactionType === "TRANSFER_OUT" ? "Monto enviado" : "Monto recibido";
-
-    return (
-      <Modal isOpen={isOpen} onClose={onClose} ariaLabel="Detalle de transferencia">
-        <div className={styles.wrapper}>
-          <button type="button" className={styles.closeButtonFloating} onClick={onClose} aria-label="Cerrar">
-            <span className="msym" aria-hidden="true">close</span>
-          </button>
-
-          <div className={styles.transferAmountBlock}>
-            <span className={styles.eyebrowCentered}>{amountLabel.toUpperCase()}</span>
-            <span className={styles.amount}>{display.amount} {display.currency}</span>
-          </div>
-
-          <div className={styles.transferList}>
-            {counterparty && <DetailRow icon="person" label={counterpartyLabel} value={counterparty} />}
-            {transaction.counterpartyAlias && (
-              <DetailRow icon="bolt" label="Alias" value={transaction.counterpartyAlias} />
-            )}
-            <DetailRow icon="schedule" label="Fecha" value={formatShortDateTime(transaction.createdAt)} />
-            {transaction.concepto && <DetailRow icon="description" label="Concepto" value={transaction.concepto} />}
-            <DetailRow icon="sell" label="ID de operación" value={transaction.id} mono />
-          </div>
-        </div>
-      </Modal>
-    );
-  }
-
   const typeLabel = TYPE_LABEL[transaction.transactionType] ?? "Movimiento";
+  const counterparty = isTransfer
+    ? [transaction.counterpartyName, transaction.counterpartyLastName].filter(Boolean).join(" ")
+    : "";
+  const counterpartyLabel = transaction.transactionType === "TRANSFER_OUT" ? "Destinatario" : "Remitente";
+
+  // html-to-image se importa dinámicamente — solo hace falta cuando alguien
+  // efectivamente descarga un comprobante, no en el bundle inicial de la app.
+  // No es html2canvas: esa no soporta color-mix() (lo usamos en .statusPill y
+  // varios otros lugares del proyecto) y tira un parse error duro apenas lo
+  // encuentra — confirmado probándolo en vivo antes de cambiar de librería.
+  async function handleDownload() {
+    if (!receiptRef.current || !transaction) return;
+    setIsDownloading(true);
+    try {
+      const { toPng } = await import("html-to-image");
+      const dataUrl = await toPng(receiptRef.current, { pixelRatio: 2 });
+      const link = document.createElement("a");
+      link.download = `valora-comprobante-${transaction.id}.png`;
+      link.href = dataUrl;
+      link.click();
+    } catch {
+      // Sin toast propio acá (ver CardDisplay/CopyIconButton) — si falla la
+      // descarga no rompe nada más, el modal sigue usable.
+    } finally {
+      setIsDownloading(false);
+    }
+  }
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} ariaLabel="Detalle de transacción">
@@ -115,39 +102,45 @@ export function TransactionDetailModal({ isOpen, onClose, transaction }: Transac
           </button>
         </div>
 
-        <div className={styles.amountRow}>
-          <span className={styles.amount}>
-            {display.amount.replace(/^[+-]/, "")} {display.currency}
-          </span>
-          {/* No hay transacciones "pendientes" ni "fallidas" en el modelo real
-              — si el backend respondió 200, ya está commiteada. Fijo, no
-              depende de ningún dato (mismo criterio que el estado de cuenta
-              en Usuario.tsx). */}
-          <span className={styles.statusPill}>Completada</span>
+        {/* Todo lo que va en el PNG descargado vive acá adentro — el header de
+            arriba (con el botón de cerrar) queda afuera a propósito. */}
+        <div ref={receiptRef} className={styles.receipt}>
+          <div className={styles.amountRow}>
+            <span className={styles.amount}>{display.amount} {display.currency}</span>
+            {/* No hay transacciones "pendientes" ni "fallidas" en el modelo
+                real — si el backend respondió 200, ya está commiteada. Fijo,
+                no depende de ningún dato (mismo criterio que el estado de
+                cuenta en Usuario.tsx). */}
+            <span className={styles.statusPill}>Completada</span>
+          </div>
+
+          <div className={styles.detailList}>
+            {isTransfer && counterparty && (
+              <DetailRow icon="person" label={counterpartyLabel} value={counterparty} />
+            )}
+            {isTransfer && transaction.counterpartyAlias && (
+              <DetailRow icon="alternate_email" label="Alias" value={transaction.counterpartyAlias} />
+            )}
+            <DetailRow icon="calendar_today" label="Fecha" value={formatShortDateTime(transaction.createdAt)} />
+            <DetailRow icon="description" label="Descripción" value={display.title} />
+            {isTransfer && transaction.concepto && (
+              <DetailRow icon="chat_bubble" label="Concepto" value={transaction.concepto} />
+            )}
+            <DetailRow icon="payments" label="Moneda" value={display.currency} />
+            <DetailRow icon="confirmation_number" label="ID de operación" value={transaction.id} mono />
+          </div>
         </div>
 
-        <dl className={styles.detailList}>
-          <div className={styles.detailRow}>
-            <dt className={styles.detailLabel}>Fecha</dt>
-            <dd className={styles.detailValue}>{formatLongDate(transaction.createdAt)}</dd>
-          </div>
-          <div className={styles.detailRow}>
-            <dt className={styles.detailLabel}>Hora</dt>
-            <dd className={styles.detailValue}>{formatTime(transaction.createdAt)}</dd>
-          </div>
-          <div className={styles.detailRow}>
-            <dt className={styles.detailLabel}>Descripción</dt>
-            <dd className={styles.detailValue}>{display.title}</dd>
-          </div>
-          <div className={styles.detailRow}>
-            <dt className={styles.detailLabel}>Moneda</dt>
-            <dd className={styles.detailValue}>{display.currency}</dd>
-          </div>
-          <div className={styles.detailRow}>
-            <dt className={styles.detailLabel}>ID</dt>
-            <dd className={`${styles.detailValue} ${styles.detailValueMono}`}>{transaction.id}</dd>
-          </div>
-        </dl>
+        <Button
+          type="button"
+          variant="secondary"
+          className={styles.downloadButton}
+          onClick={handleDownload}
+          disabled={isDownloading}
+        >
+          <span className="msym" style={{ fontSize: 18 }} aria-hidden="true">download</span>
+          {isDownloading ? "Generando..." : "Descargar comprobante"}
+        </Button>
       </div>
     </Modal>
   );

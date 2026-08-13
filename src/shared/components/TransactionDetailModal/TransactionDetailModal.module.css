@@ -48,6 +48,18 @@
   color: var(--text-primary);
 }
 
+/* Todo lo que entra en el PNG descargado (ver handleDownload) — con su propio
+   fondo explícito porque html2canvas necesita un color de fondo real detrás
+   del contenido capturado, no puede heredar el transparente del overlay. */
+.receipt {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+  background: var(--bg-panel);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-md);
+}
+
 .amountRow {
   display: flex;
   align-items: center;
@@ -74,70 +86,14 @@
 }
 
 .detailList {
-  margin: 0;
   display: flex;
   flex-direction: column;
 }
 
+/* Mismo estilo de fila (ícono + label + valor) para los 6 tipos de
+   transacción — antes "Compra/Venta" usaba una lista sin íconos y
+   Transferencia tenía los suyos; ahora es uno solo. */
 .detailRow {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: var(--spacing-md);
-  padding: var(--spacing-sm) 0;
-  border-top: 1px solid var(--border);
-}
-
-.detailLabel {
-  margin: 0;
-  font-size: var(--font-size-sm);
-  color: var(--text-secondary);
-  flex-shrink: 0;
-}
-
-.detailValue {
-  margin: 0;
-  font-size: var(--font-size-sm);
-  font-weight: var(--font-weight-medium);
-  color: var(--text-primary);
-  text-align: right;
-  word-break: break-word;
-}
-
-.detailValueMono {
-  font-family: monospace;
-  font-size: var(--font-size-xs);
-}
-
-/* ---- Vista específica de transferencia (TRANSFER_OUT/TRANSFER_IN) ---- */
-
-.closeButtonFloating {
-  composes: closeButton;
-  position: absolute;
-  top: var(--spacing-md);
-  right: var(--spacing-md);
-}
-
-.transferAmountBlock {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--spacing-xs);
-  text-align: center;
-  padding-top: var(--spacing-sm);
-}
-
-.eyebrowCentered {
-  composes: eyebrow;
-  margin-top: 0;
-}
-
-.transferList {
-  display: flex;
-  flex-direction: column;
-}
-
-.transferRow {
   display: flex;
   align-items: center;
   gap: var(--spacing-sm);
@@ -145,19 +101,19 @@
   border-top: 1px solid var(--border);
 }
 
-.transferRowIcon {
+.detailRowIcon {
   flex-shrink: 0;
   font-size: var(--font-size-md);
   color: var(--text-tertiary);
 }
 
-.transferRowLabel {
+.detailRowLabel {
   flex: 1;
   font-size: var(--font-size-sm);
   color: var(--text-secondary);
 }
 
-.transferRowValue {
+.detailRowValue {
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-medium);
   color: var(--text-primary);
@@ -165,7 +121,14 @@
   word-break: break-word;
 }
 
-.transferRowValueMono {
+.detailRowValueMono {
   font-family: monospace;
   font-size: var(--font-size-xs);
+}
+
+.downloadButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-xs);
 }
