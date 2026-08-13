@@ -99,7 +99,7 @@ export function Usuario() {
         </div>
 
         <div className={styles.field}>
-          <span className={styles.label}>Nacionalidad</span>
+          <span className={styles.label}>País de residencia</span>
           <span className={styles.value}>{residenceCountryLabel}</span>
         </div>
 
