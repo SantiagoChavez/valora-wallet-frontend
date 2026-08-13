@@ -1,4 +1,4 @@
-import { useEffect, useState, type SubmitEvent } from "react";
+import { useEffect, useRef, useState, type SubmitEvent } from "react";
 import { Button } from "../Button/Button";
 import { Input } from "../Input/Input";
 import { Modal } from "../Modal/Modal";
@@ -27,6 +27,14 @@ export function TransferModal({ isOpen, onClose, token, balances, onSuccess }: T
   const [concepto, setConcepto] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+
+  // Espejo del identificador en vivo, para que handleResolve pueda comparar
+  // la respuesta contra el valor ACTUAL del input en vez de contra sí mismo
+  // (ver el comentario en handleResolve más abajo).
+  const identifierRef = useRef(identifier);
+  useEffect(() => {
+    identifierRef.current = identifier;
+  }, [identifier]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -64,10 +72,15 @@ export function TransferModal({ isOpen, onClose, token, balances, onSuccess }: T
       // reabrió) mientras viajaba, esta respuesta ya quedó vieja: aplicarla
       // igual mostraría un destinatario distinto al que en realidad se
       // transferiría con el identificador actual. Se descarta en silencio.
-      if (identifier.trim() !== trimmedIdentifier) return;
+      // Comparar contra identifierRef (no contra `identifier` del closure) es
+      // lo que hace que esta guardia funcione de verdad: `identifier` acá
+      // adentro es el valor capturado al arrancar handleResolve, siempre
+      // igual a trimmedIdentifier — comparar closure contra closure nunca
+      // detecta un cambio. identifierRef.current sí se actualiza en vivo.
+      if (identifierRef.current.trim() !== trimmedIdentifier) return;
       setDestination(result);
     } catch (err) {
-      if (identifier.trim() !== trimmedIdentifier) return;
+      if (identifierRef.current.trim() !== trimmedIdentifier) return;
       setDestination(null);
       setResolveError(getApiErrorMessage(err));
     } finally {
