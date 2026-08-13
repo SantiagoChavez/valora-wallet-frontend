@@ -194,45 +194,86 @@ export function Dashboard() {
     setHidden((prev) => ({ ...prev, [code]: !prev[code] }));
   }
 
-  // null mientras no hay una cifra real que mostrar (todavía no cargaron los
-  // balances, o falló alguna cotización) — nunca se inventa un total parcial.
-  const [totalConverted, setTotalConverted] = useState<number | null>(null);
+  // Se guarda junto con la moneda a la que corresponde — así, al cambiar el
+  // selector, el total viejo (todavía de la moneda anterior) no se muestra
+  // ni un frame relabeleado bajo el código de la moneda nueva: el render de
+  // abajo compara totalConverted.currency contra totalCurrency y solo lo usa
+  // si coinciden, mostrando "Calculando…" mientras no coinciden.
+  const [totalConverted, setTotalConverted] = useState<{ currency: CurrencyCode; amount: number } | null>(null);
+  // Distinto de "todavía no llegó la cotización": si falla de verdad, hay que
+  // poder distinguirlo de "está cargando" (que también se ve como
+  // totalConverted sin coincidir con totalCurrency) para no quedar en
+  // "Calculando…" para siempre sin ningún mensaje ni forma de reintentar.
+  const [totalError, setTotalError] = useState(false);
+  const [totalRetryTick, setTotalRetryTick] = useState(0);
   // Mismo criterio que dashboardRequest de arriba — evita que una cotización
   // vieja (de la moneda anterior en el selector) pise el total con datos que
   // ya no corresponden si las respuestas llegan desordenadas.
   const totalRequest = useRequestGuard();
 
+  // balances en un ref (actualizado en cada render, antes del efecto de abajo
+  // porque los efectos corren en orden de declaración dentro del mismo
+  // commit): el efecto de cotización depende de balancesKey, no de la
+  // referencia del array — loadDashboardData() trae un array nuevo en cada
+  // recarga aunque el monto de una sola moneda haya cambiado, y sin esto
+  // dispararía cotizaciones de nuevo para todas las monedas cada vez.
+  const balancesRef = useRef(balances);
   useEffect(() => {
-    if (!token || !balances) return;
+    balancesRef.current = balances;
+  }, [balances]);
+  // null distinto de "" a propósito: si fueran el mismo valor, la transición
+  // real de "todavía no cargaron los balances" (null) a "cargaron y la
+  // cuenta está en cero" ([]) no cambiaría la dependencia del efecto de abajo
+  // y nunca llegaría a correr para esa cuenta.
+  const balancesKey = balances === null
+    ? null
+    : balances.map((bal) => `${bal.currencyCode}:${bal.amount}`).sort().join("|");
+
+  useEffect(() => {
+    if (!token || !balancesRef.current) return;
     const requestId = totalRequest.start();
+    const currentBalances = balancesRef.current;
+    const currency = totalCurrency;
+    const controller = new AbortController();
+    setTotalError(false);
 
     // Antes esto era una tabla de tasas aproximada del lado del cliente — ahora
     // que existe /transactions/quote con la tasa real, se pide una cotización
     // por cada moneda con saldo (misma moneda que la elegida en el selector no
     // pide nada, es 1 a 1: el backend rechaza fromCurrency === toCurrency).
-    const contributions = balances.map(async (bal) => {
-      if (bal.amount <= 0 || bal.currencyCode === totalCurrency) return bal.amount;
-      const quote = await getQuote(token, bal.currencyCode, totalCurrency, bal.amount, "source");
+    const contributions = currentBalances.map(async (bal) => {
+      if (bal.amount <= 0 || bal.currencyCode === currency) return bal.amount;
+      const quote = await getQuote(token, bal.currencyCode, currency, bal.amount, "source", controller.signal);
       return quote.targetAmount;
     });
 
     Promise.all(contributions)
       .then((amounts) => {
         if (!totalRequest.isCurrent(requestId)) return;
-        setTotalConverted(amounts.reduce((sum, value) => sum + value, 0));
+        setTotalConverted({ currency, amount: amounts.reduce((sum, value) => sum + value, 0) });
       })
       .catch(() => {
-        if (!totalRequest.isCurrent(requestId)) return;
+        if (!totalRequest.isCurrent(requestId) || controller.signal.aborted) return;
         // Tasa real no disponible para alguna moneda — mejor mostrar que no
         // está disponible que un total parcial o con una tasa inventada.
-        setTotalConverted(null);
+        setTotalError(true);
       });
-  }, [token, balances, totalCurrency, totalRequest]);
+
+    return () => {
+      // Corta las cotizaciones en vuelo si el selector cambia de nuevo (o el
+      // componente se desmonta) antes de que resuelvan — ya son descartadas
+      // por el chequeo de requestId de arriba, pero sin esto igual corrían
+      // hasta el final del lado del servidor sin que nadie use el resultado.
+      controller.abort();
+    };
+  }, [token, balancesKey, totalCurrency, totalRetryTick, totalRequest]);
   const totalDisplayValue = totalHidden
     ? "••••••"
-    : totalConverted === null
-      ? "Calculando…"
-      : `${totalCurrency} ${totalConverted.toLocaleString("es-AR", { maximumFractionDigits: 2 })}`;
+    : totalError
+      ? "No disponible"
+      : totalConverted && totalConverted.currency === totalCurrency
+        ? `${totalCurrency} ${totalConverted.amount.toLocaleString("es-AR", { maximumFractionDigits: 2 })}`
+        : "Calculando…";
 
   return (
     <div className={styles.page}>
@@ -244,6 +285,15 @@ export function Dashboard() {
               <div className={styles.label}>Balance total</div>
               <div className={styles.totalRow}>
                 <span className={styles.totalValue}>{totalDisplayValue}</span>
+                {totalError && !totalHidden && (
+                  <button
+                    type="button"
+                    className={styles.txLink}
+                    onClick={() => setTotalRetryTick((tick) => tick + 1)}
+                  >
+                    Reintentar
+                  </button>
+                )}
                 <button
                   type="button"
                   className={styles.eyeButton}
