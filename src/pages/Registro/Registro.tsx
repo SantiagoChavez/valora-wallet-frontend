@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { Button } from "../../shared/components/Button/Button";
 import { GoogleButton } from "../../shared/components/GoogleButton/GoogleButton";
 import { Input } from "../../shared/components/Input/Input";
+import { PhoneNumberField } from "../../shared/components/PhoneNumberField/PhoneNumberField";
 import { AuthMobileGlow, AuthBrandGlow } from "../../shared/components/AuthBlobs/AuthBlobs";
 import { AuthBrandHeader } from "../../shared/components/AuthBrandHeader/AuthBrandHeader";
 import { AuthMobileHeader } from "../../shared/components/AuthMobileHeader/AuthMobileHeader";
@@ -15,49 +16,21 @@ import { useToast, TOAST_DURATION_MS } from "../../shared/components/Toast/useTo
 import * as authService from "../../shared/auth/authService";
 import { useAuth } from "../../shared/auth/useAuth";
 import { getApiErrorMessage } from "../../shared/services/apiClient";
+import { PHONE_COUNTRY_CODES, RESIDENCE_COUNTRY_CODES } from "../../shared/constants";
+import type { CountryCode } from "../../shared/types/models";
+import { useDocumentTypes } from "../../shared/hooks/useDocumentTypes";
+import { resolveE164Phone } from "../../shared/utils/phone";
+import { MAX_BIRTHDATE, toBackendDate } from "../../shared/utils/date";
 import styles from "./Registro.module.css";
-
-const MIN_AGE_YEARS = 18;
-
-function isLeapYear(year: number): boolean {
-  return (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0;
-}
-
-// Fecha límite para el <input type="date"> (18 años atrás de hoy), calculada
-// una sola vez al cargar el módulo — no cambia entre renders. Se arma con los
-// componentes locales de la fecha en vez de toISOString() (que convierte a
-// UTC) para no correr un día la fecha límite en husos horarios donde la
-// medianoche local cae del otro lado del corte UTC.
-function getMaxBirthdate(): string {
-  const today = new Date();
-  const year = today.getFullYear() - MIN_AGE_YEARS;
-  const month = today.getMonth() + 1;
-  let day = today.getDate();
-
-  // Si hoy es 29 de febrero (bisiesto) pero año-18 no es bisiesto, esa fecha
-  // no existe — clampear al 28, el último día válido de febrero ese año.
-  if (month === 2 && day === 29 && !isLeapYear(year)) {
-    day = 28;
-  }
-
-  return `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
-}
-
-const MAX_BIRTHDATE = getMaxBirthdate();
-
-// El backend (Zod, ver authSchema.ts) espera la fecha en DD/MM/YYYY, no en el
-// formato ISO (YYYY-MM-DD) que devuelve un <input type="date"> nativo.
-function toBackendDate(isoDate: string): string {
-  const [year, month, day] = isoDate.split("-");
-  return `${day}/${month}/${year}`;
-}
 
 export function Registro() {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [dateOfBirth, setDateOfBirth] = useState("");
+  const [phoneCountryCode, setPhoneCountryCode] = useState(PHONE_COUNTRY_CODES[0].code);
   const [phone, setPhone] = useState("");
+  const [country, setCountry] = useState<CountryCode>(RESIDENCE_COUNTRY_CODES[0].code as CountryCode);
   const [du, setDu] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -75,6 +48,10 @@ export function Registro() {
   const { loginWithGoogle } = useAuth();
   const navigate = useNavigate();
   const redirectTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const documentTypes = useDocumentTypes();
+  const documentLabel = documentTypes?.[country] ?? "Documento";
+  const phonePlaceholder =
+    PHONE_COUNTRY_CODES.find((entry) => entry.code === phoneCountryCode)?.example ?? "+54 9 11 1234-5678";
 
   useEffect(() => () => clearTimeout(redirectTimer.current), []);
 
@@ -91,7 +68,16 @@ export function Registro() {
 
     setIsSubmitting(true);
     try {
-      await authService.register(email, password, firstName, lastName, toBackendDate(dateOfBirth), phone, du);
+      await authService.register(
+        email,
+        password,
+        firstName,
+        lastName,
+        toBackendDate(dateOfBirth),
+        resolveE164Phone(phoneCountryCode, phone),
+        du,
+        country,
+      );
       showToast("Cuenta creada, iniciá sesión.");
       redirectTimer.current = setTimeout(() => {
         navigate("/login", { replace: true });
@@ -129,7 +115,7 @@ export function Registro() {
           headline="Empezá en minutos."
           subtext="Creá tu cuenta y gestioná múltiples monedas desde una sola plataforma hecha para freelancers de LATAM."
         >
-          <ul className={styles.brandChecklist}>
+          <ul className={styles.brandChecklist} role="list">
             <li className={styles.brandChecklistItem}>
               <span className={`msym ${styles.brandCheckIcon}`} aria-hidden="true">check</span>
               Sin comisiones de apertura ni mantenimiento
@@ -207,41 +193,75 @@ export function Registro() {
               required
             />
 
-            <Input
-              id="phone"
-              label="Celular"
-              type="tel"
-              size="lg"
-              placeholder="+54 9 11 1234-5678"
-              value={phone}
-              onChange={(event) => setPhone(event.target.value)}
-              autoComplete="tel"
+            <div className={styles.field}>
+              <label className={styles.selectLabel} htmlFor="country">País de residencia</label>
+              <div className={styles.selectWrap}>
+                <select
+                  id="country"
+                  className={styles.select}
+                  value={country}
+                  onChange={(event) => setCountry(event.target.value as CountryCode)}
+                >
+                  {RESIDENCE_COUNTRY_CODES.map((entry) => (
+                    <option key={entry.code} value={entry.code}>
+                      {entry.label}
+                    </option>
+                  ))}
+                </select>
+                <span className={`msym ${styles.selectIcon}`} aria-hidden="true">expand_more</span>
+              </div>
+            </div>
+
+            <PhoneNumberField
+              dialCodeSelectId="phoneCountryCode"
+              localInputId="phone"
+              dialCodeLabel="Prefijo"
+              labelClassName={styles.selectLabel}
+              // var(--spacing-md), no el default var(--spacing-sm) del componente:
+              // consistente con .nameRow de este mismo archivo (misma fila de dos
+              // columnas, mismo espaciado) — comportamiento preexistente a esta
+              // extracción, no una decisión nueva.
+              gap="var(--spacing-md)"
+              // 639, no el default 859: antes de esta extracción el .phoneRow
+              // propio de este archivo wrappeaba a 639px (el breakpoint mobile
+              // general de esta pantalla), no a 859px (el del modal) —
+              // preservado acá, no una decisión nueva (hallazgo de la review
+              // de Copilot: sin esto, apilaba entre 640-859px donde antes iba
+              // en fila).
+              wrapBreakpoint={639}
+              countryCode={phoneCountryCode}
+              onCountryCodeChange={setPhoneCountryCode}
+              local={phone}
+              onLocalChange={setPhone}
+              placeholder={phonePlaceholder}
               icon="call"
               required
             />
 
-            {/* country va fijo en "AR" (ver authService.register) — a propósito
-                sin selector de país: el enum de authSchema.ts del backend hoy
-                solo acepta AR/PE/CO/MX, y un dropdown con esos 4 nada más le
-                muestra a cualquiera del resto de LATAM (Chile, Uruguay,
-                Ecuador, Centroamérica, etc.) una lista que no lo incluye —
-                peor que no mostrar el selector. Vuelve cuando el backend
-                soporte el resto de la región. Mientras tanto, el formato
-                validado acá es el de DNI argentino (7 u 8 dígitos). */}
+            {/* Retomado tras el desbloqueo del backend del 10/08 — reemplaza
+                la intención de 55281b9 (Analía, mismo día 02:04, revertido en
+                db74ca7 a las 02:10 porque el enum de authSchema.ts todavía
+                solo aceptaba AR/PE/CO/MX en ese momento). El backend se
+                destrabó horas después, mismo día (a458ce2, backend, 16:34:
+                "reemplazar validacion de documento por pais con una generica
+                para los 19 paises de LATAM") — country/du/phone ya validan
+                contra los 19 países LATAM tanto en /auth/register como en
+                PATCH /auth/me. Mismo criterio que CompleteProfileModal:
+                documento genérico alfanumérico, no el formato fijo de DNI
+                argentino de antes. */}
             <Input
               id="du"
-              label="Documento único"
+              label={documentLabel}
               type="text"
-              inputMode="numeric"
               size="lg"
               placeholder="12345678"
               value={du}
               onChange={(event) => setDu(event.target.value)}
               autoComplete="off"
               icon="badge"
-              pattern="[0-9]{7,8}"
-              minLength={7}
-              maxLength={8}
+              pattern="[A-Za-z0-9]{5,15}"
+              minLength={5}
+              maxLength={15}
               required
             />
 

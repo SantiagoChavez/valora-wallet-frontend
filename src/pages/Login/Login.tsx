@@ -144,10 +144,6 @@ export function Login() {
               {isSubmitting ? "Ingresando..." : "Iniciar sesión"}
             </Button>
 
-            <Button type="button" variant="secondary" className={styles.actionButton} onClick={() => navigate("/registro")}>
-              Crear cuenta
-            </Button>
-
             <div className={styles.divider}>
               <span className={styles.dividerLine} />
               <span className={styles.dividerText}>o continuá con</span>

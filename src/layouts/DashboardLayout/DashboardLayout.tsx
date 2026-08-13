@@ -3,6 +3,8 @@ import { Outlet, useNavigate } from "react-router-dom";
 import logo from "../../shared/assets/valora-logo.png";
 import { useAuth } from "../../shared/auth/useAuth";
 import { BottomNav, type NavEntry } from "../../shared/components/BottomNav/BottomNav";
+import { CompleteProfileModal } from "../../shared/components/CompleteProfileModal/CompleteProfileModal";
+import { HelpModal } from "../../shared/components/HelpModal/HelpModal";
 import { LegalModal, type LegalVariant } from "../../shared/components/LegalModal/LegalModal";
 import { NotificationPanel, type AppNotification } from "../../shared/components/NotificationPanel/NotificationPanel";
 import { Sidebar } from "../../shared/components/Sidebar/Sidebar";
@@ -86,6 +88,7 @@ export function DashboardLayout() {
   const [openPanel, setOpenPanel] = useState<"notif" | "hamburger" | null>(null);
   const [legalOpen, setLegalOpen] = useState(false);
   const [legalVariant, setLegalVariant] = useState<LegalVariant>("terms");
+  const [helpOpen, setHelpOpen] = useState(false);
   const [chatbotOpen, setChatbotOpen] = useState(false);
   const notifAnchorRef = useRef<HTMLDivElement>(null);
   const hamburgerAnchorRef = useRef<HTMLDivElement>(null);
@@ -338,6 +341,16 @@ export function DashboardLayout() {
               <button type="button" className={styles.hamburgerItem} onClick={() => openLegal("privacy")}>
                 Políticas de privacidad
               </button>
+              <button
+                type="button"
+                className={styles.hamburgerItem}
+                onClick={() => {
+                  setHelpOpen(true);
+                  setOpenPanel(null);
+                }}
+              >
+                Ayuda
+              </button>
               <a
                 href={`mailto:${SUPPORT_EMAIL}`}
                 className={styles.hamburgerItem}
@@ -355,14 +368,26 @@ export function DashboardLayout() {
           </div>
         </div>
       </header>
-      <Sidebar items={NAV_ITEMS} onLogout={handleLogout} onOpenLegal={openLegal} onToggleChatbot={handleToggleChatbot} />
+      <Sidebar
+        items={NAV_ITEMS}
+        onLogout={handleLogout}
+        onOpenLegal={openLegal}
+        onToggleChatbot={handleToggleChatbot}
+        onOpenHelp={() => setHelpOpen(true)}
+      />
       <main className={styles.main}>
         <Outlet context={outletContextValue} />
       </main>
       <BottomNav items={NAV_ITEMS} />
       <LegalModal isOpen={legalOpen} onClose={() => setLegalOpen(false)} variant={legalVariant} />
+      <HelpModal isOpen={helpOpen} onClose={() => setHelpOpen(false)} />
       {chatbotOpen && <ChatbotWidget onClose={handleCloseChatbot} />}
       <ChatbotFAB onOpen={handleOpenChatbot} hidden={chatbotOpen} />
+      {/* Sin prop de open/close manual — se abre y cierra solo en función de
+          user.profileComplete (ver useCompleteProfile, que llama a updateUser
+          del AuthContext al resolver 200). No descartable: sin botón de
+          cerrar, sin click-afuera, sin Escape (Modal con dismissible={false}). */}
+      {!!user && !user.profileComplete && <CompleteProfileModal />}
     </div>
   );
 }

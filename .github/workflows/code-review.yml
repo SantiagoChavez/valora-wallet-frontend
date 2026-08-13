@@ -21,9 +21,9 @@ jobs:
         run: |
           set -euo pipefail
 
-          # 1. Se extrae el diff
+          # 1. Se agrega '|| true' para evitar que el pipefail cause el error 141
           DIFF=$(gh pr diff "$PR_NUMBER" | head -c 50000 | iconv -f utf-8 -t utf-8 -c || true)
-          
+
           if [ -z "$DIFF" ]; then
             echo "No hay cambios en el diff."
             exit 0
@@ -79,3 +79,12 @@ jobs:
           
           # 6. Publicar el comentario
           gh pr comment $PR_NUMBER -b "$FINAL_COMMENT"
+
+          # 2. Se lee desde el archivo response.json (en lugar de la variable vacía $RESPONSE)
+          # claude-sonnet-5 corre con thinking adaptativo prendido por default (no se
+          # manda el parámetro "thinking"), así que el bloque de thinking aparece primero
+          # en content[] y el de texto después — content[0].text daba null. Se junta
+          # todo bloque de tipo "text" en vez de asumir la posición 0.
+          COMMENT=$(cat response.json | jq -r 'if .error then "⚠️ Error de Claude: \(.error.message)" else ([.content[]? | select(.type=="text") | .text] | join("\n")) end')
+
+          gh pr comment $PR_NUMBER -b "$COMMENT"

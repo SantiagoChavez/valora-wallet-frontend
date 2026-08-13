@@ -1,10 +1,16 @@
+import { useState } from "react";
 import { useAuth } from "../../shared/auth/useAuth";
 import { Button } from "../../shared/components/Button/Button";
 import { Card } from "../../shared/components/Card/Card";
+import { CopyIconButton } from "../../shared/components/CopyIconButton/CopyIconButton";
 import { Input } from "../../shared/components/Input/Input";
+import { Toast } from "../../shared/components/Toast/Toast";
+import { useToast } from "../../shared/components/Toast/useToast";
+import { RESIDENCE_COUNTRY_CODES } from "../../shared/constants";
+import { useDocumentTypes } from "../../shared/hooks/useDocumentTypes";
 import { ApiError } from "../../shared/services/apiClient";
-import { updateDu, updatePhone } from "../../shared/services/userService";
 import { updateAlias } from "../../shared/services/walletService";
+import { EditPhoneModal } from "./EditPhoneModal";
 import { useEditableField } from "./useEditableField";
 import styles from "./Usuario.module.css";
 
@@ -16,35 +22,8 @@ const ACCOUNT_STATUS_LABEL = "Activa";
 
 export function Usuario() {
   const { user, wallet, token, updateWallet } = useAuth();
-  const {
-    value: phone,
-    isEditing: isEditingPhone,
-    draft: phoneDraft,
-    setDraft: setPhoneDraft,
-    isSubmitting: isSubmittingPhone,
-    error: phoneError,
-    startEditing: startEditingPhone,
-    cancelEditing: cancelEditingPhone,
-    save: savePhone,
-  } = useEditableField(
-    user?.phone ?? "",
-    (draft) => updatePhone(draft).then((result) => result.phone),
-  );
-
-  const {
-    value: du,
-    isEditing: isEditingDu,
-    draft: duDraft,
-    setDraft: setDuDraft,
-    isSubmitting: isSubmittingDu,
-    error: duError,
-    startEditing: startEditingDu,
-    cancelEditing: cancelEditingDu,
-    save: saveDu,
-  } = useEditableField(
-    user?.du ?? "",
-    (draft) => updateDu(draft).then((result) => result.du),
-  );
+  const [isPhoneModalOpen, setIsPhoneModalOpen] = useState(false);
+  const { message: toast, showToast } = useToast();
 
   const {
     value: alias,
@@ -76,10 +55,21 @@ export function Usuario() {
     },
   );
 
+  const documentTypes = useDocumentTypes();
+  // Mismo lookup y mismo operador que CompleteProfileModal.tsx/Registro.tsx
+  // (documentTypes?.[country] ?? "Documento") — acá country sale de user en
+  // vez de un <select> propio. ?? en vez de || a propósito: solo cae al
+  // fallback si el catálogo no resolvió (null/undefined), no si alguna vez
+  // devolviera "" para algún país.
+  const documentLabel = user ? documentTypes?.[user.country] ?? "Documento" : "Documento";
+
   const avatarInitial = user?.firstName ? user.firstName.charAt(0).toUpperCase() : "?";
+  const residenceCountryLabel =
+    RESIDENCE_COUNTRY_CODES.find((entry) => entry.code === user?.country)?.label ?? user?.country ?? "Sin datos";
 
   return (
     <div className={styles.page}>
+      <h1 className={styles.srOnly}>Usuario</h1>
       <Card className={styles.card}>
         <div className={styles.avatar}>{avatarInitial}</div>
 
@@ -99,83 +89,28 @@ export function Usuario() {
         </div>
 
         <div className={styles.field}>
-          <label className={styles.label} htmlFor="du">Documento</label>
-          {isEditingDu ? (
-            <div className={styles.editForm}>
-              <Input
-                id="du"
-                type="text"
-                value={duDraft}
-                onChange={(event) => setDuDraft(event.target.value)}
-                autoComplete="off"
-              />
-              <div className={styles.editActions}>
-                <Button type="button" onClick={saveDu} disabled={isSubmittingDu}>
-                  {isSubmittingDu ? "Guardando..." : "Guardar"}
-                </Button>
-                <button
-                  type="button"
-                  className={styles.cancelButton}
-                  onClick={cancelEditingDu}
-                  disabled={isSubmittingDu}
-                >
-                  Cancelar
-                </button>
-              </div>
-              {duError && (
-                <p className={styles.error} role="alert">
-                  {duError}
-                </p>
-              )}
-            </div>
-          ) : (
-            <div className={styles.valueRow}>
-              <span className={styles.value}>{du || "Sin registrar"}</span>
-              <button type="button" className={styles.editButton} onClick={startEditingDu}>
-                Editar
-              </button>
-            </div>
-          )}
+          <span className={styles.label}>Fecha de nacimiento</span>
+          <span className={styles.value}>{user?.dateOfBirth || "Sin registrar"}</span>
         </div>
 
         <div className={styles.field}>
-          <label className={styles.label} htmlFor="phone">Nro. de celular</label>
-          {isEditingPhone ? (
-            <div className={styles.editForm}>
-              <Input
-                id="phone"
-                type="tel"
-                value={phoneDraft}
-                onChange={(event) => setPhoneDraft(event.target.value)}
-                autoComplete="tel"
-              />
-              <div className={styles.editActions}>
-                <Button type="button" onClick={savePhone} disabled={isSubmittingPhone}>
-                  {isSubmittingPhone ? "Guardando..." : "Guardar"}
-                </Button>
-                <button
-                  type="button"
-                  className={styles.cancelButton}
-                  onClick={cancelEditingPhone}
-                  disabled={isSubmittingPhone}
-                >
-                  Cancelar
-                </button>
-              </div>
-              {phoneError && (
-                <p className={styles.error} role="alert">
-                  {phoneError}
-                </p>
-              )}
-            </div>
-          ) : (
-            <div className={styles.valueRow}>
-              <span className={styles.value}>{phone || "Sin registrar"}</span>
-              <button type="button" className={styles.editButton} onClick={startEditingPhone}>
-                Editar
-              </button>
-            </div>
-          )}
+          <span className={styles.label}>{documentLabel}</span>
+          <span className={styles.value}>{user?.du || "Sin registrar"}</span>
+        </div>
+
+        <div className={styles.field}>
+          <span className={styles.label}>País de residencia</span>
+          <span className={styles.value}>{residenceCountryLabel}</span>
+        </div>
+
+        <div className={styles.field}>
+          <span className={styles.label}>Nro. de celular</span>
+          <div className={styles.valueRow}>
+            <span className={styles.value}>{user?.phone || "Sin registrar"}</span>
+            <button type="button" className={styles.editButton} onClick={() => setIsPhoneModalOpen(true)}>
+              Editar
+            </button>
+          </div>
         </div>
       </Card>
 
@@ -213,23 +148,47 @@ export function Usuario() {
           ) : (
             <div className={styles.valueRow}>
               <span className={styles.value}>{alias || "Sin registrar"}</span>
-              <button type="button" className={styles.editButton} onClick={startEditingAlias}>
-                Editar
-              </button>
+              <div className={styles.valueActions}>
+                <button type="button" className={styles.editButton} onClick={startEditingAlias}>
+                  Editar
+                </button>
+                {alias && (
+                  <CopyIconButton
+                    value={alias}
+                    label="Copiar alias"
+                    onCopy={() => showToast("Copiaste el alias.")}
+                  />
+                )}
+              </div>
             </div>
           )}
         </div>
 
         <div className={styles.field}>
           <span className={styles.label}>CVU</span>
-          <span className={styles.value}>{wallet?.cvu ?? "Sin datos"}</span>
+          <div className={styles.valueRow}>
+            <span className={styles.value}>{wallet?.cvu ?? "Sin datos"}</span>
+            {wallet?.cvu && (
+              <CopyIconButton
+                value={wallet.cvu}
+                label="Copiar CVU"
+                onCopy={() => showToast("Copiaste el CVU.")}
+              />
+            )}
+          </div>
         </div>
 
         <div className={styles.field}>
           <span className={styles.label}>Estado</span>
-          <span className={styles.value}>{ACCOUNT_STATUS_LABEL}</span>
+          <div className={styles.statusRow}>
+            <span className={styles.statusDot} aria-hidden="true" />
+            <span className={styles.value}>{ACCOUNT_STATUS_LABEL}</span>
+          </div>
         </div>
       </Card>
+
+      <EditPhoneModal isOpen={isPhoneModalOpen} onClose={() => setIsPhoneModalOpen(false)} />
+      <Toast message={toast} />
     </div>
   );
 }
