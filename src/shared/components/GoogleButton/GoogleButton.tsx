@@ -8,6 +8,10 @@ const CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID as string | undefined;
 // del formulario, ~420px en Login/Registro) y lo recorta acá si hace falta.
 const MAX_BUTTON_WIDTH = 400;
 
+// Tiempo de gracia para que GIS inyecte el iframe del botón real después de
+// renderButton() antes de asumir que no va a aparecer (ad-blocker/CSP).
+const RENDER_CHECK_DELAY_MS = 2000;
+
 interface GoogleCredentialResponse {
   credential?: string;
 }
@@ -87,6 +91,7 @@ export function GoogleButton({ onSuccess, onError }: GoogleButtonProps) {
 
     let cancelled = false;
     let pollId: ReturnType<typeof setInterval> | undefined;
+    let renderCheckId: ReturnType<typeof setTimeout> | undefined;
 
     function setup() {
       if (cancelled || hasSetupRef.current || !window.google || !containerRef.current || !CLIENT_ID) return;
@@ -111,13 +116,31 @@ export function GoogleButton({ onSuccess, onError }: GoogleButtonProps) {
       // (confirmado en consola de Vercel: "Failed to open popup window...
       // Maybe blocked by the browser" + beacons popupNotOpened, 13/08). Acá
       // el click es real, sobre el elemento real.
-      const width = Math.min(containerRef.current.offsetWidth, MAX_BUTTON_WIDTH);
-      window.google.accounts.id.renderButton(containerRef.current, {
-        theme: "filled_black",
-        size: "large",
-        text: "continue_with",
-        width: String(width),
-      });
+      const container = containerRef.current;
+      const width = Math.min(container.offsetWidth, MAX_BUTTON_WIDTH);
+      try {
+        window.google.accounts.id.renderButton(container, {
+          theme: "filled_black",
+          size: "large",
+          text: "continue_with",
+          width: String(width),
+        });
+      } catch {
+        activeHandlers.onError(GENERIC_ERROR);
+        return;
+      }
+      // renderButton() inyecta el iframe del botón de forma asíncrona — chequeo
+      // demorado (no inmediato) para darle tiempo real a aparecer antes de
+      // decidir que falló. Si un ad-blocker/CSP bloqueó el iframe, el
+      // contenedor queda vacío para siempre y sin esto nadie se entera: no hay
+      // ningún click que pueda disparar el callback de error de Google, porque
+      // no hay ningún botón ahí para clickear.
+      renderCheckId = setTimeout(() => {
+        if (cancelled) return;
+        if (container.childElementCount === 0) {
+          activeHandlers.onError(GENERIC_ERROR);
+        }
+      }, RENDER_CHECK_DELAY_MS);
     }
 
     if (window.google) {
@@ -144,6 +167,7 @@ export function GoogleButton({ onSuccess, onError }: GoogleButtonProps) {
     return () => {
       cancelled = true;
       if (pollId) clearInterval(pollId);
+      if (renderCheckId) clearTimeout(renderCheckId);
     };
   }, []);
 
