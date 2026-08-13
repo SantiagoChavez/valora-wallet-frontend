@@ -13,6 +13,7 @@ import { ChatbotFAB } from "../../features/chatbot/ChatbotFAB";
 import { ChatbotWidget } from "../../features/chatbot/ChatbotWidget";
 import { getTransactions } from "../../shared/services/transactionService";
 import { deriveNotifications } from "../../shared/utils/deriveNotifications";
+import { useRequestGuard } from "../../shared/hooks/useRequestGuard";
 import styles from "./DashboardLayout.module.css";
 
 // Contrato del Outlet entre este layout y las páginas que cuelgan de él —
@@ -96,6 +97,7 @@ export function DashboardLayout() {
   const [dismissedIds, setDismissedIds] = useState<Set<string>>(() => readDismissedIds());
   const { token, user, logout } = useAuth();
   const [seenIds, setSeenIds] = useState<Set<string>>(() => readSeenIds(user?.id));
+  const notifOpenRequest = useRequestGuard();
   const visibleNotifications = notifications.filter((note) => !dismissedIds.has(note.id));
   const hasUnread = visibleNotifications.some((note) => note.unread && !seenIds.has(note.id));
   const navigate = useNavigate();
@@ -166,9 +168,9 @@ export function DashboardLayout() {
   // componente se desmontó) antes de que la promesa resolviera.
   useEffect(() => {
     if (openPanel !== "notif") return;
-    let cancelled = false;
+    const requestId = notifOpenRequest.start();
     loadNotifications().then((derived) => {
-      if (cancelled || !derived) return;
+      if (!notifOpenRequest.isCurrent(requestId) || !derived) return;
       setSeenIds((prev) => {
         const newIds = derived.map((note) => note.id).filter((id) => !prev.has(id));
         if (newIds.length === 0) return prev;
@@ -179,9 +181,9 @@ export function DashboardLayout() {
       });
     });
     return () => {
-      cancelled = true;
+      notifOpenRequest.invalidate();
     };
-  }, [openPanel, loadNotifications, user?.id]);
+  }, [openPanel, loadNotifications, user?.id, notifOpenRequest]);
 
   function handleLogout() {
     logout();

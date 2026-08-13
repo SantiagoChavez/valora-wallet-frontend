@@ -18,6 +18,7 @@ import type { Balance, CurrencyCode, Transaction } from "../../shared/types/mode
 import { CURRENCY_OPTIONS } from "../../shared/constants";
 import { balanceFor } from "../../shared/utils/balances";
 import { INVALID_AMOUNT_MESSAGE, parsePositiveAmount } from "../../shared/utils/amount";
+import { useRequestGuard } from "../../shared/hooks/useRequestGuard";
 import type { DashboardOutletContext } from "../../layouts/DashboardLayout/DashboardLayout";
 import styles from "./Dashboard.module.css";
 
@@ -75,18 +76,12 @@ export function Dashboard() {
     setIsDetailOpen(true);
   }
 
-  // Contador de generación, no boolean: con un solo cancelledRef reseteado a
-  // false al arrancar cada corrida, un request de una corrida ANTERIOR que
-  // sigue en vuelo podía "revivir" — el reset de la corrida nueva pisaba el
-  // true que había puesto el cleanup de la corrida vieja, así que si esa
-  // respuesta vieja llegaba después (fuera de orden), pasaba el chequeo igual
-  // y pisaba el estado correcto con datos viejos. Acá cada corrida compara
-  // contra su propio requestId capturado al arrancar — no hay reset que pueda
-  // borrar la señal de una corrida anterior.
-  const requestIdRef = useRef(0);
+  // Ver useRequestGuard.ts para el porqué de un contador de generación en vez
+  // de un boolean reseteado a mano.
+  const dashboardRequest = useRequestGuard();
 
   const loadDashboardData = useCallback(async () => {
-    const requestId = ++requestIdRef.current;
+    const requestId = dashboardRequest.start();
     setIsLoading(true);
     setError(null);
     try {
@@ -94,31 +89,30 @@ export function Dashboard() {
         getBalances(token as string),
         getTransactions(token as string, { limit: LATEST_TRANSACTIONS_LIMIT }),
       ]);
-      if (requestIdRef.current !== requestId) return;
+      if (!dashboardRequest.isCurrent(requestId)) return;
       setBalances(balancesData);
       setTransactions(transactionsResult.transactions);
     } catch (err) {
-      if (requestIdRef.current !== requestId) return;
+      if (!dashboardRequest.isCurrent(requestId)) return;
       setError(getApiErrorMessage(err));
     } finally {
-      if (requestIdRef.current === requestId) setIsLoading(false);
+      if (dashboardRequest.isCurrent(requestId)) setIsLoading(false);
     }
-  }, [token]);
+  }, [token, dashboardRequest]);
 
   useEffect(() => {
     if (!token) return;
     loadDashboardData();
-    // Defensivo, no por un bug encontrado hoy: bumpea el contador al
+    // Defensivo, no por un bug encontrado hoy: invalida la corrida al
     // desmontar/cambiar deps para que un request en vuelo justo antes de
     // navegar fuera de Dashboard no aplique su resultado sobre una instancia
     // ya desmontada. En React 18+ un setState post-unmount ya es un no-op
     // silencioso — mismo criterio que isMountedRef en useChatbot.ts, por
-    // consistencia dentro del mismo PR. Sigue siendo monótono creciente (no
-    // resetea a un valor fijo), así que no reabre la carrera de arriba.
+    // consistencia dentro del mismo PR.
     return () => {
-      requestIdRef.current += 1;
+      dashboardRequest.invalidate();
     };
-  }, [token, loadDashboardData]);
+  }, [token, loadDashboardData, dashboardRequest]);
 
   function openDepositModal() {
     setDepositCurrency("USD");
@@ -203,14 +197,14 @@ export function Dashboard() {
   // null mientras no hay una cifra real que mostrar (todavía no cargaron los
   // balances, o falló alguna cotización) — nunca se inventa un total parcial.
   const [totalConverted, setTotalConverted] = useState<number | null>(null);
-  // Mismo criterio que requestIdRef de arriba — evita que una cotización
+  // Mismo criterio que dashboardRequest de arriba — evita que una cotización
   // vieja (de la moneda anterior en el selector) pise el total con datos que
   // ya no corresponden si las respuestas llegan desordenadas.
-  const totalRequestIdRef = useRef(0);
+  const totalRequest = useRequestGuard();
 
   useEffect(() => {
     if (!token || !balances) return;
-    const requestId = ++totalRequestIdRef.current;
+    const requestId = totalRequest.start();
 
     // Antes esto era una tabla de tasas aproximada del lado del cliente — ahora
     // que existe /transactions/quote con la tasa real, se pide una cotización
@@ -224,16 +218,16 @@ export function Dashboard() {
 
     Promise.all(contributions)
       .then((amounts) => {
-        if (totalRequestIdRef.current !== requestId) return;
+        if (!totalRequest.isCurrent(requestId)) return;
         setTotalConverted(amounts.reduce((sum, value) => sum + value, 0));
       })
       .catch(() => {
-        if (totalRequestIdRef.current !== requestId) return;
+        if (!totalRequest.isCurrent(requestId)) return;
         // Tasa real no disponible para alguna moneda — mejor mostrar que no
         // está disponible que un total parcial o con una tasa inventada.
         setTotalConverted(null);
       });
-  }, [token, balances, totalCurrency]);
+  }, [token, balances, totalCurrency, totalRequest]);
   const totalDisplayValue = totalHidden
     ? "••••••"
     : totalConverted === null
