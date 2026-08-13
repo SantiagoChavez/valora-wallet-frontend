@@ -43,25 +43,19 @@ function formatShortDateTime(iso: string): string {
   return `${datePart} · ${timePart}`;
 }
 
-// Código corto "de marca" derivado del UUID real (no un dato inventado, es una
-// transformación cosmética del id real) — puramente para que se vea como un
-// número de operación, no para usarse como identificador único en ningún lado.
-function formatOperationId(id: string): string {
-  return `VAL-${id.replace(/-/g, "").slice(0, 6).toUpperCase()}`;
-}
-
 interface DetailRowProps {
   icon: string;
   label: string;
   value: string;
+  mono?: boolean;
 }
 
-function DetailRow({ icon, label, value }: DetailRowProps) {
+function DetailRow({ icon, label, value, mono }: DetailRowProps) {
   return (
     <div className={styles.transferRow}>
       <span className={`msym ${styles.transferRowIcon}`} aria-hidden="true">{icon}</span>
       <span className={styles.transferRowLabel}>{label}</span>
-      <span className={styles.transferRowValue}>{value}</span>
+      <span className={`${styles.transferRowValue} ${mono ? styles.transferRowValueMono : ""}`}>{value}</span>
     </div>
   );
 }
@@ -99,7 +93,7 @@ export function TransactionDetailModal({ isOpen, onClose, transaction }: Transac
             )}
             <DetailRow icon="schedule" label="Fecha" value={formatShortDateTime(transaction.createdAt)} />
             {transaction.concepto && <DetailRow icon="description" label="Concepto" value={transaction.concepto} />}
-            <DetailRow icon="sell" label="ID de operación" value={formatOperationId(transaction.id)} />
+            <DetailRow icon="sell" label="ID de operación" value={transaction.id} mono />
           </div>
         </div>
       </Modal>

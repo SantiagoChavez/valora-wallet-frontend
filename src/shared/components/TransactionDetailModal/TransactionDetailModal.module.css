@@ -164,3 +164,8 @@
   text-align: right;
   word-break: break-word;
 }
+
+.transferRowValueMono {
+  font-family: monospace;
+  font-size: var(--font-size-xs);
+}
