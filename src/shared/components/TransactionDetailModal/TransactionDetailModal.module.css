@@ -108,3 +108,59 @@
   font-family: monospace;
   font-size: var(--font-size-xs);
 }
+
+/* ---- Vista específica de transferencia (TRANSFER_OUT/TRANSFER_IN) ---- */
+
+.closeButtonFloating {
+  composes: closeButton;
+  position: absolute;
+  top: var(--spacing-md);
+  right: var(--spacing-md);
+}
+
+.transferAmountBlock {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-xs);
+  text-align: center;
+  padding-top: var(--spacing-sm);
+}
+
+.eyebrowCentered {
+  composes: eyebrow;
+  margin-top: 0;
+}
+
+.transferList {
+  display: flex;
+  flex-direction: column;
+}
+
+.transferRow {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-sm) 0;
+  border-top: 1px solid var(--border);
+}
+
+.transferRowIcon {
+  flex-shrink: 0;
+  font-size: var(--font-size-md);
+  color: var(--text-tertiary);
+}
+
+.transferRowLabel {
+  flex: 1;
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+}
+
+.transferRowValue {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--text-primary);
+  text-align: right;
+  word-break: break-word;
+}

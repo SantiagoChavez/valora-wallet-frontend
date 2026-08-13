@@ -34,6 +34,38 @@ function formatTime(iso: string): string {
   return new Date(iso).toLocaleTimeString("es-AR", { hour: "numeric", minute: "2-digit" });
 }
 
+// Fecha corta + hora en una sola línea (ej. "12/08/2026 · 21:04") — distinto
+// del par Fecha/Hora del detalle genérico, para la vista de transferencia.
+function formatShortDateTime(iso: string): string {
+  const date = new Date(iso);
+  const datePart = date.toLocaleDateString("es-AR", { day: "2-digit", month: "2-digit", year: "numeric" });
+  const timePart = date.toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit", hour12: false });
+  return `${datePart} · ${timePart}`;
+}
+
+// Código corto "de marca" derivado del UUID real (no un dato inventado, es una
+// transformación cosmética del id real) — puramente para que se vea como un
+// número de operación, no para usarse como identificador único en ningún lado.
+function formatOperationId(id: string): string {
+  return `VAL-${id.replace(/-/g, "").slice(0, 6).toUpperCase()}`;
+}
+
+interface DetailRowProps {
+  icon: string;
+  label: string;
+  value: string;
+}
+
+function DetailRow({ icon, label, value }: DetailRowProps) {
+  return (
+    <div className={styles.transferRow}>
+      <span className={`msym ${styles.transferRowIcon}`} aria-hidden="true">{icon}</span>
+      <span className={styles.transferRowLabel}>{label}</span>
+      <span className={styles.transferRowValue}>{value}</span>
+    </div>
+  );
+}
+
 export function TransactionDetailModal({ isOpen, onClose, transaction }: TransactionDetailModalProps) {
   // El Modal en sí sigue montado durante la animación de cierre (ver
   // Modal.tsx) — esto solo cubre el primer render, antes de seleccionar
@@ -41,6 +73,39 @@ export function TransactionDetailModal({ isOpen, onClose, transaction }: Transac
   if (!transaction) return null;
 
   const display = formatTransaction(transaction);
+  const isTransfer = transaction.transactionType === "TRANSFER_OUT" || transaction.transactionType === "TRANSFER_IN";
+
+  if (isTransfer) {
+    const counterparty = [transaction.counterpartyName, transaction.counterpartyLastName].filter(Boolean).join(" ");
+    const counterpartyLabel = transaction.transactionType === "TRANSFER_OUT" ? "Destinatario" : "Remitente";
+    const amountLabel = transaction.transactionType === "TRANSFER_OUT" ? "Monto enviado" : "Monto recibido";
+
+    return (
+      <Modal isOpen={isOpen} onClose={onClose} ariaLabel="Detalle de transferencia">
+        <div className={styles.wrapper}>
+          <button type="button" className={styles.closeButtonFloating} onClick={onClose} aria-label="Cerrar">
+            <span className="msym" aria-hidden="true">close</span>
+          </button>
+
+          <div className={styles.transferAmountBlock}>
+            <span className={styles.eyebrowCentered}>{amountLabel.toUpperCase()}</span>
+            <span className={styles.amount}>{display.amount} {display.currency}</span>
+          </div>
+
+          <div className={styles.transferList}>
+            {counterparty && <DetailRow icon="person" label={counterpartyLabel} value={counterparty} />}
+            {transaction.counterpartyAlias && (
+              <DetailRow icon="bolt" label="Alias" value={transaction.counterpartyAlias} />
+            )}
+            <DetailRow icon="schedule" label="Fecha" value={formatShortDateTime(transaction.createdAt)} />
+            {transaction.concepto && <DetailRow icon="description" label="Concepto" value={transaction.concepto} />}
+            <DetailRow icon="sell" label="ID de operación" value={formatOperationId(transaction.id)} />
+          </div>
+        </div>
+      </Modal>
+    );
+  }
+
   const typeLabel = TYPE_LABEL[transaction.transactionType] ?? "Movimiento";
 
   return (
