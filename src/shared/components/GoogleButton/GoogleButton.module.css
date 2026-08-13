@@ -8,9 +8,14 @@
   /* El "G" cuadrado que renderiza Google no siempre resuelve bien las puntas
      redondeadas por su cuenta (varía entre entornos) — se recorta acá con
      nuestro propio radio en vez de depender de shape:"pill" del lado de
-     Google (sacado de renderButton() en GoogleButton.tsx). Mismo radio que
-     el resto de los botones de la app. */
-  border-radius: 12px;
+     Google (sacado de renderButton() en GoogleButton.tsx). 16px, no los
+     12px del resto de los botones de la app: con 12px quedaba un filo
+     blanco de la placa del ícono asomando en las esquinas izquierdas
+     (screenshot 13/08) — Google posiciona esa placa con su propio
+     padding interno, que no controlamos, y 12px no alcanzaba a comerlo del
+     todo. Si hace falta que combine exacto con el resto, es un ajuste
+     visual para Analía, no de estructura. */
+  border-radius: 16px;
   overflow: hidden;
 }
 
