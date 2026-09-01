@@ -8,9 +8,9 @@ Desarrollado por **Nexo Tech Solutions** como Proyecto Final para la carrera Ful
 
 ## 🚀 Enlaces de Despliegue
 
-- **Frontend (Vercel):** [https://valora-wallet-frontend.vercel.app](https://valora-wallet-frontend.vercel.app)
-- **Backend API (Railway):** [https://valora-wallet-backend-production.up.railway.app](https://valora-wallet-backend-production.up.railway.app)
-- **Base de Datos PostgreSQL (Railway):** Privada (Conexión TCP interna con el backend).
+- **Frontend (Vercel):** [https://valora-wallet-frontend-chi.vercel.app](https://valora-wallet-frontend-chi.vercel.app) *(¡Probá la aplicación en vivo desde acá!)*
+- **Backend API (Render):** [https://valora-wallet-backend.onrender.com](https://valora-wallet-backend.onrender.com)
+- **Base de Datos PostgreSQL (Neon):** PostgreSQL serverless activo y conectado.
 
 ---
 
