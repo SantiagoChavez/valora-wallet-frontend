@@ -95,6 +95,16 @@ export function AuthProvider({ children }: PropsWithChildren) {
         // Storage bloqueado o sin cuota — no bloquea el logout.
       }
     }
+    
+    // Le avisa a Google que deshabilite el auto-login temporalmente para que
+    // no vuelva a iniciar sesión solo (si One Tap estuviera activo).
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (window as any).google?.accounts?.id?.disableAutoSelect();
+    } catch {
+      // Ignorar si Google no cargó
+    }
+
     setAuth(null);
   }
 
