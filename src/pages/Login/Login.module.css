@@ -20,10 +20,10 @@
   display: flex;
   flex-direction: column;
   justify-content: center;
-  gap: 40px;
+  align-items: center;
   flex: 1 1 46%;
   min-width: 420px;
-  padding: 64px;
+  padding: 64px clamp(24px, 4vw, 64px);
   background: var(--bg-elevated);
 }
 
@@ -39,6 +39,15 @@
   .brandPanel {
     display: none;
   }
+}
+
+.brandPanelInner {
+  width: 100%;
+  max-width: 480px;
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+  margin: auto 0;
 }
 
 .brandPills {

@@ -109,27 +109,29 @@ export function Registro() {
 
       <section className={styles.brandPanel}>
         <AuthBrandGlow />
-        <AuthBrandHeader />
+        <div className={styles.brandPanelInner}>
+          <AuthBrandHeader />
 
-        <AuthBrandCopy
-          headline="Empezá en minutos."
-          subtext="Creá tu cuenta y gestioná múltiples monedas desde una sola plataforma hecha para freelancers de LATAM."
-        >
-          <ul className={styles.brandChecklist} role="list">
-            <li className={styles.brandChecklistItem}>
-              <span className={`msym ${styles.brandCheckIcon}`} aria-hidden="true">check</span>
-              Sin comisiones de apertura ni mantenimiento
-            </li>
-            <li className={styles.brandChecklistItem}>
-              <span className={`msym ${styles.brandCheckIcon}`} aria-hidden="true">check</span>
-              Recibí en USD, EUR y ARS al instante
-            </li>
-            <li className={styles.brandChecklistItem}>
-              <span className={`msym ${styles.brandCheckIcon}`} aria-hidden="true">check</span>
-              Verificación de identidad en menos de 5 minutos
-            </li>
-          </ul>
-        </AuthBrandCopy>
+          <AuthBrandCopy
+            headline="Empezá en minutos."
+            subtext="Creá tu cuenta y gestioná múltiples monedas desde una sola plataforma hecha para freelancers de LATAM."
+          >
+            <ul className={styles.brandChecklist} role="list">
+              <li className={styles.brandChecklistItem}>
+                <span className={`msym ${styles.brandCheckIcon}`} aria-hidden="true">check</span>
+                Sin comisiones de apertura ni mantenimiento
+              </li>
+              <li className={styles.brandChecklistItem}>
+                <span className={`msym ${styles.brandCheckIcon}`} aria-hidden="true">check</span>
+                Recibí en USD, EUR y ARS al instante
+              </li>
+              <li className={styles.brandChecklistItem}>
+                <span className={`msym ${styles.brandCheckIcon}`} aria-hidden="true">check</span>
+                Verificación de identidad en menos de 5 minutos
+              </li>
+            </ul>
+          </AuthBrandCopy>
+        </div>
       </section>
 
       <div className={styles.formPanel}>
