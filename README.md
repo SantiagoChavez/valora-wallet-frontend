@@ -14,6 +14,73 @@ Desarrollado por **Nexo Tech Solutions** como Proyecto Final para la carrera Ful
 
 ---
 
+## 🔑 Cuentas de Prueba (Demo Users)
+
+Para probar todas las funcionalidades en vivo sin necesidad de registrarse desde cero, puedes iniciar sesión con cualquiera de las siguientes cuentas demo precargadas:
+
+> **Contraseña universal para todas las cuentas demo:** `Test1234!`
+
+| Usuario | Correo Electrónico | País | Alias Valora | Saldos Precargados |
+| :--- | :--- | :---: | :--- | :--- |
+| **Juan Pérez** | `demo.juan@valora.com` | 🇦🇷 AR | `demo.juan.valora` | $3,900 USD · $150,000 ARS · €1,000 EUR |
+| **María Gómez** | `demo.maria@valora.com` | 🇨🇴 CO | `demo.maria.valora` | $3,900 USD · $150,000 ARS · €1,000 EUR |
+| **Carlos López** | `demo.carlos@valora.com` | 🇲🇽 MX | `demo.carlos.valora` | $3,900 USD · $150,000 ARS · €1,000 EUR |
+
+*(También puedes registrar una cuenta nueva o ingresar con tu cuenta de Google).*
+
+---
+
+## 📸 Galería y Recorrido Visual de la Aplicación
+
+A continuación se presentan las principales pantallas y flujos funcionales de **Valora Wallet**:
+
+### 1. 🔐 Autenticación y Acceso (`Login / Registro`)
+![Inicio de sesión - Valora Wallet](src/shared/assets/login-valora.png)
+- **Ingreso con credenciales:** Inicio de sesión seguro con correo electrónico y contraseña (incluye toggle para mostrar/ocultar contraseña).
+- **Google Sign-In (OAuth 2.0):** Acceso rápido en un solo clic con cuenta de Google autenticada.
+- **Flujos complementarios:** Acceso directo a la pantalla de **Registro** para nuevos usuarios y **Recuperación de Contraseña** mediante correo con token seguro.
+
+---
+
+### 2. 👤 Perfil y Datos de Usuario (`Usuario`)
+![Perfil y Datos de Usuario](src/shared/assets/datos-usuario.png)
+- **Información Personal:** Visualización y edición de nombre, apellido, fecha de nacimiento, celular validado según el estándar internacional E.164 y Documento Único (DU/DNI/CPF/CURP) por país.
+- **Datos de Billetera:** Consulta de CVU único y personalización de **Alias** para transferencias inmediatas.
+- **Preferencias:** Activación y desactivación de notificaciones automáticas por correo electrónico ante movimientos de fondos.
+
+---
+
+### 3. 💱 Intercambio y Conversión de Monedas (`Intercambio`)
+![Intercambio y Conversión de Monedas](src/shared/assets/intercambio-moneda.png)
+- **Operaciones Multi-Moneda:** Conversión instantánea, compra y venta entre **USD**, **EUR** y **ARS**.
+- **Tasas en Tiempo Real:** Cotizaciones actualizadas en vivo con cálculo bidireccional de montos (origen o destino).
+- **Transparencia Financiera:** Desglose del spread (comisión del 1%) y actualización instantánea de los balances disponibles tras la confirmación.
+
+---
+
+### 4. 📊 Historial y Registro de Actividad (`Actividad`)
+![Historial de Actividad](src/shared/assets/actividad.png)
+- **Registro Detallado:** Listado cronológico de todas las transacciones realizadas (depósitos, compras, ventas, swaps y transferencias).
+- **Filtros por Operación:** Pestañas de filtrado rápido (*Todas*, *Depósitos*, *Intercambios*, *Compras*, *Ventas*, *Transferencias enviadas*, *Transferencias recibidas*).
+- **Detalle Contable:** Montos en moneda original y convertida, contrapartes (nombre, email, alias/CVU), concepto y sellos de tiempo.
+
+---
+
+### 5. 🤖 Asistente Financiero Inteligente (`Asistente AI`)
+![Asistente Financiero con IA](src/shared/assets/Estado-chat.png)
+- **Chatbot con Google Gemini:** Asistente conversacional con contexto financiero de la cuenta.
+- **Consultas en Lenguaje Natural:** Capacidad de responder sobre saldos reales, cotizaciones de monedas autorizadas y análisis de movimientos recientes.
+- **Seguridad y Guardrails:** Protección estricta contra inyecciones de prompt y persistencia del historial de conversación por usuario.
+
+---
+
+### 6. 🔔 Centro de Notificaciones (`Notificaciones`)
+![Notificaciones del Sistema](src/shared/assets/notificaciones.png)
+- **Alertas en Tiempo Real:** Bandeja de notificaciones sobre transferencias recibidas/enviadas, depósitos exitosos y cambios de configuración.
+- **Gestión de Lectura:** Indicador visual de notificaciones pendientes y persistencia de estado de lectura en el almacenamiento local.
+
+---
+
 ## 🏗️ Arquitectura y Tecnologías (Stack)
 
 El proyecto está modularizado en dos repositorios independientes (Frontend y Backend) cumpliendo con los estándares de separación de responsabilidades ("Sobresaliente" según rúbrica de evaluación). Este repositorio corresponde exclusivamente al **Frontend**.

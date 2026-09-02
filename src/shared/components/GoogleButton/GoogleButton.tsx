@@ -161,7 +161,8 @@ export function GoogleButton({ onSuccess, onError }: GoogleButtonProps) {
       // referencia de "cuánto espacio hay disponible" (mediría lo que le
       // acabamos de fijar, no el espacio real del formulario).
       const container = containerRef.current;
-      const width = Math.min(wrapperRef.current.offsetWidth, MAX_BUTTON_WIDTH);
+      container.innerHTML = "";
+      const width = Math.max(200, Math.min(wrapperRef.current.offsetWidth || 350, MAX_BUTTON_WIDTH));
       // Google alterna, sin que lo controlemos, entre renderizar un
       // <div role="button"> normal (que sí respeta el "width" de las
       // opciones como su propio ancho) y un <iframe> (confirmado en
@@ -221,6 +222,7 @@ export function GoogleButton({ onSuccess, onError }: GoogleButtonProps) {
 
     return () => {
       cancelled = true;
+      hasSetupRef.current = false;
       if (pollId) clearInterval(pollId);
       if (renderCheckId) clearTimeout(renderCheckId);
     };

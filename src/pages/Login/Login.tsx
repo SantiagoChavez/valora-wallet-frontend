@@ -72,23 +72,25 @@ export function Login() {
 
       <section className={styles.brandPanel}>
         <AuthBrandGlow />
-        <AuthBrandHeader />
+        <div className={styles.brandPanelInner}>
+          <AuthBrandHeader />
 
-        <AuthBrandCopy
-          headline="Tu dinero, sin fronteras."
-          subtext="Recibe, convierte y gestioná múltiples monedas desde una sola cuenta hecha para freelancers de LATAM."
-        >
-          <div className={styles.brandPills}>
-            <span className={styles.pill}>
-              <span className={styles.pillDot} aria-hidden="true" />
-              USD · EUR · ARS
-            </span>
-            <span className={styles.pill}>
-              <span className="msym" style={{ fontSize: 16 }} aria-hidden="true">bolt</span>
-              Transferencias instantáneas
-            </span>
-          </div>
-        </AuthBrandCopy>
+          <AuthBrandCopy
+            headline="Tu dinero, sin fronteras."
+            subtext="Recibe, convierte y gestioná múltiples monedas desde una sola cuenta hecha para freelancers de LATAM."
+          >
+            <div className={styles.brandPills}>
+              <span className={styles.pill}>
+                <span className={styles.pillDot} aria-hidden="true" />
+                USD · EUR · ARS
+              </span>
+              <span className={styles.pill}>
+                <span className="msym" style={{ fontSize: 16 }} aria-hidden="true">bolt</span>
+                Transferencias instantáneas
+              </span>
+            </div>
+          </AuthBrandCopy>
+        </div>
       </section>
 
       <div className={styles.formPanel}>
