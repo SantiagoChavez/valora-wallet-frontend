@@ -14,6 +14,22 @@ Desarrollado por **Nexo Tech Solutions** como Proyecto Final para la carrera Ful
 
 ---
 
+## 🔑 Cuentas de Prueba (Demo Users)
+
+Para probar todas las funcionalidades en vivo sin necesidad de registrarse desde cero, puedes iniciar sesión con cualquiera de las siguientes cuentas demo precargadas:
+
+> **Contraseña universal para todas las cuentas demo:** `Test1234!`
+
+| Usuario | Correo Electrónico | País | Alias Valora | Saldos Precargados |
+| :--- | :--- | :---: | :--- | :--- |
+| **Juan Pérez** | `demo.juan@valora.com` | 🇦🇷 AR | `demo.juan.valora` | $3,900 USD · $150,000 ARS · €1,000 EUR |
+| **María Gómez** | `demo.maria@valora.com` | 🇨🇴 CO | `demo.maria.valora` | $3,900 USD · $150,000 ARS · €1,000 EUR |
+| **Carlos López** | `demo.carlos@valora.com` | 🇲🇽 MX | `demo.carlos.valora` | $3,900 USD · $150,000 ARS · €1,000 EUR |
+
+*(También puedes registrar una cuenta nueva o ingresar con tu cuenta de Google).*
+
+---
+
 ## 📸 Galería y Recorrido Visual de la Aplicación
 
 A continuación se presentan las principales pantallas y flujos funcionales de **Valora Wallet**:
