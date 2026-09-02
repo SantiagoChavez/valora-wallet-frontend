@@ -2,7 +2,15 @@
 
 Dashboard web de **Valora Wallet**, una billetera digital multi-moneda diseñada para freelancers y trabajadores remotos en LATAM. 
 
-Desarrollado por **Nexo Tech Solutions** como Proyecto Final para la carrera Full Stack de **Henry**.
+Desarrollado originalmente por **Nexo Tech Solutions** como Proyecto Final para la carrera Full Stack de **Henry**, y actualmente mantenido y evolucionado de manera **personal e individual por Santiago Chavez**.
+
+> ℹ️ **Nota de Evolución del Proyecto:**  
+> La versión original del proyecto utilizaba infraestructura de pago (Railway para Backend/DB y AWS SES para emails). La presente versión fue optimizada, refactorizada y migrada para operar íntegramente sobre **planes gratuitos** bajo cuentas personales de Santiago Chavez:
+> - **Frontend:** Desplegado en **Vercel**.
+> - **Backend API:** Desplegado en **Render**.
+> - **Base de Datos:** **Neon PostgreSQL (Serverless)**.
+> - **Servicio de Emails:** Migrado a **Nodemailer + Gmail SMTP** (reemplazando AWS SES).
+> - **Asistente de IA (Chatbot):** Integrado con **Google Gemini 3.5 Flash Lite** para respuestas financieras inteligentes y alto límite de contexto.
 
 > **Nuestra Misión:** Facilitar la vida financiera de los profesionales independientes permitiéndoles centralizar cobros internacionales en múltiples monedas, realizar conversiones con tasas transparentes en tiempo real y contar con un asistente de IA para optimizar la gestión de sus ingresos.
 
@@ -50,7 +58,15 @@ A continuación se presentan las principales pantallas y flujos funcionales de *
 
 ---
 
-### 3. 💱 Intercambio y Conversión de Monedas (`Intercambio`)
+### 3. 💵 Operaciones de Compra, Venta y Depósito (`Inicio / Modal de Operaciones`)
+![Comprar, Vender y Depositar Monedas](src/shared/assets/comprar-vender-depositar.png)
+- **Modal de Operaciones Rápidas:** Compra y venta instantánea de divisas (USD, EUR, ARS) directamente desde el panel principal con validación de saldo disponible en vivo.
+- **Depósitos Flexibles:** Acreditación de fondos inmediata en la cuenta del usuario para comenzar a operar.
+- **Cálculo Transparente:** Selección intuitiva de moneda origen/destino con cálculo dinámico de conversión antes de confirmar.
+
+---
+
+### 4. 💱 Intercambio y Conversión de Monedas (`Intercambio`)
 ![Intercambio y Conversión de Monedas](src/shared/assets/intercambio-moneda.png)
 - **Operaciones Multi-Moneda:** Conversión instantánea, compra y venta entre **USD**, **EUR** y **ARS**.
 - **Tasas en Tiempo Real:** Cotizaciones actualizadas en vivo con cálculo bidireccional de montos (origen o destino).
@@ -58,7 +74,7 @@ A continuación se presentan las principales pantallas y flujos funcionales de *
 
 ---
 
-### 4. 📊 Historial y Registro de Actividad (`Actividad`)
+### 5. 📊 Historial y Registro de Actividad (`Actividad`)
 ![Historial de Actividad](src/shared/assets/actividad.png)
 - **Registro Detallado:** Listado cronológico de todas las transacciones realizadas (depósitos, compras, ventas, swaps y transferencias).
 - **Filtros por Operación:** Pestañas de filtrado rápido (*Todas*, *Depósitos*, *Intercambios*, *Compras*, *Ventas*, *Transferencias enviadas*, *Transferencias recibidas*).
@@ -66,7 +82,7 @@ A continuación se presentan las principales pantallas y flujos funcionales de *
 
 ---
 
-### 5. 🤖 Asistente Financiero Inteligente (`Asistente AI`)
+### 6. 🤖 Asistente Financiero Inteligente (`Asistente AI`)
 ![Asistente Financiero con IA](src/shared/assets/Estado-chat.png)
 - **Chatbot con Google Gemini:** Asistente conversacional con contexto financiero de la cuenta.
 - **Consultas en Lenguaje Natural:** Capacidad de responder sobre saldos reales, cotizaciones de monedas autorizadas y análisis de movimientos recientes.
@@ -74,7 +90,7 @@ A continuación se presentan las principales pantallas y flujos funcionales de *
 
 ---
 
-### 6. 🔔 Centro de Notificaciones (`Notificaciones`)
+### 7. 🔔 Centro de Notificaciones (`Notificaciones`)
 ![Notificaciones del Sistema](src/shared/assets/notificaciones.png)
 - **Alertas en Tiempo Real:** Bandeja de notificaciones sobre transferencias recibidas/enviadas, depósitos exitosos y cambios de configuración.
 - **Gestión de Lectura:** Indicador visual de notificaciones pendientes y persistencia de estado de lectura en el almacenamiento local.
@@ -191,11 +207,11 @@ Manejamos un ciclo de vida de ramas de 4 etapas: `personal` → `dev` → `pre-s
 
 ---
 
-## 👥 El Equipo (Nexo Tech Solutions)
+## 👥 El Equipo (Nexo Tech Solutions & Desarrollo Personal)
 
-Trabajamos como un **Equipo de Desarrollo Full-Stack** coordinado bajo la visión del PO (Product Owner - Henry). Roles internos de ejecución:
+El proyecto nació bajo la coordinación del equipo **Nexo Tech Solutions** para el Proyecto Final de Henry:
 
+- **Santiago Ezequiel Chavez:** Full Stack (Maintainer & Lead Developer). Arquitectura, seguridad de API, testing, integración de Gemini 3.5, refactorización a planes gratuitos y mantenimiento evolutivo general.
 - **Gerardo Acosta:** Full Stack (Orientación Frontend). Routing, layout, vistas principales e historial.
-- **Analía Pérez Juliá:** Full Stack (Orientación Frontend + Integraciones). UX/UI, AWS SES, documentación y Scrum Master.
-- **Daniel Sardinas:** Full Stack (AI & Core Logic). Integración de Gemini 2.5, lógica de transacciones complejas.
-- **Santiago Ezequiel Chavez:** Full Stack (Backend Core Lead). Base de datos PostgreSQL ACID, seguridad de API, validaciones Zod y despliegue en Railway. (Colaborador en este repositorio para la conexión con la API).
+- **Analía Pérez Juliá:** Full Stack (Orientación Frontend + Integraciones). UX/UI, maquetado, validaciones multi-país y Scrum Master.
+- **Daniel Sardinas:** Full Stack (AI & Core Logic). Integración inicial de Gemini y lógica de transacciones complejas.

@@ -81,3 +81,22 @@ export interface Transaction {
   // cualquier tipo de movimiento que no sea una transferencia.
   concepto: string | null;
 }
+
+export type CardBrand = 'VALORA PLATINUM' | 'VALORA BLACK' | 'VALORA GOLD';
+export type CardType = 'VIRTUAL' | 'PHYSICAL';
+
+export interface Card {
+  id: string;
+  walletId: string;
+  cardNumber: string;
+  maskedNumber: string;
+  holderName: string;
+  expiry: string;
+  cvv: string;
+  brand: CardBrand;
+  cardType: CardType;
+  label: string;
+  isFrozen: boolean;
+  createdAt: string;
+}
+
