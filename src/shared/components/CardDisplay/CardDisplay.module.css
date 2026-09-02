@@ -1,7 +1,7 @@
 .cardView {
   position: relative;
   overflow: hidden;
-  height: 192px;
+  height: 200px;
   border-radius: var(--radius-xl);
   border: 1px solid var(--border);
   background: linear-gradient(135deg, var(--border), var(--bg-base));
@@ -10,11 +10,56 @@
   flex-direction: column;
   justify-content: space-between;
   cursor: pointer;
-  transition: transform 0.2s ease;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
 }
 
 .cardView:hover {
-  transform: scale(1.02);
+  transform: translateY(-2px);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
+}
+
+/* Variantes de marca / Tier */
+.brandPlatinum {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(20, 20, 24, 0.95) 100%);
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+.brandBlack {
+  background: linear-gradient(135deg, #18181c 0%, #09090b 100%);
+  border-color: rgba(255, 215, 0, 0.3);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4), inset 0 0 12px rgba(255, 215, 0, 0.05);
+}
+
+.brandGold {
+  background: linear-gradient(135deg, #2a1f0a 0%, #120e05 100%);
+  border-color: rgba(234, 179, 8, 0.4);
+  box-shadow: 0 8px 24px rgba(234, 179, 8, 0.1), inset 0 0 16px rgba(234, 179, 8, 0.08);
+}
+
+.frozenCard {
+  filter: grayscale(0.5);
+  opacity: 0.82;
+  border-style: dashed;
+}
+
+.frozenBadge {
+  position: absolute;
+  top: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(239, 68, 68, 0.9);
+  color: #ffffff;
+  font-size: var(--font-size-2xs);
+  font-weight: var(--font-weight-bold);
+  letter-spacing: 0.08em;
+  padding: 3px 10px;
+  border-radius: var(--radius-full);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  z-index: 5;
+  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.4);
 }
 
 .cardGlow {
@@ -23,7 +68,7 @@
   right: -48px;
   width: 128px;
   height: 128px;
-  background: color-mix(in srgb, var(--accent) 10%, transparent);
+  background: color-mix(in srgb, var(--accent) 15%, transparent);
   border-radius: 50%;
   filter: blur(40px);
 }
@@ -34,6 +79,26 @@
   align-items: flex-start;
   position: relative;
   z-index: 1;
+}
+
+.cardTopLeft {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.cardLabelBadge {
+  font-size: var(--font-size-2xs);
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-secondary);
+  background: var(--bg-inset);
+  padding: 2px 8px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-subtle);
+  max-width: 140px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .cardBrand {
@@ -58,42 +123,47 @@
 }
 
 .cardNumber {
-  font-size: var(--font-size-xs);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
   letter-spacing: var(--tracking-widest);
-  color: var(--text-secondary);
+  color: var(--text-primary);
   font-variant-numeric: tabular-nums;
+  font-family: monospace;
 }
 
 .cardActions {
   display: flex;
   align-items: center;
-  gap: 2px;
+  gap: 4px;
   flex-shrink: 0;
 }
 
 .cardIconButton {
   position: relative;
-  background: transparent;
-  border: none;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid transparent;
   cursor: pointer;
   display: flex;
-  padding: 4px;
+  align-items: center;
+  justify-content: center;
+  padding: 6px;
   border-radius: 50%;
-  color: var(--text-tertiary);
-  transition: background-color 0.15s ease, color 0.15s ease;
+  color: var(--text-secondary);
+  transition: all 0.15s ease;
 }
 
 .cardIconButton:hover {
   background: var(--bg-inset);
   color: var(--text-primary);
+  border-color: var(--border);
 }
 
-/* Solo en el botón de copiar (no en el de ojo, no se pidió ahí) — resumen de
-   qué hace el ícono, no la confirmación de que ya copió (eso lo dice el toast
-   y el aria-label/ícono de check, esto es fijo siempre). Oculta por defecto
-   con opacity/pointer-events en vez de display:none para poder animar la
-   entrada, y con :focus-visible además de :hover para que también aparezca
-   navegando con teclado. */
+.cardIconButtonDanger:hover {
+  background: rgba(239, 68, 68, 0.15);
+  color: var(--danger);
+  border-color: rgba(239, 68, 68, 0.3);
+}
+
 .copyTooltip {
   position: absolute;
   bottom: calc(100% + 8px);
@@ -124,7 +194,7 @@
   display: flex;
   gap: var(--spacing-lg);
   margin-bottom: 10px;
-  font-size: var(--font-size-2xs);
+  font-size: var(--font-size-xs);
   letter-spacing: var(--tracking-wide);
   color: var(--text-secondary);
   font-variant-numeric: tabular-nums;
@@ -137,9 +207,10 @@
 }
 
 .cardHolder {
-  font-size: var(--font-size-lg);
-  font-weight: var(--font-weight-medium);
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-semibold);
   color: var(--text-primary);
+  letter-spacing: 0.04em;
 }
 
 .cardNetwork {
@@ -151,14 +222,14 @@
   width: 22px;
   height: 22px;
   border-radius: 50%;
-  opacity: 0.8;
+  opacity: 0.85;
 }
 
 .networkDotRed {
-  background: var(--danger);
+  background: #eb001b;
 }
 
 .networkDotGold {
-  background: var(--accent);
+  background: #f79e1b;
   margin-left: -8px;
 }

@@ -1,32 +1,24 @@
 import { useMemo, useState } from "react";
 import { useAuth } from "../../auth/useAuth";
 import { useCopyToClipboard } from "../../hooks/useCopyToClipboard";
+import type { Card } from "../../types/models";
 import styles from "./CardDisplay.module.css";
 
 const EXPIRY_MIN_YEARS = 2;
 const EXPIRY_MAX_YEARS = 4;
 
-// Exportado para que los callers armen su propio onCopy sin hardcodear el
-// texto aparte (ver por qué CardDisplay no muestra su propio toast más abajo).
 export const CARD_NUMBER_COPIED_MESSAGE = "Copiaste el número de tarjeta.";
 
 interface CardDisplayProps {
+  card?: Card;
   brand?: string;
-  /** Se llama después de copiar el número al portapapeles con éxito — quien
-   *  use CardDisplay decide cómo avisarlo (ej. su propio showToast de página),
-   *  en vez de que este componente monte su propia instancia de Toast: las dos
-   *  páginas que lo usan (Dashboard, Tarjetas) ya tienen la suya para otras
-   *  acciones, y dos <Toast> independientes en la misma pantalla comparten
-   *  position:fixed/z-index — si llegan a coincidir en el tiempo (ej. copiar
-   *  justo después de un depósito), uno tapa al otro. */
+  showManageActions?: boolean;
   onCopy?: () => void;
+  onFreezeToggle?: (card: Card) => void;
+  onDelete?: (card: Card) => void;
+  onReveal?: (card: Card) => Promise<string | undefined>;
 }
 
-// Generador congruencial lineal (LCG) sembrado por string — no es mulberry32
-// (los constantes 1664525/1013904223 son las clásicas de Numerical Recipes),
-// no criptográfico, no hace falta: esto es puramente decorativo (ver Estado
-// actual en CLAUDE.md, "vista de tarjeta física... vino con el mock del
-// diseño Geist"), nunca es dinero ni datos reales de una tarjeta.
 function seededRandom(seed: string): () => number {
   let h = 0;
   for (let i = 0; i < seed.length; i++) {
@@ -48,7 +40,7 @@ function generateCardDigits(random: () => number): string {
 
 function generateExpiry(random: () => number): string {
   const monthsAhead = Math.floor(
-    (EXPIRY_MIN_YEARS + random() * (EXPIRY_MAX_YEARS - EXPIRY_MIN_YEARS)) * 12,
+    (EXPIRY_MIN_YEARS + random() * (EXPIRY_MAX_YEARS - EXPIRY_MIN_YEARS)) * 12
   );
   const now = new Date();
   const expiry = new Date(now.getFullYear(), now.getMonth() + monthsAhead, 1);
@@ -58,32 +50,42 @@ function generateExpiry(random: () => number): string {
 }
 
 function generateCvv(random: () => number): string {
-  let digits = "";
+  let cvv = "";
   for (let i = 0; i < 3; i++) {
-    digits += Math.floor(random() * 10);
+    cvv += Math.floor(random() * 10);
+  }
+  return cvv;
+}
+
+function formatCardDigits(digits: string): string {
+  const clean = digits.replace(/\s+/g, "");
+  return clean.replace(/(\d{4})(?=\d)/g, "$1 ");
+}
+
+function maskCardDigits(digits: string): string {
+  const clean = digits.replace(/\s+/g, "");
+  if (clean.length === 16) {
+    return `•••• •••• •••• ${clean.slice(12, 16)}`;
   }
   return digits;
 }
 
-function formatCardDigits(digits: string): string {
-  return digits.match(/.{1,4}/g)?.join(" ") ?? digits;
-}
-
-function maskCardDigits(digits: string): string {
-  return `•••• •••• •••• ${digits.slice(12, 16)}`;
-}
-
-export function CardDisplay({ brand = "VALORA PLATINUM", onCopy }: CardDisplayProps) {
+export function CardDisplay({
+  card,
+  brand: customBrand,
+  showManageActions = false,
+  onCopy,
+  onFreezeToggle,
+  onDelete,
+  onReveal,
+}: CardDisplayProps) {
   const { user } = useAuth();
-  const holderName = user ? `${user.firstName} ${user.lastName}`.toUpperCase() : "USUARIO VALORA";
+  const defaultHolderName = user
+    ? `${user.firstName} ${user.lastName}`.toUpperCase()
+    : "USUARIO VALORA";
 
-  // Sembrado por el id del usuario: mismo número/vencimiento/CVV mientras dure
-  // la sesión (no cambia en cada render ni al abrir/cerrar el ojito), sin
-  // persistir nada — no hace falta que sobreviva a un refresh (ver consigna).
-  // Un solo useMemo (no uno por dato encadenado a otro) — los tres valores
-  // salen de la misma corrida del PRNG, así que da lo mismo memoizarlos juntos
-  // que encadenar tres memos sobre la identidad de un cuarto.
-  const { cardDigits, expiry, cvv } = useMemo(() => {
+  // Fallback determinístico para cuando no se pase una tarjeta de base de datos
+  const mockValues = useMemo(() => {
     const random = seededRandom(user?.id ?? "guest");
     return {
       cardDigits: generateCardDigits(random),
@@ -93,61 +95,147 @@ export function CardDisplay({ brand = "VALORA PLATINUM", onCopy }: CardDisplayPr
   }, [user?.id]);
 
   const [isRevealed, setIsRevealed] = useState(false);
+  const [revealedDigits, setRevealedDigits] = useState<string | null>(null);
+
   const { isCopied, copy, reset: resetCopied } = useCopyToClipboard(onCopy);
 
-  function toggleRevealed() {
-    setIsRevealed((v) => !v);
-    // Sin esto, ocultar y volver a mostrar la tarjeta antes de que pasen los
-    // COPY_CONFIRMATION_MS revivía el ícono de "copiado" de la vez anterior
-    // (isCopied vive en CardDisplay, no en el botón — no se resetea solo por
-    // desmontar/remontar el botón de copiar al togglear el ojo).
+  const activeBrand = card?.brand || customBrand || "VALORA PLATINUM";
+  const activeHolderName = card?.holderName || defaultHolderName;
+  const isFrozen = card?.isFrozen ?? false;
+  const activeLabel = card?.label;
+
+  const rawDigits = revealedDigits || card?.cardNumber || mockValues.cardDigits;
+  const activeExpiry = card?.expiry || mockValues.expiry;
+  const activeCvv = card && card.cvv !== "•••" ? card.cvv : mockValues.cvv;
+
+  async function handleToggleReveal() {
+    if (!isRevealed) {
+      if (card && onReveal) {
+        const fullNumber = await onReveal(card);
+        if (fullNumber) {
+          setRevealedDigits(fullNumber);
+        }
+      }
+      setIsRevealed(true);
+    } else {
+      setIsRevealed(false);
+    }
     resetCopied();
   }
 
+  // Selección de clase de tema visual
+  const themeClass =
+    activeBrand === "VALORA BLACK"
+      ? styles.brandBlack
+      : activeBrand === "VALORA GOLD"
+      ? styles.brandGold
+      : styles.brandPlatinum;
+
   return (
-    <div className={styles.cardView}>
+    <div
+      className={`${styles.cardView} ${themeClass} ${isFrozen ? styles.frozenCard : ""}`}
+    >
       <div className={styles.cardGlow} />
+
+      {isFrozen && (
+        <div className={styles.frozenBadge}>
+          <span className="msym" style={{ fontSize: 14 }} aria-hidden="true">
+            lock
+          </span>
+          CONGELADA
+        </div>
+      )}
+
       <div className={styles.cardTop}>
-        <span className="msym" style={{ fontSize: 22, color: "var(--accent)" }} aria-hidden="true">contactless</span>
-        <span className={styles.cardBrand}>{brand}</span>
+        <div className={styles.cardTopLeft}>
+          <span
+            className="msym"
+            style={{ fontSize: 22, color: "var(--accent)" }}
+            aria-hidden="true"
+          >
+            contactless
+          </span>
+          {activeLabel && <span className={styles.cardLabelBadge}>{activeLabel}</span>}
+        </div>
+        <span className={styles.cardBrand}>{activeBrand}</span>
       </div>
+
       <div className={styles.cardBottom}>
         <div className={styles.cardNumberRow}>
           <div className={styles.cardNumber}>
-            {isRevealed ? formatCardDigits(cardDigits) : maskCardDigits(cardDigits)}
+            {isRevealed
+              ? formatCardDigits(rawDigits)
+              : maskCardDigits(card?.maskedNumber || rawDigits)}
           </div>
           <div className={styles.cardActions}>
-            {isRevealed && (
+            {isRevealed && !isFrozen && (
               <button
                 type="button"
                 className={styles.cardIconButton}
-                onClick={() => copy(cardDigits)}
+                onClick={() => copy(rawDigits.replace(/\s+/g, ""))}
                 aria-label={isCopied ? "Número copiado" : "Copiar número de tarjeta"}
               >
                 <span className="msym" style={{ fontSize: 18 }} aria-hidden="true">
                   {isCopied ? "check" : "content_copy"}
                 </span>
-                <span className={styles.copyTooltip} aria-hidden="true">Copiar número de tarjeta</span>
+                <span className={styles.copyTooltip} aria-hidden="true">
+                  Copiar número
+                </span>
               </button>
             )}
-            <button
-              type="button"
-              className={styles.cardIconButton}
-              onClick={toggleRevealed}
-              aria-label={isRevealed ? "Ocultar datos de la tarjeta" : "Mostrar datos de la tarjeta"}
-            >
-              <span className="msym" style={{ fontSize: 18 }} aria-hidden="true">
-                {isRevealed ? "visibility_off" : "visibility"}
-              </span>
-            </button>
+
+            {!isFrozen && (
+              <button
+                type="button"
+                className={styles.cardIconButton}
+                onClick={handleToggleReveal}
+                aria-label={
+                  isRevealed ? "Ocultar datos de la tarjeta" : "Mostrar datos de la tarjeta"
+                }
+              >
+                <span className="msym" style={{ fontSize: 18 }} aria-hidden="true">
+                  {isRevealed ? "visibility_off" : "visibility"}
+                </span>
+              </button>
+            )}
+
+            {showManageActions && card && onFreezeToggle && (
+              <button
+                type="button"
+                className={styles.cardIconButton}
+                onClick={() => onFreezeToggle(card)}
+                aria-label={isFrozen ? "Descongelar tarjeta" : "Congelar tarjeta"}
+                title={isFrozen ? "Descongelar tarjeta" : "Congelar tarjeta"}
+              >
+                <span className="msym" style={{ fontSize: 18 }} aria-hidden="true">
+                  {isFrozen ? "lock_open" : "lock"}
+                </span>
+              </button>
+            )}
+
+            {showManageActions && card && onDelete && (
+              <button
+                type="button"
+                className={`${styles.cardIconButton} ${styles.cardIconButtonDanger}`}
+                onClick={() => onDelete(card)}
+                aria-label="Dar de baja tarjeta"
+                title="Dar de baja tarjeta"
+              >
+                <span className="msym" style={{ fontSize: 18 }} aria-hidden="true">
+                  delete
+                </span>
+              </button>
+            )}
           </div>
         </div>
+
         <div className={styles.cardMeta}>
-          <span>{isRevealed ? expiry : "••/••"}</span>
-          <span>{isRevealed ? cvv : "•••"}</span>
+          <span>{isRevealed && !isFrozen ? activeExpiry : "••/••"}</span>
+          <span>{isRevealed && !isFrozen ? activeCvv : "•••"}</span>
         </div>
+
         <div className={styles.cardHolderRow}>
-          <span className={styles.cardHolder}>{holderName}</span>
+          <span className={styles.cardHolder}>{activeHolderName}</span>
           <div className={styles.cardNetwork}>
             <div className={styles.networkDotRed} />
             <div className={styles.networkDotGold} />
